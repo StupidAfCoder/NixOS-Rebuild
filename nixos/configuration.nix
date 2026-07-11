@@ -16,6 +16,17 @@
 	  NIXOS_OZONE_WL = "1";
   };
 
+  swapDevices = [{
+    device = "/var/lib/swapfile";
+    size = 16 * 1024; # 16 GiB safety net
+  }];
+
+  boot.zswap.enable = true;
+
+  boot.kernel.sysctl = {
+    "vm.swappiness" = 40;
+  };
+
   services.xserver.enable = true;
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
