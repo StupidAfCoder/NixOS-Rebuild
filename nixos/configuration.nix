@@ -64,7 +64,16 @@
     packages = with pkgs; [];
   };
 
-  programs.hyprland.enable = true;
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true; # recommended for most users
+    xwayland.enable = true;
+  };
+
+  services.displayManager.sddm = {
+    enable = true;
+    wayland.enable = true;
+  };
 
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
