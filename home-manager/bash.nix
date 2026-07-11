@@ -11,7 +11,7 @@
 
             update = "nix flake update --flake ${flakeDir}";
 
-            list-gen = "sudo nixos-rebuild list-generations --flake ${flakeDir}#${hostname}";
+            list-gen = "sudo nixos-rebuild list-generations --flake ${flakeDir}#${hostName}";
 
             clean-all = "sudo nix-collect-garbage -d";
         };
