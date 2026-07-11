@@ -16,6 +16,8 @@
 	NIXOS_OZONE_WL = "1";
   };
 
+  services.xserver.enable = true;
+
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Bootloader.
