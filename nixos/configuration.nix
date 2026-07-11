@@ -33,6 +33,10 @@
 
   services.udisks2.enable = true;
 
+  # Thunar backend services for Trash, Networking, and Thumbnails
+  services.gvfs.enable = true; 
+  services.tumbler.enable = true;
+
   security.rtkit.enable = true; # Gives audio high-priority processing
   services.pipewire = {
     enable = true;

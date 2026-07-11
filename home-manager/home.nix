@@ -10,16 +10,10 @@
       htop
       fortune
 
-      kdePackages.dolphin
-      kdePackages.qtsvg                # Mandatory for rendering Papirus SVG icons in Qt6
-      kdePackages.qtwayland            # Native Wayland support for Qt6 apps
-      kdePackages.kio-admin            # Allows you to edit root files directly inside Dolphin
-      kdePackages.kio-extras           # Enables thumbnails, archives, and network drives
-      kdePackages.kdegraphics-thumbnailers # Enables image previews inside Dolphin
-    
-      kdePackages.qt6ct                # Qt6 Configuration Tool
-      kdePackages.qtstyleplugin-kvantum  # The actual Qt6 rendering engine
-      kdePackages.breeze-icons
+      # The Lightweight GTK File Manager Architecture
+      pkgs.thunar
+      pkgs.thunar-archive-plugin # Allows extracting zip/tar directly in Thunar
+      pkgs.thunar-volman         # Automounts USBs
 
       grim
       slurp
@@ -27,7 +21,7 @@
       hyprpicker
       satty
       
-      (inputs.quickshell.packages.${pkgs.system}.default.withModules [ 
+      (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [ 
         pkgs.kdePackages.qtwayland 
         pkgs.kdePackages.qt5compat 
       ])
@@ -62,24 +56,22 @@
      };
    };
 
-  /*gtk = {
+  gtk = {
     enable = true;
     theme = {
-      name = "Adwaita-dark";
-      package = pkgs.adwaita-icon-theme; # Standard base GTK theme
+      name = "Tokyonight-Dark";
+      package = pkgs.tokyonight-gtk-theme; 
     };
     iconTheme = {
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
-    # Ensures GTK applications use your custom cursor too
-    #cursorTheme = {};
-  };*/
+  };
 
   qt = {
     enable = true;
-    platformTheme.name = "qtct";
-    style.name = "kvantum";
+    platformTheme.name = "gtk";
+    style.name = "gtk2";
   };
 
   imports = [
