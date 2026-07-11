@@ -9,11 +9,19 @@
       fastfetch
       htop
       fortune
-
-      # The Lightweight GTK File Manager Architecture
-      pkgs.thunar
-      pkgs.thunar-archive-plugin # Allows extracting zip/tar directly in Thunar
-      pkgs.thunar-volman         # Automounts USBs
+      killall
+    
+    (pkgs.thunar.override {
+      thunarPlugins = with pkgs; [
+          thunar-archive-plugin
+          thunar-volman
+      ];
+    })
+      
+      # The Archive Backend Engines
+      file-roller  # The graphical UI that actually processes the extraction
+      unzip        # Core CLI tool to read zips
+      zip          # Core CLI tool to create zips
 
       grim
       slurp
@@ -56,6 +64,28 @@
      };
    };
 
+  home.pointerCursor = {
+    gtk.enable = true;
+    x11.enable = true;
+    name = "MeguminCursor";
+    size = 24;
+    
+    # We build a custom package locally instead of fetching from a dead URL
+    package = pkgs.stdenv.mkDerivation {
+      pname = "megumin-cursor";
+      version = "1.0";
+      
+      # Points to the folder we just moved into your dotfiles repo
+      src = ../cursors/MeguminCursor;
+      
+      # stdenv automatically 'cd's into the src directory, so we just copy everything inside it (.)
+      installPhase = ''
+        mkdir -p $out/share/icons/MeguminCursor
+        cp -R . $out/share/icons/MeguminCursor/
+      '';
+    };
+  };
+
   gtk = {
     enable = true;
     theme = {
@@ -65,6 +95,10 @@
     iconTheme = {
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
+    };
+    cursorTheme = {
+      name = "MeguminCursor";
+      size = 24;
     };
   };
 
