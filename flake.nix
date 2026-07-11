@@ -18,15 +18,15 @@
       specialArgs = { inherit inputs; }; 
       
       modules = [
-        ./hardware-configuration.nix
-        ./configuration.nix
+        ./nixos/hardware-configuration.nix
+        ./nixos/configuration.nix
         
         home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           
-          home-manager.users.swami = import ./home.nix;
+          home-manager.users.swami = import ./home-manager/home.nix;
         }
       ];
     };
