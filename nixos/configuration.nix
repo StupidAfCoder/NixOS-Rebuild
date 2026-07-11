@@ -27,6 +27,8 @@
     "vm.swappiness" = 40;
   };
 
+  systemd.oomd.enable = true;
+
   services.xserver.enable = true;
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
