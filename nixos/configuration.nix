@@ -13,7 +13,7 @@
   environment.sessionVariables = {
   	# Force applications to use the NVIDIA VA-API driver
   	LIBVA_DRIVER_NAME = "nvidia";
-	NIXOS_OZONE_WL = "1";
+	  NIXOS_OZONE_WL = "1";
   };
 
   services.xserver.enable = true;
@@ -31,6 +31,8 @@
     };
     efi.canTouchEfiVariables = true;
   };
+
+  boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
 
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -91,11 +93,9 @@
   # $ nix search wget
   environment.systemPackages = with pkgs; [
      vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-     gcc
      kitty
      git
      wget
-     go
      firefox     
      # ffmpeg-full.override { withUnfree = true; }	
 
@@ -103,10 +103,10 @@
   ];
 
   hardware.graphics = {
- 	enable = true;
+ 	  enable = true;
 
-	enable32Bit = true;
-	extraPackages = with pkgs; [
+	  enable32Bit = true;
+	  extraPackages = with pkgs; [
     		nvidia-vaapi-driver
   	];
   };
@@ -114,12 +114,12 @@
   services.xserver.videoDrivers = ["nvidia"];
 
   hardware.nvidia = {
-	modesetting.enable = true;
-	powerManagement.enable = false;
-	powerManagement.finegrained = false;
-	open = true;
-	nvidiaSettings = true;
-	package = config.boot.kernelPackages.nvidiaPackages.stable;
+	  modesetting.enable = true;
+	  powerManagement.enable = false;
+	  powerManagement.finegrained = false;
+	  open = false;
+	  nvidiaSettings = true;
+	  package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 	
   nix.gc = {
