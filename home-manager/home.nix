@@ -25,5 +25,6 @@
   imports = [
       ./bash.nix
       ./ssh.nix
+      ./kitty.nix
   ];
 }
