@@ -31,6 +31,18 @@
 
   services.xserver.enable = true;
 
+  services.udisks2.enable = true;
+
+  security.rtkit.enable = true; # Gives audio high-priority processing
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you ever want to use JACK for pro audio, uncomment this:
+    # jack.enable = true; 
+  };
+
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # Bootloader.
