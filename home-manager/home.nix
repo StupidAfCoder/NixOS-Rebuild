@@ -156,6 +156,24 @@
     tray = "auto";
   };
 
+  systemd.user.services.polkit-kde-agent = {
+    Unit = {
+      Description = "KDE Polkit Authentication Agent";
+      Wants = [ "graphical-session.target" ]; # Required by the wiki
+      After = [ "graphical-session.target" ]; # Required by the wiki
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ]; # Required by the wiki
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.kdePackages.polkit-kde-agent-1}/libexec/polkit-kde-authentication-agent-1"; # Required by the wiki
+      Restart = "on-failure"; # Required by the wiki
+      RestartSec = 1; # Required by the wiki
+      TimeoutStopSec = 10; # Required by the wiki
+    };
+  };
+
   # Bluetooth Tray Applet
   services.blueman-applet.enable = true;
 

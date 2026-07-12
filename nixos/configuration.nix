@@ -132,17 +132,14 @@
       pkgs.kdePackages.qtsvg
       pkgs.kdePackages.qtdeclarative
       pkgs.kdePackages.qt5compat
+      pkgs.kdePackages.breeze
     ];
-
+    
     settings = {
       Theme = {
         CursorTheme = "breeze_cursors";
+      };
     };
-  };
-
-  environment.variables = {
-    WLR_NO_HARDWARE_CURSORS = "1";
-    QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
   };
 
   # Allow unfree packages
@@ -159,10 +156,11 @@
     inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
     pkgs.nicotine-plus
     kdePackages.polkit-kde-agent-1
-    kdePackages.breeze
     # ffmpeg-full.override { withUnfree = true; }	
 
     (inputs.pixie-sddm.packages.${pkgs.stdenv.hostPlatform.system}.pixie-sddm.override {
+        background = ./assets/87872-ski-mask-cat.jpeg; # Nix path or absolute path
+        avatar = ./assets/game.png;
         autoColor = true;                 # true/false
     })
 
