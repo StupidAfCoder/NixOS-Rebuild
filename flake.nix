@@ -19,6 +19,7 @@
     };
 
     awww.url = "git+https://codeberg.org/LGFae/awww";
+    pixie-sddm.url = "github:xCaptaiN09/pixie-sddm";
   };
 
   outputs = { self, nixpkgs, home-manager, ... }@inputs: {

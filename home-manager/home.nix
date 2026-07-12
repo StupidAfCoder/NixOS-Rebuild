@@ -19,16 +19,24 @@
         ];
       })
         
-      # The Archive Backend Engines
-      file-roller  # The graphical UI that actually processes the extraction
-      unzip        # Core CLI tool to read zips
-      zip          # Core CLI tool to create zips
+      file-roller  
+      unzip        
+      zip          
 
       grim
       slurp
       wl-clipboard
       hyprpicker
       satty
+
+      wallust
+      matugen
+      fuzzel
+
+      btop
+      rmpc
+      libnotify
+      mpc
       
       (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [ 
         pkgs.kdePackages.qtwayland 
@@ -119,6 +127,37 @@
     platformTheme.name = "gtk";
     style.name = "gtk2";
   };
+
+  #Systemd User defined Services
+  services.mpd = {
+    enable = true;
+    musicDirectory = "~/Music";
+    # Optional:
+    network.listenAddress = "127.0.0.1"; # if you want to allow non-localhost connections
+    network.startWhenNeeded = true; # systemd feature: only start MPD service upon connection to its socket
+
+    extraConfig = ''
+      audio_output {
+        type "pulse"
+        name "PipeWire PulseAudio"
+      }
+    '';
+  };
+
+  services.mako = {
+    enable = true;
+    settings = {
+      default-timeout = 5000;
+    };
+  };
+
+  services.udiskie = {
+    enable = true;
+    tray = "auto";
+  };
+
+  # Bluetooth Tray Applet
+  services.blueman-applet.enable = true;
 
   imports = [
       ./bash.nix

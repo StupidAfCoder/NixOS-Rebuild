@@ -13,7 +13,7 @@ hl.monitor({
 ---------------------
 local terminal    = "kitty"
 local fileManager = "thunar"
-local menu        = "hyprlauncher"
+local menu        = "fuzzel"
 local browser     = "firefox"
 
 -------------------
@@ -26,6 +26,14 @@ hl.on("hyprland.start", function ()
     -- The strictly correct NixOS GTK fix using dconf
     hl.exec_cmd("dconf write /org/gnome/desktop/interface/cursor-theme \"'MeguminCursor'\"")
     hl.exec_cmd("dconf write /org/gnome/desktop/interface/cursor-size 24")
+
+    --Wallpapers!
+    hl.exec_cmd("awww-daemon")
+    hl.exec_cmd("awww img ~/Pictures/Wallpapers/wallhaven-lywpjl_1920x1080.png --transition-type center")
+
+    --Kde authentication for sudo password gui
+    hl.exec_cmd("systemctl --user start hyprland-session.target")
+    hl.exec_cmd("/run/current-system/sw/libexec/polkit-kde-authentication-agent-1")
 end)
 
 -------------------------------
@@ -219,8 +227,8 @@ hl.config({
 
 hl.config({
     misc = {
-        force_default_wallpaper = -1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
-        disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
+        force_default_wallpaper = 1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
+        disable_hyprland_logo   = true, -- If true disables the random hyprland logo / anime girl background. :(
     },
 })
 
@@ -291,7 +299,7 @@ local closeWindowBind = hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 hl.bind("SUPER" .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
+hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
@@ -373,6 +381,20 @@ hl.window_rule({
     float = true,
     center = true,
     pin = true,
+})
+
+hl.window_rule({
+    name = "vscodium opacity",
+    match = { class = "codium" },
+
+    opacity = "0.85 override 0.45 override 1.0 override"
+})
+
+hl.window_rule({
+    name = "terminal-opacity",
+    match = { class = "kitty" },
+    -- Use " override" to set an exact value rather than a multiplier
+    opacity = "0.8 override 0.55 override 1.0 override", 
 })
 
 local suppressMaximizeRule = hl.window_rule({

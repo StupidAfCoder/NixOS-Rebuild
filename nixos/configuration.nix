@@ -21,6 +21,7 @@
     size = 16 * 1024; # 16 GiB safety net
   }];
 
+
   boot.zswap.enable = true;
 
   boot.kernel.sysctl = {
@@ -83,9 +84,10 @@
 
   # Set your time zone.
   time.timeZone = "Asia/Kolkata";
+  time.hardwareClockInLocalTime = true;
 
   # Select internationalisation properties.
-  i18n.defaultLocale = "en_IN";
+  i18n.defaultLocale = "en_US.UTF-8";
 
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "en_IN";
@@ -121,6 +123,26 @@
 
   services.displayManager.sddm = {
     enable = true;
+    theme = "pixie";
+    wayland.enable = true;
+
+    package = pkgs.kdePackages.sddm;
+  
+    extraPackages = [
+      pkgs.kdePackages.qtsvg
+      pkgs.kdePackages.qtdeclarative
+      pkgs.kdePackages.qt5compat
+    ];
+
+    settings = {
+      Theme = {
+        CursorTheme = "breeze_cursors";
+    };
+  };
+
+  environment.variables = {
+    WLR_NO_HARDWARE_CURSORS = "1";
+    QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
   };
 
   # Allow unfree packages
@@ -129,15 +151,22 @@
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
-     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-     kitty
-     git
-     wget
-     firefox     
-     inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
-     # ffmpeg-full.override { withUnfree = true; }	
+    vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
+    kitty
+    git
+    wget
+    firefox     
+    inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
+    pkgs.nicotine-plus
+    kdePackages.polkit-kde-agent-1
+    kdePackages.breeze
+    # ffmpeg-full.override { withUnfree = true; }	
 
-     vscodium-fhs
+    (inputs.pixie-sddm.packages.${pkgs.stdenv.hostPlatform.system}.pixie-sddm.override {
+        autoColor = true;                 # true/false
+    })
+
+    vscodium-fhs
   ];
 
   hardware.graphics = {
@@ -153,9 +182,9 @@
 
   hardware.nvidia = {
 	  modesetting.enable = true;
-	  powerManagement.enable = false;
+	  powerManagement.enable = true;
 	  powerManagement.finegrained = false;
-	  open = false;
+	  open = true;
 	  nvidiaSettings = true;
 	  package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
