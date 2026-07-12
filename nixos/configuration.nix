@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 {
   imports =
@@ -28,10 +28,13 @@
   };
 
   systemd.oomd.enable = true;
+  security.polkit.enable = true;
 
   services.xserver.enable = true;
 
   services.udisks2.enable = true;
+
+  services.tlp.enable = true;
 
   # Thunar backend services for Trash, Networking, and Thumbnails
   services.gvfs.enable = true; 
@@ -45,6 +48,11 @@
     pulse.enable = true;
     # If you ever want to use JACK for pro audio, uncomment this:
     # jack.enable = true; 
+  };
+
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
   };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -126,6 +134,7 @@
      git
      wget
      firefox     
+     inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
      # ffmpeg-full.override { withUnfree = true; }	
 
      vscodium-fhs

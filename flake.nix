@@ -17,6 +17,8 @@
       # Mismatched system dependencies will lead to crashes and other issues.
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    awww.url = "git+https://codeberg.org/LGFae/awww";
   };
 
   outputs = { self, nixpkgs, home-manager, ... }@inputs: {

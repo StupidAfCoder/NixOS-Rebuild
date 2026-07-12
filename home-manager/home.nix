@@ -10,14 +10,15 @@
       htop
       fortune
       killall
+      imv
     
-    (pkgs.thunar.override {
-      thunarPlugins = with pkgs; [
-          thunar-archive-plugin
-          thunar-volman
-      ];
-    })
-      
+      (pkgs.thunar.override {
+        thunarPlugins = with pkgs; [
+            thunar-archive-plugin
+            thunar-volman
+        ];
+      })
+        
       # The Archive Backend Engines
       file-roller  # The graphical UI that actually processes the extraction
       unzip        # Core CLI tool to read zips
@@ -50,8 +51,19 @@
   # This guarantees Quickshell and other apps can find your Nix binaries.
   xdg.configFile."uwsm/env".source = "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
-  # We still symlink the Lua file directly so we can write real code, not Nix-generated strings.
-  xdg.configFile."hypr/hyprland.lua".source = ../hyprland.lua;
+  # This is some crazy command that links the hyprland.lua file to the home manager in it's mutable state meaning if you save the hyprland.lua the changes are real time (I believe it is magic)
+  xdg.configFile."hypr/hyprland.lua".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/hyprland.lua";
+
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "image/jpeg" = [ "imv.desktop" ];
+      "image/png"  = [ "imv.desktop" ];
+      "image/gif"  = [ "imv.desktop" ];
+      "image/webp" = [ "imv.desktop" ];
+      "image/svg+xml" = [ "imv.desktop" ];
+    };
+  };
 
   # Modernized Git Configuration
    programs.git = {
