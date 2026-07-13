@@ -19,7 +19,11 @@
     };
 
     awww.url = "git+https://codeberg.org/LGFae/awww";
-    pixie-sddm.url = "github:xCaptaiN09/pixie-sddm";
+    qylock.url = "github:Darkkal44/qylock";
+    ##pixie-sddm.url = "github:xCaptaiN09/pixie-sddm";
+    elegant-grub2-themes = {
+      url = "github:vinceliuice/elegant-grub2-themes";
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, ... }@inputs: {
@@ -33,6 +37,11 @@
         ./nixos/hardware-configuration.nix
         ./nixos/configuration.nix
         
+        ##Grub theme
+        inputs.elegant-grub2-themes.nixosModules.default
+        ##SDDM theme
+        qylock.nixosModules.default
+
         home-manager.nixosModules.home-manager
         {
           home-manager.useGlobalPkgs = true;

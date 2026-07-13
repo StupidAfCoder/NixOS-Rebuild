@@ -20,6 +20,41 @@
         "url": "https://codeberg.org/LGFae/awww"
       }
     },
+    "elegant-grub2-theme-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1782202092,
+        "narHash": "sha256-4yPldMZ7g6FrGGvoF2oxvS6cGlM2X/ALX0mfq/Dax8c=",
+        "owner": "vinceliuice",
+        "repo": "Elegant-grub2-themes",
+        "rev": "f8a8d41c8f306f8bdfae41db1a425cf0a2451477",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vinceliuice",
+        "repo": "Elegant-grub2-themes",
+        "type": "github"
+      }
+    },
+    "elegant-grub2-themes": {
+      "inputs": {
+        "elegant-grub2-theme-src": "elegant-grub2-theme-src",
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "lastModified": 1782202092,
+        "narHash": "sha256-4yPldMZ7g6FrGGvoF2oxvS6cGlM2X/ALX0mfq/Dax8c=",
+        "owner": "vinceliuice",
+        "repo": "elegant-grub2-themes",
+        "rev": "f8a8d41c8f306f8bdfae41db1a425cf0a2451477",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vinceliuice",
+        "repo": "elegant-grub2-themes",
+        "type": "github"
+      }
+    },
     "flake-compat": {
       "flake": false,
       "locked": {
@@ -93,6 +128,22 @@
     },
     "nixpkgs_2": {
       "locked": {
+        "lastModified": 1783776592,
+        "narHash": "sha256-UgCQzxeWI75XM8G+hPrPh+MKzEPjG3SpAj7dtqSbksA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e7a3ca8092b61ff85b6a45bf863ea2b2d6a661b3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
         "lastModified": 1783549019,
         "narHash": "sha256-0XnckG4ZhBmAsYa9mLuEIFowBG0fDGPLHduQGsbMS4A=",
         "owner": "nixos",
@@ -107,7 +158,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_3": {
+    "nixpkgs_4": {
       "locked": {
         "lastModified": 1776877367,
         "narHash": "sha256-EHq1/OX139R1RvBzOJ0aMRT3xnWyqtHBRUBuO1gFzjI=",
@@ -126,7 +177,7 @@
     "pixie-sddm": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs_3"
+        "nixpkgs": "nixpkgs_4"
       },
       "locked": {
         "lastModified": 1777827483,
@@ -165,8 +216,9 @@
     "root": {
       "inputs": {
         "awww": "awww",
+        "elegant-grub2-themes": "elegant-grub2-themes",
         "home-manager": "home-manager",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs_3",
         "pixie-sddm": "pixie-sddm",
         "quickshell": "quickshell"
       }

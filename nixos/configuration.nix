@@ -4,6 +4,27 @@
 
 { config, pkgs, inputs, ... }:
 
+let
+  # Define your custom system package right here in memory
+  megumin-cursor = pkgs.stdenvNoCC.mkDerivation {
+    pname = "megumin-cursor";
+    version = "1.0";
+    
+    # Point this strictly to the local Git-tracked folder
+    src = ./assets/MeguminCursor; 
+    
+    # We don't need to 'make' or 'build' anything, just install
+    dontBuild = true; 
+    
+    installPhase = ''
+      # Create the standard Linux icon directory structure inside the Nix store
+      mkdir -p $out/share/icons/MeguminCursor
+      
+      # Copy all files from the source into the new store path
+      cp -R . $out/share/icons/MeguminCursor/
+    '';
+  };
+in
 {
   imports =
     [ # Include the results of the hardware scan.
@@ -68,6 +89,16 @@
       useOSProber = true;
     };
     efi.canTouchEfiVariables = true;
+
+    elegant-grub2-theme = {
+      enable = true;
+      theme = "mountain"; # Options: forest, mojave, mountain, wave
+      type = "blur";    # Options: window, float, sharp, blur
+      side = "left";    # Options: left, right
+      color = "dark";   # Options: dark, light
+      screen = "1080p"; # Options: 1080p, 2k, 4k
+      logo = "system";  # Options: default, system
+    };
   };
 
   boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
@@ -123,8 +154,9 @@
 
   services.displayManager.sddm = {
     enable = true;
-    theme = "pixie";
+    ##theme = "pixie";
     wayland.enable = true;
+    compositor = "kwin";
 
     package = pkgs.kdePackages.sddm;
   
@@ -132,14 +164,20 @@
       pkgs.kdePackages.qtsvg
       pkgs.kdePackages.qtdeclarative
       pkgs.kdePackages.qt5compat
-      pkgs.kdePackages.breeze
     ];
-    
+
     settings = {
       Theme = {
-        CursorTheme = "breeze_cursors";
+        CursorTheme = "MeguminCursor"; # Instruct SDDM to use it
       };
     };
+  };
+
+  programs.qylock = {
+            enable = true;
+            theme = "pixel-emerald";          # any directory name under themes/
+            # sddm.enable = true;             # installs theme + sets it active (default)
+            # quickshell.enable = true;       # adds `qylock-lock` to PATH (default)
   };
 
   # Allow unfree packages
@@ -156,6 +194,7 @@
     inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
     pkgs.nicotine-plus
     lxqt.lxqt-policykit
+    megumin-cursor
     # ffmpeg-full.override { withUnfree = true; }	
 
     (inputs.pixie-sddm.packages.${pkgs.stdenv.hostPlatform.system}.pixie-sddm.override {

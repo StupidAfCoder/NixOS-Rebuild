@@ -383,6 +383,25 @@ hl.window_rule({
 })
 
 hl.window_rule({
+    match = {
+        title = "Authentication Required"
+    },
+    float = true,
+    center = true,
+    pin = true,
+})
+
+hl.window_rule({
+    match = {
+        class = "thunar",
+        title = "Rename .*"
+    },
+    float = true,
+    center = true,
+    pin = true,
+})
+
+hl.window_rule({
     name = "vscodium opacity",
     match = { class = "codium" },
 
