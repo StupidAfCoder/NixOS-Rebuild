@@ -20,13 +20,12 @@
 
     awww.url = "git+https://codeberg.org/LGFae/awww";
     qylock.url = "github:Darkkal44/qylock";
-    ##pixie-sddm.url = "github:xCaptaiN09/pixie-sddm";
     elegant-grub2-themes = {
       url = "github:vinceliuice/elegant-grub2-themes";
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... }@inputs: {
+  outputs = { self, nixpkgs, qylock, home-manager, ... }@inputs: {
     
     nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";

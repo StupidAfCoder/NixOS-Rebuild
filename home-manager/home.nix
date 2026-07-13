@@ -84,28 +84,6 @@
      };
    };
 
-  /*home.pointerCursor = {
-    gtk.enable = true;
-    x11.enable = true;
-    name = "MeguminCursor";
-    size = 24;
-    
-    # We build a custom package locally instead of fetching from a dead URL
-    package = pkgs.stdenv.mkDerivation {
-      pname = "megumin-cursor";
-      version = "1.0";
-      
-      # Points to the folder we just moved into your dotfiles repo
-      src = ../cursors/MeguminCursor;
-      
-      # stdenv automatically 'cd's into the src directory, so we just copy everything inside it (.)
-      installPhase = ''
-        mkdir -p $out/share/icons/MeguminCursor
-        cp -R . $out/share/icons/MeguminCursor/
-      '';
-    };
-  };*/
-
   gtk = {
     enable = true;
     theme = {

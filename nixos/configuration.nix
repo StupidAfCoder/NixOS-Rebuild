@@ -35,6 +35,8 @@ in
   	# Force applications to use the NVIDIA VA-API driver
   	LIBVA_DRIVER_NAME = "nvidia";
 	  NIXOS_OZONE_WL = "1";
+    XCURSOR_THEME = "MeguminCursor";
+    XCURSOR_SIZE = "24";
   };
 
   swapDevices = [{
@@ -154,9 +156,9 @@ in
 
   services.displayManager.sddm = {
     enable = true;
-    ##theme = "pixie";
-    wayland.enable = true;
-    compositor = "kwin";
+    wayland = {
+      enable = true;
+    };
 
     package = pkgs.kdePackages.sddm;
   
@@ -164,20 +166,23 @@ in
       pkgs.kdePackages.qtsvg
       pkgs.kdePackages.qtdeclarative
       pkgs.kdePackages.qt5compat
+      pkgs.kdePackages.qtmultimedia
+      pkgs.kdePackages.qtwayland
     ];
 
     settings = {
       Theme = {
-        CursorTheme = "MeguminCursor"; # Instruct SDDM to use it
+        CursorTheme = "MeguminCursor";
+        CursorSize = 24;
       };
     };
   };
 
   programs.qylock = {
             enable = true;
-            theme = "pixel-emerald";          # any directory name under themes/
-            # sddm.enable = true;             # installs theme + sets it active (default)
-            # quickshell.enable = true;       # adds `qylock-lock` to PATH (default)
+            theme = "forest";          # any directory name under themes/
+            sddm.enable = true;             # installs theme + sets it active (default)
+            #quickshell.enable = true;       # adds `qylock-lock` to PATH (default)
   };
 
   # Allow unfree packages
@@ -196,12 +201,6 @@ in
     lxqt.lxqt-policykit
     megumin-cursor
     # ffmpeg-full.override { withUnfree = true; }	
-
-    (inputs.pixie-sddm.packages.${pkgs.stdenv.hostPlatform.system}.pixie-sddm.override {
-        background = ./assets/nice.png; # Nix path or absolute path
-        avatar = ./assets/music-dog.png;
-        autoColor = true;                 # true/false
-    })
 
     vscodium-fhs
   ];
