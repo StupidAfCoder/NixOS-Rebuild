@@ -1,5 +1,22 @@
 { config, pkgs, inputs, ... }:
 
+let
+  pixelarticons = pkgs.stdenvNoCC.mkDerivation {
+    pname = "pixelarticons";
+    version = "unstable-2024";
+    src = pkgs.fetchFromGitHub {
+      owner = "halfmage";
+      repo = "pixelarticons";
+      rev = "efb6e172f2cec1abb1fb61a9a7bfe60e671ec002";
+      hash = "sha256-5GNscKfRnZqYeBUc3B8ESUY7scifJUjASpbxuk6iWRY=";
+    };
+    dontBuild = true;
+    installPhase = ''
+      mkdir -p $out/share/pixelarticons
+      cp -r svg $out/share/pixelarticons/
+    '';
+  };
+in
 {
     home.stateVersion = "26.05";
     home.homeDirectory = "/home/swami";
@@ -37,10 +54,14 @@
       rmpc
       libnotify
       mpc
-      
+
+      pixelarticons
+
       (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [ 
         pkgs.kdePackages.qtwayland 
         pkgs.kdePackages.qt5compat 
+        pkgs.kdePackages.qtsvg          # SVG icon rendering in QML
+        pkgs.kdePackages.qtmultimedia
       ])
     ];
 
@@ -102,8 +123,8 @@
 
   qt = {
     enable = true;
-    platformTheme.name = "gtk";
-    style.name = "gtk2";
+    platformTheme.name = "qtct";
+    style.name = "kvantum";
   };
 
   #Systemd User defined Services
@@ -141,5 +162,6 @@
       ./bash.nix
       ./ssh.nix
       ./kitty.nix
+      ./font.nix
   ];
 }

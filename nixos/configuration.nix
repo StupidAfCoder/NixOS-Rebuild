@@ -24,6 +24,21 @@ let
       cp -R . $out/share/icons/MeguminCursor/
     '';
   };
+
+  pixel-operator = pkgs.stdenvNoCC.mkDerivation {
+    pname = "pixel-operator";
+    version = "2018.10.04";
+    src = pkgs.fetchzip {
+      url = "https://dl.dafont.com/dl/?f=pixel_operator";
+      sha256 = "1a6wb3awlc5qn2wbw1iy03c759m97gl9gnsqn9iwjdjlixqzfa9l";
+      extension = "zip";
+    };
+    dontBuild = true;
+    installPhase = ''
+      mkdir -p $out/share/fonts/truetype
+      cp *.ttf $out/share/fonts/truetype/
+    '';
+  };
 in
 {
   imports =
@@ -200,10 +215,35 @@ in
     pkgs.nicotine-plus
     lxqt.lxqt-policykit
     megumin-cursor
+
+    brightnessctl     # brightness widget
+    ddcutil           # external monitor brightness control (optional)
+    lm_sensors        # temp/sensor widgets
+    libqalculate      # if you build a calculator module
     # ffmpeg-full.override { withUnfree = true; }	
+
+    kdePackages.qt6ct
+    libsForQt5.qtstyleplugin-kvantum
+    kdePackages.qtstyleplugin-kvantum
+
+    adw-gtk3
+
+    cmake
+    ninja
+    pkg-config
+    clang-tools       # clang-format, clangd
+    qt6.qtdeclarative # QML tooling incl. qmlformat, qmllint
+
+    libcava
+    aubio
 
     vscodium-fhs
   ];
+
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
+  };
 
   hardware.graphics = {
  	  enable = true;
@@ -233,6 +273,12 @@ in
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
+    cozette
+    google-fonts
+    nerd-fonts.caskaydia-cove  # good icon coverage if you want it — swap for any nerd font you like
+    rubik                      # optional, only if you like Caelestia's UI typeface
+    material-symbols
+    pixel-operator
   ];
 
   nix.settings.auto-optimise-store = true;
