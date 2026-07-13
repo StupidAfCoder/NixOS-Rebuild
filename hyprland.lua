@@ -32,7 +32,7 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("awww img ~/Pictures/Wallpapers/wallhaven-lywpjl_1920x1080.png --transition-type center")
 
     --Kde authentication for sudo password gui
-    hl.exec_cmd("systemctl --user start polkit-kde-agent")
+    hl.exec_cmd("lxqt-policykit-agent")
 end)
 
 -------------------------------

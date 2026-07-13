@@ -155,7 +155,7 @@
     firefox     
     inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
     pkgs.nicotine-plus
-    kdePackages.polkit-kde-agent-1
+    lxqt.lxqt-policykit
     # ffmpeg-full.override { withUnfree = true; }	
 
     (inputs.pixie-sddm.packages.${pkgs.stdenv.hostPlatform.system}.pixie-sddm.override {
