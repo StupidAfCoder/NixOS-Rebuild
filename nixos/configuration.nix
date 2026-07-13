@@ -159,8 +159,8 @@
     # ffmpeg-full.override { withUnfree = true; }	
 
     (inputs.pixie-sddm.packages.${pkgs.stdenv.hostPlatform.system}.pixie-sddm.override {
-        background = ./assets/87872-ski-mask-cat.jpeg; # Nix path or absolute path
-        avatar = ./assets/game.png;
+        background = ./assets/game.png; # Nix path or absolute path
+        avatar = ./assets/87872-ski-mask-cat.jpeg;
         autoColor = true;                 # true/false
     })
 
