@@ -39,6 +39,7 @@ in
       file-roller  
       unzip        
       zip          
+      foot
 
       grim
       slurp
@@ -82,6 +83,7 @@ in
 
   # This is some crazy command that links the hyprland.lua file to the home manager in it's mutable state meaning if you save the hyprland.lua the changes are real time (I believe it is magic)
   xdg.configFile."hypr/hyprland.lua".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/hyprland.lua";
+  xdg.configFile."quickshell".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/quickshell";
 
   xdg.mimeApps = {
     enable = true;
@@ -143,12 +145,12 @@ in
     '';
   };
 
-  services.mako = {
+  /*services.mako = {
     enable = true;
     settings = {
       default-timeout = 5000;
     };
-  };
+  };*/
 
   services.udiskie = {
     enable = true;
@@ -157,6 +159,19 @@ in
 
   # Bluetooth Tray Applet
   services.blueman-applet.enable = true;
+
+  programs.foot = {
+    enable = true;
+    settings = {
+      main = {
+        dpi-aware = "yes";
+        font = "Cozette:size=13";
+      };
+      mouse = {
+        hide-when-typing = "yes";
+      };
+    };
+  };
 
   imports = [
       ./bash.nix

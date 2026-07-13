@@ -176,8 +176,8 @@ hl.animation({ leaf = "borderangle", enabled = true, speed = 4, bezier = "linear
 
 -- 6. Workspaces
 -- Workspaces
-hl.animation({ leaf = "workspaces",       enabled = true, speed = 6, bezier = "md3_decel", style = "slidefade 15%" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 6, bezier = "md3_decel", style = "slidevert" })
+hl.animation({ leaf = "workspaces",       enabled = true, speed = 3, bezier = "md3_decel", style = "slidefade 15%" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, bezier = "md3_decel", style = "slidevert" })
 -- 7. Zoom
 hl.animation({ leaf = "zoomFactor", enabled = true, speed = 4, bezier = "fluent_decel" })
 

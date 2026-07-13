@@ -32,6 +32,7 @@ let
       url = "https://dl.dafont.com/dl/?f=pixel_operator";
       sha256 = "1a6wb3awlc5qn2wbw1iy03c759m97gl9gnsqn9iwjdjlixqzfa9l";
       extension = "zip";
+      stripRoot = false;
     };
     dontBuild = true;
     installPhase = ''

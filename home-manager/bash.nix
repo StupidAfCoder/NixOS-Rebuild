@@ -7,6 +7,7 @@
             hostName = "nixos";
         in {
             rebuild = "sudo nixos-rebuild switch --flake ${flakeDir}#${hostName}";
+            dry-build = "sudo nixos-rebuild dry-build --flake ${flakeDir}#${hostName}";
             test-rebuild = "sudo nixos-rebuild test --flake ${flakeDir}#${hostName}";
 
             update = "nix flake update --flake ${flakeDir}";
