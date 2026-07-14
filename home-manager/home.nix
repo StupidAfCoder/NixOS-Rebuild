@@ -84,6 +84,7 @@ in
   # This is some crazy command that links the hyprland.lua file to the home manager in it's mutable state meaning if you save the hyprland.lua the changes are real time (I believe it is magic)
   xdg.configFile."hypr/hyprland.lua".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/hyprland.lua";
   xdg.configFile."quickshell".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/quickshell";
+  xdg.dataFile."pixelarticons".source = "${pixelarticons}/share/pixelarticons/";
 
   xdg.mimeApps = {
     enable = true;
@@ -130,6 +131,25 @@ in
   };
 
   #Systemd User defined Services
+  systemd.user.services.quickshell = {
+    Unit = {
+      Description = "Quickshell desktop shell";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [
+        pkgs.kdePackages.qtwayland
+        pkgs.kdePackages.qt5compat
+        pkgs.kdePackages.qtsvg
+        pkgs.kdePackages.qtmultimedia
+      ]}/bin/quickshell";
+      Restart = "on-failure";
+      RestartSec = 2;
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+
   services.mpd = {
     enable = true;
     musicDirectory = "~/Music";
@@ -144,13 +164,6 @@ in
       }
     '';
   };
-
-  /*services.mako = {
-    enable = true;
-    settings = {
-      default-timeout = 5000;
-    };
-  };*/
 
   services.udiskie = {
     enable = true;
