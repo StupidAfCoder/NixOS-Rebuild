@@ -238,6 +238,8 @@ in
     libcava
     aubio
 
+    aseprite
+
     vscodium-fhs
   ];
 

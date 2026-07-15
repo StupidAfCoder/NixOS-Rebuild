@@ -1,6 +1,7 @@
 import Quickshell
 import QtQuick
 import "notifications"
+import "bar"
 
 ShellRoot {
     id: root
@@ -32,4 +33,6 @@ ShellRoot {
             }
         }
     }
+
+    BarManager {}
 }

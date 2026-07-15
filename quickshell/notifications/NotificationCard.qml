@@ -261,7 +261,7 @@ Item {
                         id: chevronWrapper
                         visible: bodyText.truncated || root.expanded
                         Layout.alignment: Qt.AlignHCenter
-                        Layout.topMargin: 2
+                        Layout.topMargin: root.expanded ? 8 : 2
                         width: 16
                         height: 16
 

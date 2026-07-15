@@ -56,6 +56,9 @@ in
       libnotify
       mpc
 
+      zathura
+      foliate
+
       pixelarticons
 
       (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [ 

@@ -48,12 +48,12 @@ Scope {
                     model: server.trackedNotifications
 
                     add: Transition {
-                        NumberAnimation { property: "revealProgress"; from: 0; to: 1; duration: 420; easing.type: Easing.OutQuint }
-                        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 180 }
+                        NumberAnimation { property: "revealProgress"; from: 0; to: 1; duration: 560; easing.type: Easing.OutQuint }
+                        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 240 }
                     }
                     remove: Transition {
-                        NumberAnimation { property: "revealProgress"; to: 0; duration: 220; easing.type: Easing.InQuint }
-                        NumberAnimation { property: "opacity"; to: 0; duration: 150 }
+                        NumberAnimation { property: "revealProgress"; to: 0; duration: 420; easing.type: Easing.InQuint }
+                        NumberAnimation { property: "opacity"; to: 0; duration: 240 }
                     }
                     displaced: Transition {
                         NumberAnimation { property: "y"; duration: 180; easing.type: Easing.OutQuad }
