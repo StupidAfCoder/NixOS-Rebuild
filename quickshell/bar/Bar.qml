@@ -37,8 +37,8 @@ Item {
 
             Image {
                 anchors.centerIn: parent
-                width: 14
-                height: 14
+                width: 22
+                height: 22
                 source: "file:///home/swami/.nixos_dotfiles/quickshell/bar/assets/NixOS.svg"
                 smooth: false
             }

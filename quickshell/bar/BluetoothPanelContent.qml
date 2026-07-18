@@ -6,7 +6,26 @@ Item {
     id: content
     implicitWidth: 280
     implicitHeight: 360
-    visible: BluetoothPanel.shown
+    width: implicitWidth
+    height: implicitHeight
+    anchors.horizontalCenter: parent.horizontalCenter
+    visible: true   // stays "visible" always -- it's fully off-screen when hidden, so nothing draws or catches clicks anyway
+
+    // resting position: tucked 2px into the bottom border (matches the
+    // old bottomMargin: -2). Hidden position: slid down until the box
+    // is entirely below the screen's bottom edge.
+    y: BluetoothPanel.shown ? (parent.height - height + 2) : parent.height
+
+    property bool everToggled: false
+    Connections {
+        target: BluetoothPanel
+        function onShownChanged() { content.everToggled = true }
+    }
+
+    Behavior on y {
+        enabled: content.everToggled
+        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+    }
 
     Rectangle {
         id: panelBox

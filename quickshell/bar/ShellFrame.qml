@@ -149,9 +149,6 @@ Scope {
 
                     BluetoothPanelContent {
                         id: bluetoothPanelContent
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.bottom: parent.bottom
-                        anchors.bottomMargin: -2
                     }
 
                     // --- Corner accents, straddling each true corner.

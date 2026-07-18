@@ -10,7 +10,7 @@ Item {
     id: root
 
     property int thickness: 4
-    property real sizeScale: 2.4       // arm length = thickness * sizeScale
+    property real sizeScale: 4       // arm length = thickness * sizeScale
     property color color: "#565f89"
     property color outlineColor: "#11131c"
     property string corner: "topLeft"   // "topLeft" | "topRight" | "bottomLeft" | "bottomRight"
