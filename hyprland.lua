@@ -82,32 +82,32 @@ hl.config({
 
 hl.config({
     general = {
-        gaps_in  = 6,
-        gaps_out = 9,
+        gaps_in  = 5,
+        gaps_out = 15,
 
         border_size = 2,
 
         col = {
-            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
-            inactive_border = "rgba(595959aa)",
+            active_border   = "rgba(565f89cc)",
+            inactive_border = "rgba(41486840)",
         },
 
-        -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
         resize_on_border = true,
 
-        -- Please see https://wiki.hypr.land/Configuring/Advanced-and-Cool/Tearing/ before you turn this on
         allow_tearing = false,
 
         layout = "dwindle",
     },
 
     decoration = {
-        rounding       = 5,
+        rounding       = 3,
         rounding_power = 3,
 
-        -- Change transparency of focused and unfocused windows
         active_opacity   = 1.0,
         inactive_opacity = 0.5,
+
+        dim_inactive = true,
+        dim_strength = 0.25,
 
         shadow = {
             enabled      = true,
@@ -146,39 +146,69 @@ hl.curve("easeOutQuint",   { type = "bezier", points = { {0.23, 1}, {0.32, 1} } 
 hl.curve("easeOutExpo",    { type = "bezier", points = { {0.16, 1}, {0.3, 1} } })
 hl.curve("linear",         { type = "bezier", points = { {0, 0}, {1, 1} } })
 hl.curve("md3_decel",    { type = "bezier", points = { {0.05, 0.7}, {0.1, 1.0} } })
+
+------------------------------------------------
+---- CONSOLE-STYLE BEZIER CURVES             ----
+------------------------------------------------
+
+-- crtPop: fast approach, tiny overshoot past 100% then settles --
+-- reads as content "snapping into" the screen, like a cartridge
+-- clicking into a slot, instead of gliding to a stop
+hl.curve("crtPop",     { type = "bezier", points = { {0.34, 1.28}, {0.44, 1.0} } })
+
+-- crtSnap: near-linear, very fast decel -- for things leaving/closing.
+-- Console UIs cut out fast rather than ease away.
+hl.curve("crtSnap",    { type = "bezier", points = { {0.5, 0}, {0.2, 1} } })
+
+-- crtSlide: sharper, more mechanical than easeOutQuint -- for
+-- workspace switches, reads like a page/cartridge flick rather than
+-- a smooth pane slide
+hl.curve("crtSlide",   { type = "bezier", points = { {0.65, 0}, {0.35, 1} } })
+
+-- keep your existing fluent_decel / linear / md3_decel curves too --
+
 ------------------------------------------------
 ---- THE COMPLETE ANIMATION TREE            ----
 ------------------------------------------------
 
--- 1. Global Fallback
-hl.animation({ leaf = "global", enabled = true, speed = 4, bezier = "fluent_decel" })
+------------------------------------------------
+---- THE COMPLETE ANIMATION TREE (revised)  ----
+------------------------------------------------
 
--- 2. Windows (Parent handles all window states unless overridden)
--- Using a 400ms speed with an 85% popin means it scales up quickly and smoothly
-hl.animation({ leaf = "windows", enabled = true, speed = 4, bezier = "fluent_decel", style = "popin 85%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 3, bezier = "easeOutExpo", style = "popin 85%" })
-hl.animation({ leaf = "windowsMove", enabled = true, speed = 4, bezier = "easeOutQuint" })
+-- 1. Global Fallback -- snappier baseline
+hl.animation({ leaf = "global", enabled = true, speed = 3, bezier = "crtPop" })
 
--- 3. Fades (Opacity changes)
-hl.animation({ leaf = "fade", enabled = true, speed = 3, bezier = "fluent_decel" })
-hl.animation({ leaf = "fadeSwitch", enabled = true, speed = 3, bezier = "fluent_decel" })
-hl.animation({ leaf = "fadeShadow", enabled = true, speed = 3, bezier = "fluent_decel" })
-hl.animation({ leaf = "fadeDim", enabled = true, speed = 3, bezier = "fluent_decel" })
+-- 2. Windows -- punchier pop-in, sharp exit
+hl.animation({ leaf = "windows",    enabled = true, speed = 3, bezier = "crtPop",  style = "popin 80%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 2, bezier = "crtSnap", style = "popin 80%" })
+hl.animation({ leaf = "windowsMove", enabled = true, speed = 3, bezier = "crtSlide" })
 
--- 4. Layers (Waybar, Wofi, Quickshell, popups)
-hl.animation({ leaf = "layers", enabled = true, speed = 4, bezier = "fluent_decel", style = "fade" })
-hl.animation({ leaf = "layersIn", enabled = true, speed = 4, bezier = "easeOutQuint", style = "fade" })
-hl.animation({ leaf = "layersOut", enabled = true, speed = 3, bezier = "easeOutExpo", style = "fade" })
+-- 3. Fades -- keep quick, avoid floaty
+hl.animation({ leaf = "fade",       enabled = true, speed = 2, bezier = "crtSnap" })
+hl.animation({ leaf = "fadeSwitch", enabled = true, speed = 2, bezier = "crtSnap" })
+hl.animation({ leaf = "fadeShadow", enabled = true, speed = 2, bezier = "crtSnap" })
+hl.animation({ leaf = "fadeDim",    enabled = true, speed = 2, bezier = "crtSnap" })
 
--- 5. Borders and Glows (Static transitions, NO LOOPS)
-hl.animation({ leaf = "border", enabled = true, speed = 4, bezier = "fluent_decel" })
+-- 4. Layers (fuzzel, notifications, etc -- your Quickshell frame is
+-- already exempted via the no_anim layer_rule, so this only affects
+-- OTHER layer-shell surfaces)
+hl.animation({ leaf = "layers",    enabled = true, speed = 3, bezier = "crtPop",  style = "fade" })
+hl.animation({ leaf = "layersIn",  enabled = true, speed = 3, bezier = "crtPop",  style = "fade" })
+hl.animation({ leaf = "layersOut", enabled = true, speed = 2, bezier = "crtSnap", style = "fade" })
+
+-- 5. Borders and Glows -- LEAVE THESE SMOOTH, not punchy. A border
+-- color that overshoots or snaps looks like a rendering glitch, not
+-- a design choice -- this is the one place gliding is correct
+hl.animation({ leaf = "border",     enabled = true, speed = 4, bezier = "fluent_decel" })
 hl.animation({ leaf = "borderangle", enabled = true, speed = 4, bezier = "linear", style = "once" })
 
--- 6. Workspaces
--- Workspaces
-hl.animation({ leaf = "workspaces",       enabled = true, speed = 3, bezier = "md3_decel", style = "slidefade 15%" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, bezier = "md3_decel", style = "slidevert" })
--- 7. Zoom
+-- 6. Workspaces -- the biggest opportunity for "console" feel.
+-- Straight slide, no fade -- like flicking to the next screen/level,
+-- not a soft crossfade
+hl.animation({ leaf = "workspaces",       enabled = true, speed = 2, bezier = "crtSlide", style = "slide" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 2, bezier = "crtSlide", style = "slidevert" })
+
+-- 7. Zoom -- unchanged, this one's rare enough not to matter
 hl.animation({ leaf = "zoomFactor", enabled = true, speed = 4, bezier = "fluent_decel" })
 
 -- Ref https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
@@ -226,8 +256,15 @@ hl.config({
 
 hl.config({
     misc = {
-        force_default_wallpaper = 1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
-        disable_hyprland_logo   = true, -- If true disables the random hyprland logo / anime girl background. :(
+        background_color = "0x13141c",   -- matches your bezel color from
+                                        -- PowerMenuContent -- the gap now
+                                        -- reads as more console shell,
+                                        -- not exposed wallpaper
+        disable_hyprland_logo = true,     -- no logo showing through on an
+                                        -- empty workspace -- keeps the
+                                        -- illusion intact even with
+                                        -- nothing open
+        disable_splash_rendering = true,
     },
 })
 
@@ -324,7 +361,7 @@ hl.bind(mainMod .. " + SHIFT + K", hl.dsp.window.move({direction = "d"}))
 
 --ScreenShot Utility
 -- 1.Pick hex color from screen directly to clipboard
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("bash -c 'sleep 0.2 && hyprpicker -a; hyprctl dispatch forcerendererreload'"))
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("bash -c 'sleep 0.2 && hyprpicker -a; hyprctl dispatch forcerendererreload'"))
 
 -- 2.Capture entire monitor and open in Satty editor to annotate/save
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("grim - | satty --filename - --fullscreen --output-filename ~/Pictures/screenshot_$(date +'%Y%m%d_%H%M%S').png; hyprctl dispatch forcerendererreload"))
@@ -374,6 +411,13 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 -- and https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
 
 -- Example window rules that are useful
+hl.layer_rule({
+    name = "no-blur-frame",
+    match = { namespace = "^quickshell:frame$" },
+    no_anim = true,
+})
+
+
 hl.window_rule({
     match = { 
         class = "com.gabm.satty" 
