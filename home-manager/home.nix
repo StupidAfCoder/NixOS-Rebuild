@@ -28,6 +28,7 @@ in
       fortune
       killall
       imv
+      hyprlock
     
       (pkgs.thunar.override {
         thunarPlugins = with pkgs; [
@@ -111,6 +112,55 @@ in
      };
    };
 
+  programs.zathura = {
+    enable = true;
+    options = {
+      # Adjustments to match Sumatra's default opening style
+      adjust-open = "width";
+      pages-per-row = 1;
+      scroll-step = 60;
+
+      # Fix clipboard handling so copying text works seamlessly
+      selection-clipboard = "clipboard";
+
+      # Strip away the UI clutter to emulate Sumatra's clean viewport
+      statusbar-home-tilde = "true";
+      window-title-basename = "true";
+
+      # Enable smooth dark/recolored mode capabilities
+      recolor = "true";
+      recolor-keephue = "true";
+
+      # High-contrast, clean UI theme colors (Tokyonight-inspired)
+      default-bg = "#1a1b26";
+      default-fg = "#c0caf5";
+      statusbar-bg = "#16161e";
+      statusbar-fg = "#a9b1d6";
+      inputbar-bg = "#16161e";
+      inputbar-fg = "#ff9e64";
+
+      # Styling the Index Interface to make section searching highly legible
+      index-bg = "#1a1b26";
+      index-fg = "#c0caf5";
+      index-active-bg = "#414868";
+      index-active-fg = "#7aa2f7";
+
+      # Inside-document rendering colors (Dark Mode)
+      recolor-lightcolor = "#1a1b26";
+      recolor-darkcolor = "#c0caf5";
+    };
+    mappings = {
+      # Erase awkward default layouts and map intuitive half-page scrolling
+      "d" = "scroll half-down";
+      "u" = "scroll half-up";
+      
+      # Fast toggles
+      "R" = "reload";
+      "r" = "rotate";
+      "C" = "toggle_recolor";
+    };
+  };
+
   gtk = {
     enable = true;
     theme = {
@@ -167,6 +217,8 @@ in
       }
     '';
   };
+
+  services.mpris-proxy.enable = true;
 
   services.udiskie = {
     enable = true;

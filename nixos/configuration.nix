@@ -73,6 +73,8 @@ in
   services.xserver.enable = true;
 
   services.udisks2.enable = true;
+  services.upower.enable = true;
+  services.blueman.enable = true;
 
   services.tlp.enable = true;
 
@@ -94,6 +96,7 @@ in
     enable = true;
     powerOnBoot = true;
   };
+
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 

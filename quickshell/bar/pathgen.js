@@ -1,7 +1,6 @@
 .pragma library
 
 // Two-step pixel staircase corners instead of a single diagonal chamfer.
-// w, h = shape dimensions. cut = total corner inset. steps = stair count (2 = pixel-HUD feel).
 function pixelStairPath(w, h, cut, steps) {
     steps = steps || 2;
     var s = cut / steps;
@@ -32,9 +31,7 @@ function pixelStairPath(w, h, cut, steps) {
     return d.join(" ");
 }
 
-// Chamfered (45°-cut-corner) rect — used for the rivet cap discs.
-// Renders as a blocky octagon rather than a smooth circle, matching
-// the hard-edge pixel style of the rest of the bar.
+// Chamfered (45°-cut-corner) rect — used for the workspace chip/rivet caps.
 function chamferedRectPath(w, h, cut) {
     var c = Math.min(cut, w / 2, h / 2);
     var d = [];
@@ -47,6 +44,34 @@ function chamferedRectPath(w, h, cut) {
     d.push("L" + c + "," + h);
     d.push("L0," + (h - c));
     d.push("L0," + c);
+    d.push("Z");
+
+    return d.join(" ");
+}
+
+// Plain flush rectangle.
+function flushRectPath(w, h) {
+    return "M0,0 L" + w + ",0 L" + w + "," + h + " L0," + h + " Z";
+}
+
+// Pixel-stair corner bracket — an L-shaped frame piece. Drawn in
+// top-left orientation by default; rotate the Shape itself in QML for
+// the other 3 corners.
+function cornerBracketPath(size, thickness, steps) {
+    steps = steps || 2;
+    var s = thickness / steps;
+    var d = [];
+
+    // top arm
+    d.push("M0,0 L" + size + ",0 L" + size + "," + thickness + " L" + (thickness) + "," + thickness);
+    // stair down into the inner corner
+    for (var i = 0; i < steps; i++) {
+        d.push("L" + (thickness - s * i) + "," + (thickness + s * (i + 1)));
+        d.push("L" + (thickness - s * (i + 1)) + "," + (thickness + s * (i + 1)));
+    }
+    // left arm (down to bottom of bracket)
+    d.push("L" + thickness + "," + size);
+    d.push("L0," + size);
     d.push("Z");
 
     return d.join(" ");

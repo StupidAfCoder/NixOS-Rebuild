@@ -321,15 +321,16 @@ hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({direction = "r"}))
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.move({direction = "u"}))
 hl.bind(mainMod .. " + SHIFT + K", hl.dsp.window.move({direction = "d"}))
 
+
 --ScreenShot Utility
 -- 1.Pick hex color from screen directly to clipboard
-hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("bash -c 'sleep 0.2 && hyprpicker -a'"))
+hl.bind(mainMod .. " + P", hl.dsp.exec_cmd("bash -c 'sleep 0.2 && hyprpicker -a; hyprctl dispatch forcerendererreload'"))
 
 -- 2.Capture entire monitor and open in Satty editor to annotate/save
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("grim - | satty --filename - --fullscreen --output-filename ~/Pictures/screenshot_$(date +'%Y%m%d_%H%M%S').png"))
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd("grim - | satty --filename - --fullscreen --output-filename ~/Pictures/screenshot_$(date +'%Y%m%d_%H%M%S').png; hyprctl dispatch forcerendererreload"))
 
 -- 3. Drag region -> Open in Satty editor (draw arrows/copy/save)
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("bash -c 'sleep 0.2 && grim -g \"$(slurp)\" - | satty --filename - --output-filename ~/Pictures/screenshot_$(date +\"%Y%m%d_%H%M%S\").png'"))
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("bash -c 'sleep 0.2 && grim -g \"$(slurp)\" - | satty --filename - --output-filename ~/Pictures/screenshot_$(date +\"%Y%m%d_%H%M%S\").png; hyprctl dispatch forcerendererreload'"))
 
 -- 4. Instant silent region snip directly to clipboard (no editor)
 hl.bind(mainMod .. " + CONTROL + S", hl.dsp.exec_cmd("grim -g \"$(slurp)\" - | wl-copy"))
