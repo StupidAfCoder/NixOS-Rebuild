@@ -1,38 +1,46 @@
 import QtQuick
 import QtQuick.Layouts
 
-Item {
-    id: root
-    property string iconName: ""
+Rectangle {
+    id: btn
     property string label: ""
-    signal triggered()
+    property string iconName: ""
+    property color accent: "#7aa2f7"
+    signal clicked
 
-    width: 44
-    height: 52
+    Layout.preferredHeight: 32
+    color: mouseArea.containsMouse ? Qt.darker(accent, 3.2) : "transparent"
+    border.color: mouseArea.containsMouse ? accent : "#414868"
+    border.width: 1
+    antialiasing: false
 
-    ColumnLayout {
+    RowLayout {
         anchors.fill: parent
-        spacing: 4
+        anchors.leftMargin: 8
+        anchors.rightMargin: 8
+        spacing: 8
 
-        Image {
-            Layout.alignment: Qt.AlignHCenter
-            width: 20
-            height: 20
-            smooth: false
-            source: "file:///home/swami/.local/share/pixelarticons/svg/" + root.iconName
+        ColoredIcon {
+            Layout.preferredWidth: 12
+            Layout.preferredHeight: 12
+            iconName: btn.iconName
+            tint: mouseArea.containsMouse ? btn.accent : "#a9b1d6"
         }
+
         Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: root.label
-            color: "#c0caf5"
+            text: btn.label
+            color: mouseArea.containsMouse ? btn.accent : "#c0caf5"
             font.family: "Cozette"
             font.pixelSize: 9
+            Layout.fillWidth: true
         }
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
+        hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.triggered()
+        onClicked: btn.clicked()
     }
 }

@@ -135,6 +135,33 @@ Scope {
                         width: manager.borderThickness
                         color: manager.frameColor
                         antialiasing: false
+                        z: 5
+                    }
+
+                    // --- Full-screen dim scrim, only "live" while the
+                    // power menu is open. Clicking it closes the menu.
+                    // visible-gated so it drops out of the mask below
+                    // when hidden -- confirm Region actually excludes
+                    // invisible items on your Quickshell version; if
+                    // not, tell me and I'll switch this to a
+                    // width/height-collapse trick instead. ---
+                    Rectangle {
+                        id: dimScrim
+                        anchors.fill: parent
+                        color: "black"
+                        opacity: PowerMenu.shown ? 0.55 : 0
+                        visible: PowerMenu.shown
+                        antialiasing: false
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: PowerMenu.hide()
+                        }
+                        z: 3
                     }
 
                     // --- Left bar, same window/same coordinate space
@@ -149,6 +176,10 @@ Scope {
 
                     BluetoothPanelContent {
                         id: bluetoothPanelContent
+                    }
+
+                    PowerMenuContent {
+                        id: powerMenuContent
                     }
 
                     // --- Corner accents, straddling each true corner.
