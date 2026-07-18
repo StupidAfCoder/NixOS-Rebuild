@@ -190,15 +190,21 @@ Scope {
                         id: powerMenuContent
                     }
 
-                    // --- Corner accents, straddling each true corner.
-                    // Because everything above lives in `frame`, these
-                    // coordinates are exact -- no cross-window guessing. ---
+                    // --- Corner accents, pulled inward off the true
+                    // screen corner by exactly the bar/border
+                    // thickness, so each bracket's apex sits at the
+                    // INNER seam -- where the frame meets the actual
+                    // desktop area -- rather than flush with the
+                    // physical monitor edge. That inward pull is what
+                    // sells the "screen inside a screen" look. ---
                     CornerAccent {
                         corner: "topLeft"
                         thickness: manager.borderThickness
                         color: manager.accentColor
                         anchors.left: parent.left
                         anchors.top: parent.top
+                        anchors.leftMargin: manager.barWidth
+                        anchors.topMargin: manager.borderThickness
                         z: 10
                     }
                     CornerAccent {
@@ -207,6 +213,8 @@ Scope {
                         color: manager.accentColor
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
+                        anchors.leftMargin: manager.barWidth
+                        anchors.bottomMargin: manager.borderThickness
                         z: 10
                     }
                     CornerAccent {
@@ -215,6 +223,8 @@ Scope {
                         color: manager.accentColor
                         anchors.right: parent.right
                         anchors.top: parent.top
+                        anchors.rightMargin: manager.borderThickness
+                        anchors.topMargin: manager.borderThickness
                         z: 10
                     }
                     CornerAccent {
@@ -223,6 +233,8 @@ Scope {
                         color: manager.accentColor
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
+                        anchors.rightMargin: manager.borderThickness
+                        anchors.bottomMargin: manager.borderThickness
                         z: 10
                     }
                 }

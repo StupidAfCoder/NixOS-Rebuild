@@ -29,7 +29,7 @@ hl.on("hyprland.start", function ()
 
     --Wallpapers!
     hl.exec_cmd("awww-daemon")
-    hl.exec_cmd("awww img ~/Pictures/Wallpapers/wallhaven-lywpjl_1920x1080.png --transition-type center")
+    hl.exec_cmd("awww img ~/Pictures/Wallpapers/cosmic_tokyo_night.png --transition-type center")
 
     --Kde authentication for sudo password gui
     hl.exec_cmd("lxqt-policykit-agent")
