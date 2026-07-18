@@ -1,0 +1,215 @@
+import QtQuick
+import QtQuick.Layouts
+import "."
+
+Item {
+    id: content
+    implicitWidth: 280
+    implicitHeight: 360
+    visible: BluetoothPanel.shown
+
+    Rectangle {
+        id: panelBox
+        anchors.fill: parent
+        color: "#1a1b26"
+        antialiasing: false
+
+        // border on three sides only -- the bottom edge blends into
+        // the screen border strip instead of drawing its own seam
+        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#414868" }
+        Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: "#414868" }
+        Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: "#414868" }
+
+        MouseArea { anchors.fill: parent } // eat clicks so they don't fall through to desktop
+
+        Repeater {
+            model: [
+                { x: -1, y: -1, hFlip: false },
+                { x: panelBox.width - 9, y: -1, hFlip: true }
+            ]
+            delegate: Item {
+                x: modelData.x; y: modelData.y
+                width: 10; height: 10
+                Rectangle { width: 10; height: 3; antialiasing: false; color: "#565f89" }
+                Rectangle {
+                    width: 3; height: 10; antialiasing: false; color: "#565f89"
+                    x: modelData.hFlip ? 7 : 0
+                }
+            }
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 8
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+
+                Text {
+                    text: "Bluetooth"
+                    color: "#c0caf5"
+                    font.family: "Cozette"
+                    font.pixelSize: 11
+                    font.bold: true
+                    Layout.fillWidth: true
+                }
+
+                Rectangle {
+                    id: closeBtn
+                    width: 16; height: 16
+                    antialiasing: false
+                    color: closeArea.containsMouse ? "#f7768e" : "transparent"
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "x"
+                        color: closeArea.containsMouse ? "#1a1b26" : "#e0af68"
+                        font.family: "Cozette"
+                        font.pixelSize: 11
+                        font.bold: closeArea.containsMouse
+                    }
+
+                    MouseArea {
+                        id: closeArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: BluetoothPanel.hide()
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 6
+
+                Rectangle {
+                    Layout.preferredWidth: powerText.width + 12
+                    Layout.preferredHeight: 18
+                    color: "transparent"
+                    border.color: "#414868"
+                    border.width: 1
+                    antialiasing: false
+                    visible: BluetoothPanel.adapter !== null
+
+                    Text {
+                        id: powerText
+                        anchors.centerIn: parent
+                        text: BluetoothPanel.adapter && BluetoothPanel.adapter.enabled ? "on" : "off"
+                        color: BluetoothPanel.adapter && BluetoothPanel.adapter.enabled ? "#7aa2f7" : "#565f89"
+                        font.family: "Cozette"
+                        font.pixelSize: 8
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: BluetoothPanel.adapter.enabled = !BluetoothPanel.adapter.enabled
+                    }
+                }
+
+                Rectangle {
+                    Layout.preferredWidth: scanRow.width + 16
+                    Layout.preferredHeight: 18
+                    color: "transparent"
+                    border.color: "#414868"
+                    border.width: 1
+                    antialiasing: false
+                    visible: BluetoothPanel.adapter !== null && BluetoothPanel.adapter.enabled
+
+                    RowLayout {
+                        id: scanRow
+                        anchors.centerIn: parent
+                        spacing: 4
+
+                        Rectangle {
+                            width: 5; height: 5; antialiasing: false
+                            color: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? "#7aa2f7" : "#414868"
+                            SequentialAnimation on opacity {
+                                running: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering
+                                loops: Animation.Infinite
+                                NumberAnimation { to: 0.2; duration: 400 }
+                                NumberAnimation { to: 1.0; duration: 400 }
+                            }
+                        }
+
+                        Text {
+                            text: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? "scanning" : "scan"
+                            color: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? "#7aa2f7" : "#c0caf5"
+                            font.family: "Cozette"
+                            font.pixelSize: 8
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: BluetoothPanel.adapter.discovering = !BluetoothPanel.adapter.discovering
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Rectangle {
+                    visible: BluetoothPanel.connectedCount > 0
+                    Layout.preferredWidth: connText.width + 10
+                    Layout.preferredHeight: 16
+                    color: "#7aa2f7"
+                    antialiasing: false
+
+                    Text {
+                        id: connText
+                        anchors.centerIn: parent
+                        text: BluetoothPanel.connectedCount + " connected"
+                        color: "#1a1b26"
+                        font.family: "Cozette"
+                        font.pixelSize: 8
+                        font.bold: true
+                    }
+                }
+
+                Text {
+                    visible: BluetoothPanel.adapter && BluetoothPanel.adapter.devices.count > 0 && BluetoothPanel.connectedCount === 0
+                    text: BluetoothPanel.adapter ? BluetoothPanel.adapter.devices.count + " known" : ""
+                    color: "#565f89"
+                    font.family: "Cozette"
+                    font.pixelSize: 8
+                }
+            }
+
+            Rectangle { Layout.fillWidth: true; height: 1; color: "#414868"; antialiasing: false }
+
+            Flickable {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                contentHeight: deviceList.height
+
+                ColumnLayout {
+                    id: deviceList
+                    width: parent.width
+                    spacing: 2
+
+                    Repeater {
+                        model: BluetoothPanel.adapter ? BluetoothPanel.adapter.devices : []
+                        delegate: BluetoothDeviceRow {
+                            Layout.fillWidth: true
+                            required property var modelData
+                            device: modelData
+                        }
+                    }
+
+                    Text {
+                        visible: !BluetoothPanel.adapter || BluetoothPanel.adapter.devices.count === 0
+                        text: BluetoothPanel.adapter === null ? "no adapter found" : "no devices -- try scan"
+                        color: "#565f89"
+                        font.family: "Cozette"
+                        font.pixelSize: 9
+                        Layout.topMargin: 12
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+            }
+        }
+    }
+}

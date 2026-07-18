@@ -107,7 +107,10 @@ Scope {
                     // strips, and the empty space over your other
                     // windows) passes clicks straight through to
                     // whatever's underneath.
-                    mask: Region { item: barArea }
+                    mask: Region {
+                        Region { item: barArea }
+                        Region { item: bluetoothPanelContent }
+                    }
 
                     // --- Border strips, drawn edge-to-edge across the
                     // FULL window. The bar (below) is opaque and sits
@@ -125,6 +128,7 @@ Scope {
                         height: manager.borderThickness
                         color: manager.frameColor
                         antialiasing: false
+                        z: 5
                     }
                     Rectangle {
                         anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
@@ -143,6 +147,13 @@ Scope {
                         barWidth: manager.barWidth
                     }
 
+                    BluetoothPanelContent {
+                        id: bluetoothPanelContent
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: -2
+                    }
+
                     // --- Corner accents, straddling each true corner.
                     // Because everything above lives in `frame`, these
                     // coordinates are exact -- no cross-window guessing. ---
@@ -152,6 +163,7 @@ Scope {
                         color: manager.accentColor
                         anchors.left: parent.left
                         anchors.top: parent.top
+                        z: 10
                     }
                     CornerAccent {
                         corner: "bottomLeft"
@@ -159,6 +171,7 @@ Scope {
                         color: manager.accentColor
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
+                        z: 10
                     }
                     CornerAccent {
                         corner: "topRight"
@@ -166,6 +179,7 @@ Scope {
                         color: manager.accentColor
                         anchors.right: parent.right
                         anchors.top: parent.top
+                        z: 10
                     }
                     CornerAccent {
                         corner: "bottomRight"
@@ -173,6 +187,7 @@ Scope {
                         color: manager.accentColor
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
+                        z: 10
                     }
                 }
             }
