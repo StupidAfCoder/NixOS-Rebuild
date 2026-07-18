@@ -11,7 +11,7 @@ ColumnLayout {
     id: root
     spacing: 12
 
-    readonly property int iconSize: 20
+    readonly property int iconSize: 16
     readonly property color glowColor: "#7aa2f7"
     readonly property color dimColor: "#565f89"
     readonly property color warnColor: "#e0af68"

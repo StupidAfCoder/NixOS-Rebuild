@@ -273,31 +273,9 @@ Item {
 
         BarDivider { Layout.alignment: Qt.AlignHCenter; barWidth: 32 }
 
-        // --- System tray ---
-        Item {
+    // --- System tray ---
+        SystemTray {
             Layout.alignment: Qt.AlignHCenter
-            width: 24
-            height: 130
-
-            ColumnLayout {
-                anchors.centerIn: parent
-                spacing: 8
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "N"
-                    color: "#7982a9"
-                    font.family: "Cozette"
-                    font.pixelSize: 10
-                }
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "B"
-                    color: "#7982a9"
-                    font.family: "Cozette"
-                    font.pixelSize: 10
-                }
-            }
         }
     }
 }

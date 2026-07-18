@@ -149,7 +149,6 @@ Scope {
                     CornerAccent {
                         corner: "topLeft"
                         thickness: manager.borderThickness
-                        hangOut: 6
                         color: manager.accentColor
                         anchors.left: parent.left
                         anchors.top: parent.top
@@ -157,7 +156,6 @@ Scope {
                     CornerAccent {
                         corner: "bottomLeft"
                         thickness: manager.borderThickness
-                        hangOut: 6
                         color: manager.accentColor
                         anchors.left: parent.left
                         anchors.bottom: parent.bottom
@@ -165,7 +163,6 @@ Scope {
                     CornerAccent {
                         corner: "topRight"
                         thickness: manager.borderThickness
-                        hangOut: 6
                         color: manager.accentColor
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -173,7 +170,6 @@ Scope {
                     CornerAccent {
                         corner: "bottomRight"
                         thickness: manager.borderThickness
-                        hangOut: 6
                         color: manager.accentColor
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
