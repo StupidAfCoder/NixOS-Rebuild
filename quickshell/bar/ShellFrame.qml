@@ -110,6 +110,8 @@ Scope {
                     mask: Region {
                         Region { item: barArea }
                         Region { item: bluetoothPanelContent }
+                        Region { item: dimScrim }
+                        Region { item: powerMenuContent }
                     }
 
                     // --- Border strips, drawn edge-to-edge across the
@@ -147,11 +149,18 @@ Scope {
                     // width/height-collapse trick instead. ---
                     Rectangle {
                         id: dimScrim
-                        anchors.fill: parent
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        // width/height collapse to 0 when hidden -- this is the actual
+                        // fix. `visible: false` alone does NOT shrink the mask region,
+                        // since Region tracks geometry, not paint state.
+                        width: PowerMenu.shown ? parent.width : 0
+                        height: PowerMenu.shown ? parent.height : 0
                         color: "black"
                         opacity: PowerMenu.shown ? 0.55 : 0
                         visible: PowerMenu.shown
                         antialiasing: false
+                        z: 3
 
                         Behavior on opacity {
                             NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
@@ -160,8 +169,7 @@ Scope {
                         MouseArea {
                             anchors.fill: parent
                             onClicked: PowerMenu.hide()
-                        }
-                        z: 3
+                        }   
                     }
 
                     // --- Left bar, same window/same coordinate space

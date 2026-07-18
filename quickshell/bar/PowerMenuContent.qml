@@ -1,18 +1,18 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import "."
 
 Item {
     id: content
     implicitWidth: 200
-    implicitHeight: 340
+    implicitHeight: bezel.height
     width: implicitWidth
     height: implicitHeight
     anchors.verticalCenter: parent.verticalCenter
-    visible: true   // stays visible always -- fully off-screen when hidden, so nothing draws or catches clicks anyway
+    visible: true
+    z: 6
 
-    // resting position: tucked 2px into the right border. hidden
-    // position: slid right until the box is entirely off-screen.
     x: PowerMenu.shown ? (parent.width - width + 2) : parent.width
 
     Behavior on x {
@@ -20,151 +20,180 @@ Item {
     }
 
     Rectangle {
-        id: panelBox
-        anchors.fill: parent
-        color: "#1a1b26"
+        id: bezel
+        width: content.implicitWidth
+        height: panelBox.height + 12
+        color: "#13141c"
         antialiasing: false
+        z: 0
 
-        // border on three sides only -- the right edge blends into
-        // the screen border strip instead of drawing its own seam
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#414868" }
-        Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: "#414868" }
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#414868" }
-
-        MouseArea { anchors.fill: parent } // eat clicks so they don't fall through to the dim scrim
-
-        // top-left / bottom-left corner brackets only -- the right
-        // edge has nothing to bracket against, same logic as the
-        // bluetooth panel's bottom edge
         Repeater {
             model: [
-                { x: -1, y: -1, vFlip: false },
-                { x: -1, y: panelBox.height - 9, vFlip: true }
+                { x: 3, y: 3 }, { x: bezel.width - 5, y: 3 },
+                { x: 3, y: bezel.height - 5 }, { x: bezel.width - 5, y: bezel.height - 5 }
             ]
-            delegate: Item {
+            delegate: Rectangle {
                 x: modelData.x; y: modelData.y
-                width: 10; height: 10
-                Rectangle {
-                    width: 3; height: 10; antialiasing: false; color: "#565f89"
-                }
-                Rectangle {
-                    width: 10; height: 3; antialiasing: false; color: "#565f89"
-                    y: modelData.vFlip ? 7 : 0
-                }
+                width: 2; height: 2
+                color: "#565f89"
+                antialiasing: false
             }
         }
 
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 10
-            spacing: 10
+        Rectangle {
+            id: panelBox
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 6
+            width: bezel.width - 12
+            height: mainColumn.implicitHeight + 20
+            color: "#1a1b26"
+            antialiasing: false
+            z: 0
+            clip: true
 
-            RowLayout {
-                Layout.fillWidth: true
-                Text {
-                    text: "Power"
-                    color: "#c0caf5"
-                    font.family: "Cozette"
-                    font.pixelSize: 11
-                    font.bold: true
-                    Layout.fillWidth: true
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#414868"; z: 2 }
+            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: "#414868"; z: 2 }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#414868"; z: 2 }
+
+            Column {
+                anchors.fill: parent
+                spacing: 2
+                z: 1
+                Repeater {
+                    model: Math.ceil(panelBox.height / 3)
+                    delegate: Rectangle {
+                        width: panelBox.width
+                        height: 1
+                        color: "#c0caf5"
+                        opacity: 0.02
+                    }
                 }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onClicked: {}
+            }
+
+            Repeater {
+                model: [
+                    { x: -1, y: -1, vFlip: false },
+                    { x: -1, y: panelBox.height - 9, vFlip: true }
+                ]
+                delegate: Item {
+                    x: modelData.x; y: modelData.y
+                    width: 10; height: 10
+                    z: 3
+                    Rectangle { width: 3; height: 10; antialiasing: false; color: "#565f89" }
+                    Rectangle {
+                        width: 10; height: 3; antialiasing: false; color: "#565f89"
+                        y: modelData.vFlip ? 7 : 0
+                    }
+                }
+            }
+
+            ColumnLayout {
+                id: mainColumn
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 6
+                z: 4
+
                 Rectangle {
-                    width: 16; height: 16
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 120
+                    color: "#0f0f16"
                     antialiasing: false
-                    color: closeArea.containsMouse ? "#f7768e" : "transparent"
+
+                    Repeater {
+                        model: [
+                            { x: -1, y: -1, vFlip: false, hFlip: false },
+                            { x: parent.width - 9, y: -1, vFlip: false, hFlip: true },
+                            { x: -1, y: parent.height - 9, vFlip: true, hFlip: false },
+                            { x: parent.width - 9, y: parent.height - 9, vFlip: true, hFlip: true }
+                        ]
+                        delegate: Item {
+                            x: modelData.x; y: modelData.y
+                            width: 10; height: 10
+                            Rectangle {
+                                width: 3; height: 10; antialiasing: false; color: "#414868"
+                                x: modelData.hFlip ? 7 : 0
+                            }
+                            Rectangle {
+                                width: 10; height: 3; antialiasing: false; color: "#414868"
+                                y: modelData.vFlip ? 7 : 0
+                            }
+                        }
+                    }
+
                     Text {
                         anchors.centerIn: parent
-                        text: "x"
-                        color: closeArea.containsMouse ? "#1a1b26" : "#e0af68"
+                        text: "[ animation\ngoes here ]"
+                        horizontalAlignment: Text.AlignHCenter
+                        color: "#414868"
                         font.family: "Cozette"
-                        font.pixelSize: 11
-                        font.bold: closeArea.containsMouse
+                        font.pixelSize: 9
                     }
-                    MouseArea {
-                        id: closeArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: PowerMenu.hide()
+
+                    Rectangle {
+                        width: 2; height: 2
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        anchors.margins: 4
+                        color: "#9ece6a"
+                        antialiasing: false
+
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.15; duration: 700 }
+                            NumberAnimation { to: 1.0; duration: 700 }
+                        }
                     }
                 }
-            }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#414868"; antialiasing: false }
+                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
 
-            // --- Placeholder for the Aseprite animation. Fixed frame,
-            // dashed border so it's obviously a stand-in. Once you've
-            // got the sprite sheet, this becomes an AnimatedSprite (or
-            // a Timer-driven frame-swap over an Image) sized to match. ---
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 120
-                color: "#16161e"
-                border.color: "#414868"
-                border.width: 1
-                antialiasing: false
+                PowerMenuRow { label: "LOCK"; iconName: "lock.svg"; Layout.fillWidth: true
+                    onClicked: {
+                        PowerMenu.hide()
+                        Quickshell.execDetached(["hyprlock"])
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "[ animation\ngoes here ]"
-                    horizontalAlignment: Text.AlignHCenter
-                    color: "#565f89"
-                    font.family: "Cozette"
-                    font.pixelSize: 9
+                PowerMenuRow { label: "LOGOUT"; iconName: "logout.svg"; Layout.fillWidth: true
+                    onClicked: {
+                        PowerMenu.hide()
+                        Quickshell.execDetached(["hyprctl", "dispatch", "exit"])
+                    }
                 }
-            }
+                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
 
-            Item { Layout.fillHeight: true } // pushes buttons to the bottom
+                PowerMenuRow { label: "SLEEP"; iconName: "moon.svg"; Layout.fillWidth: true
+                    onClicked: {
+                        PowerMenu.hide()
+                        Quickshell.execDetached(["systemctl", "suspend"])
+                    }
+                }
+                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
 
-            PowerMenuButton {
-                label: "Lock"
-                iconName: "lock.svg"
-                Layout.fillWidth: true
-                onClicked: {
-                    PowerMenu.hide()
-                    // TODO: hook up your actual lock command, e.g.
-                    // Quickshell.execDetached(["hyprlock"])
+                PowerMenuRow { label: "REBOOT"; iconName: "reload.svg"; Layout.fillWidth: true
+                    onClicked: {
+                        PowerMenu.hide()
+                        Quickshell.execDetached(["systemctl", "reboot"])
+                    }
                 }
-            }
-            PowerMenuButton {
-                label: "Logout"
-                iconName: "logout.svg"
-                Layout.fillWidth: true
-                onClicked: {
-                    PowerMenu.hide()
-                    // TODO: e.g. Quickshell.execDetached(["hyprctl", "dispatch", "exit"])
-                }
-            }
-            PowerMenuButton {
-                label: "Sleep"
-                iconName: "moon.svg"
-                Layout.fillWidth: true
-                onClicked: {
-                    PowerMenu.hide()
-                    // TODO: e.g. Quickshell.execDetached(["systemctl", "suspend"])
-                }
-            }
-            PowerMenuButton {
-                label: "Reboot"
-                iconName: "reload.svg"
-                Layout.fillWidth: true
-                onClicked: {
-                    PowerMenu.hide()
-                    // TODO: e.g. Quickshell.execDetached(["systemctl", "reboot"])
-                }
-            }
-            PowerMenuButton {
-                label: "Shutdown"
-                iconName: "power.svg"
-                accent: "#f7768e"
-                Layout.fillWidth: true
-                onClicked: {
-                    PowerMenu.hide()
-                    // TODO: e.g. Quickshell.execDetached(["systemctl", "poweroff"])
+                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
+
+                PowerMenuRow { label: "SHUTDOWN"; iconName: "power.svg"; accent: "#f7768e"; Layout.fillWidth: true
+                    onClicked: {
+                        PowerMenu.hide()
+                        Quickshell.execDetached(["systemctl", "poweroff"])
+                    }
                 }
             }
         }
     }
-    z: 6
 }

@@ -92,6 +92,8 @@ in
     # jack.enable = true; 
   };
 
+  security.pam.services.hyprlock = {};
+
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
