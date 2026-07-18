@@ -110,17 +110,18 @@ ColumnLayout {
         visible: Bluetooth.defaultAdapter !== null
 
         readonly property bool powered: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled
+        readonly property bool anyConnected: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.devices.values.some(d => d.connected)
 
-        Text {
+        ColoredIcon {
             anchors.centerIn: parent
-            text: "B"
-            color: parent.powered ? root.glowColor : root.dimColor
-            font.family: "Cozette"
-            font.pixelSize: root.iconSize * 0.6
+            width: root.iconSize; height: root.iconSize
+            iconName: !parent.powered ? "bluetooth-off.svg" : parent.anyConnected ? "bluetooth-connected.svg" : "bluetooth.svg"
+            tint: parent.powered ? root.glowColor : root.dimColor
         }
+
         MouseArea {
             anchors.fill: parent
-            onClicked: Quickshell.execDetached(["blueman-manager"])
+            onClicked: BluetoothPanel.toggle()
         }
     }
 

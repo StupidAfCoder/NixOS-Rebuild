@@ -17,7 +17,7 @@ ShellRoot {
     // windows could.
     ShellFrame {
         barWidth: 40
-        borderThickness: 8
+        borderThickness: 10
         frameColor: "#232939"
         accentColor: "#565f89"
     }
