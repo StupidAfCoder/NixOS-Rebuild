@@ -4,7 +4,7 @@ import "."
 
 Item {
     id: content
-    implicitWidth: 260
+    implicitWidth: 300
     implicitHeight: bezel.height
     width: implicitWidth
     height: implicitHeight
@@ -75,7 +75,7 @@ Item {
             Repeater {
                 model: [
                     { x: -1, y: -1, hFlip: false },
-                    { x: 251, y: -1, hFlip: true }
+                    { x: panelBox.width - 9, y: -1, hFlip: true }
                 ]
                 delegate: Item {
                     x: modelData.x; y: modelData.y
@@ -169,9 +169,10 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 6
+                    opacity: NetworkBackend.busy ? 0.5 : 1.0
 
                     Text {
-                        text: "WIRELESS"
+                        text: NetworkBackend.busy ? "WIRELESS ..." : "WIRELESS"
                         color: "#a9b1d6"
                         font.family: "Cozette"
                         font.pixelSize: 9
@@ -186,13 +187,12 @@ Item {
                         border.color: "#414868"
                         border.width: 1
                         antialiasing: false
-                        opacity: NetworkBackend.wifiRadioEnabled ? 1.0 : 0.3
+                        opacity: NetworkBackend.wifiRadioEnabled && !NetworkBackend.busy ? 1.0 : 0.3
 
                         Text {
                             anchors.centerIn: parent
-                            text: "R"
+                            text: "\u21bb"
                             color: "#7aa2f7"
-                            font.family: "Cozette"
                             font.pixelSize: 9
                         }
                         MouseArea {
@@ -200,7 +200,7 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            enabled: NetworkBackend.wifiRadioEnabled
+                            enabled: NetworkBackend.wifiRadioEnabled && !NetworkBackend.busy
                             onClicked: NetworkBackend.scan(true)
                         }
                     }
@@ -224,7 +224,8 @@ Item {
 
                         MouseArea {
                             anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
+                            cursorShape: NetworkBackend.busy ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+                            enabled: !NetworkBackend.busy
                             onClicked: NetworkBackend.setRadio(!NetworkBackend.wifiRadioEnabled)
                         }
                     }
@@ -257,7 +258,7 @@ Item {
                 ListView {
                     visible: NetworkBackend.wifiRadioEnabled && NetworkBackend.networks.length > 0
                     Layout.fillWidth: true
-                    Layout.preferredHeight: Math.min(NetworkBackend.networks.length * 26, 156)
+                    Layout.preferredHeight: Math.min(NetworkBackend.networks.length * 26, 200)
                     clip: true
                     model: NetworkBackend.networks
                     delegate: WifiNetworkRow {}

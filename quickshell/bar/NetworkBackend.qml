@@ -82,7 +82,7 @@ Item {
 
     function setRadio(enabled) {
         busy = true
-        radioProc.command = ["nmcli", "radio", "wifi", enabled ? "on" : "off"]
+        radioProc.command = ["nmcli", "--wait", "0", "radio", "wifi", enabled ? "on" : "off"]
         radioProc.running = true
     }
 

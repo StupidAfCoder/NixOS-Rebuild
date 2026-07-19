@@ -113,6 +113,7 @@ Scope {
                         Region { item: dimScrim }
                         Region { item: powerMenuContent }
                         Region { item: wifiPanelContent }
+                        Region { item: wifiClickCatcher }
                     }
 
                     // --- Border strips, drawn edge-to-edge across the
@@ -171,6 +172,22 @@ Scope {
                             anchors.fill: parent
                             onClicked: PowerMenu.hide()
                         }   
+                    }
+
+                    Rectangle {
+                        id: wifiClickCatcher
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        width: WifiPanel.shown ? parent.width : 0
+                        height: WifiPanel.shown ? parent.height : 0
+                        color: "transparent"
+                        antialiasing: false
+                        z: 3
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: WifiPanel.hide()
+                        }
                     }
 
                     // --- Left bar, same window/same coordinate space
