@@ -80,29 +80,31 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
         width: root.iconSize + 4; height: root.iconSize + 4
 
-        property bool connected: false
+        Item {
+            anchors.centerIn: parent
+            width: root.iconSize; height: root.iconSize
+            visible: NetworkBackend.ethernetConnected
 
-        Process {
-            id: netCheck
-            command: ["nmcli", "-t", "-f", "TYPE,STATE", "device"]
-            stdout: StdioCollector {
-                onStreamFinished: netItem.connected = this.text.split("\n").some(l => l.startsWith("wifi:connected"))
-            }
+            Rectangle { x: 6; y: 0; width: 4; height: 9; color: root.glowColor; antialiasing: false }
+            Rectangle { x: 2; y: 9; width: 12; height: 2; color: root.glowColor; antialiasing: false }
+            Rectangle { x: 0; y: 11; width: 2; height: 5; color: root.glowColor; antialiasing: false }
+            Rectangle { x: 7; y: 11; width: 2; height: 5; color: root.glowColor; antialiasing: false }
+            Rectangle { x: 14; y: 11; width: 2; height: 5; color: root.glowColor; antialiasing: false }
         }
-        Timer { interval: 5000; running: true; repeat: true; triggeredOnStart: true; onTriggered: netCheck.running = true }
 
         ColoredIcon {
             anchors.centerIn: parent
             width: root.iconSize; height: root.iconSize
+            visible: !NetworkBackend.ethernetConnected
             iconName: "wifi.svg"
-            tint: netItem.connected ? root.glowColor : root.dimColor
+            tint: NetworkBackend.wifiConnected ? root.glowColor : root.dimColor
         }
+
         MouseArea {
             anchors.fill: parent
-            onClicked: Quickshell.execDetached(["nm-connection-editor"])
+            onClicked: WifiPanel.toggle()
         }
     }
-
     // ---------------- Bluetooth ----------------
     Item {
         Layout.alignment: Qt.AlignHCenter

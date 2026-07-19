@@ -29,6 +29,8 @@ in
       killall
       imv
       hyprlock
+      brave
+      discord
     
       (pkgs.thunar.override {
         thunarPlugins = with pkgs; [

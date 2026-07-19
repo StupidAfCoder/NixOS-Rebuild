@@ -112,6 +112,7 @@ Scope {
                         Region { item: bluetoothPanelContent }
                         Region { item: dimScrim }
                         Region { item: powerMenuContent }
+                        Region { item: wifiPanelContent }
                     }
 
                     // --- Border strips, drawn edge-to-edge across the
@@ -188,6 +189,10 @@ Scope {
 
                     PowerMenuContent {
                         id: powerMenuContent
+                    }
+
+                    WifiPanelContent {
+                        id: wifiPanelContent
                     }
 
                     // --- Corner accents, pulled inward off the true
