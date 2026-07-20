@@ -144,130 +144,94 @@ Item {
             Layout.fillHeight: true
             width: 24
 
+            // Pinned to the actual top of the zone — depends on nothing else
             ColumnLayout {
-                anchors.fill: parent
-                anchors.topMargin: 10
-                anchors.bottomMargin: 8
-                spacing: 0
+                id: clockBlock
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 8
 
                 ColumnLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: 8
-
-                    ColumnLayout {
+                    spacing: 1
+                    Text {
                         Layout.alignment: Qt.AlignHCenter
-                        spacing: 1
-
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: Qt.formatDateTime(clockTimer.now, "hh")
-                            color: "#c0caf5"
-                            font.family: "Pixel Operator"
-                            font.pixelSize: 14
-                            font.bold: true
-                            renderType: Text.NativeRendering
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: Qt.formatDateTime(clockTimer.now, "mm")
-                            color: "#c0caf5"
-                            font.family: "Pixel Operator"
-                            font.pixelSize: 14
-                            font.bold: true
-                            renderType: Text.NativeRendering
-                            horizontalAlignment: Text.AlignHCenter
-                        }
+                        text: Qt.formatDateTime(clockTimer.now, "hh")
+                        color: "#c0caf5"; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
+                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
-
-                    Rectangle {
+                    Text {
                         Layout.alignment: Qt.AlignHCenter
-                        width: 16
-                        height: 1
-                        color: "#414868"
-                        antialiasing: false
-                    }
-
-                    ColumnLayout {
-                        Layout.alignment: Qt.AlignHCenter
-                        spacing: 2
-
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: Qt.formatDateTime(clockTimer.now, "dd")
-                            color: "#c0caf5"
-                            font.family: "Cozette"
-                            font.pixelSize: 9
-                            renderType: Text.NativeRendering
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: Qt.formatDateTime(clockTimer.now, "MM")
-                            color: "#c0caf5"
-                            font.family: "Cozette"
-                            font.pixelSize: 9
-                            renderType: Text.NativeRendering
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: Qt.formatDateTime(clockTimer.now, "yy")
-                            color: "#c0caf5"
-                            font.family: "Cozette"
-                            font.pixelSize: 9
-                            renderType: Text.NativeRendering
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-                    }
-
-                    Timer {
-                        id: clockTimer
-                        property var now: new Date()
-                        interval: 1000
-                        running: true
-                        repeat: true
-                        onTriggered: now = new Date()
+                        text: Qt.formatDateTime(clockTimer.now, "mm")
+                        color: "#c0caf5"; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
+                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                 }
-
-                Item { Layout.fillHeight: true }
 
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
-                    width: 5
-                    height: 5
-                    color: "#7aa2f7"
-                    antialiasing: false
+                    width: 16; height: 1; color: "#414868"; antialiasing: false
                 }
 
-                Item { Layout.fillHeight: true }
-
                 ColumnLayout {
-                    id: mediaCluster
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: 4
-
-                    Rectangle {
+                    spacing: 2
+                    Text {
                         Layout.alignment: Qt.AlignHCenter
-                        width: 15
-                        height: 15
-                        color: "transparent"
-                        border.color: "#414868"
-                        border.width: 1
-                        antialiasing: false
+                        text: Qt.formatDateTime(clockTimer.now, "dd")
+                        color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 9
+                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
-
-                    Item {
+                    Text {
                         Layout.alignment: Qt.AlignHCenter
-                        Layout.preferredHeight: 8
+                        text: Qt.formatDateTime(clockTimer.now, "MM")
+                        color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 9
+                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: Qt.formatDateTime(clockTimer.now, "yy")
+                        color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 9
+                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: console.log("launcher trigger clicked")
+            Timer {
+                id: clockTimer
+                property var now: new Date()
+                interval: 1000
+                running: true
+                repeat: true
+                onTriggered: now = new Date()
+            }
+
+            // Dead center of the WHOLE zone — independent of the clock's height
+            Rectangle {
+                id: centerDot
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 5
+                height: 5
+                color: launcherArea.containsMouse ? "#c0caf5" : "#7aa2f7"
+                antialiasing: false
+                z: 2
+
+                MouseArea {
+                    id: launcherArea
+                    anchors.fill: parent
+                    anchors.margins: -4
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: console.log("launcher trigger clicked")
+                }
+            }
+
+            MediaBarWidget {
+                anchors.top: centerDot.bottom
+                anchors.topMargin: 14
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
 

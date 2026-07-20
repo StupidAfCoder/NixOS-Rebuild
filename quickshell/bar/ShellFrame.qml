@@ -118,6 +118,8 @@ Scope {
                         Region { item: batteryClickCatcher }
                         Region { item: trayMenuContent }
                         Region { item: trayMenuClickCatcher }
+                        Region { item: mediaPanelContent }
+                        Region { item: mediaClickCatcher }
                     }
 
                     // --- Border strips, drawn edge-to-edge across the
@@ -218,6 +220,18 @@ Scope {
                         MouseArea { anchors.fill: parent; onClicked: TrayMenu.hide() }
                     }
 
+                    Rectangle {
+                        id: mediaClickCatcher
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        width: MediaPanel.shown ? parent.width : 0
+                        height: MediaPanel.shown ? parent.height : 0
+                        color: "transparent"
+                        antialiasing: false
+                        z: 3
+                        MouseArea { anchors.fill: parent; onClicked: MediaPanel.hide() }
+                    }
+
                     // --- Left bar, same window/same coordinate space
                     // as the border strips above it in the tree. ---
                     Bar {
@@ -242,6 +256,10 @@ Scope {
 
                     BatteryPanelContent {
                         id: batteryPanelContent
+                    }
+
+                    MediaPanelContent {
+                        id: mediaPanelContent
                     }
 
                     // --- Corner accents, pulled inward off the true

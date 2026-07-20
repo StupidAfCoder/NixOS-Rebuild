@@ -17,7 +17,7 @@ Item {
     id: root
 
     property int thickness: 4
-    property real sizeScale: 4
+    property real sizeScale: 10
     property color color: "#565f89"
     property color outlineColor: "#11131c"
     property string corner: "topLeft"   // "topLeft" | "topRight" | "bottomLeft" | "bottomRight"
