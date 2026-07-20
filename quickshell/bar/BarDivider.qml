@@ -9,7 +9,7 @@ Item {
     id: root
     property int barWidth: 32
     property int rivetSize: 8
-    property int edgeMargin: 2      // how close each rivet sits to the true end -- keep this small
+    property int edgeMargin: 1      // how close each rivet sits to the true end -- keep this small
     property color rivetBorderColor: "#000000"
     property color rivetOuterColor: "#565b68"
     property color rivetShadowColor: "#101114"

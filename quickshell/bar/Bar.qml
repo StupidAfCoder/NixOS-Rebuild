@@ -13,9 +13,52 @@ Item {
 
     width: barWidth
 
-    readonly property var wsIcons: [
-        "globe.svg", "terminal.svg", "message.svg", "music.svg", "braces.svg"
+    readonly property string iconBasePath: "file:///home/swami/.local/share/pixelarticons/svg/"
+    readonly property string defaultWsIcon: "app-windows.svg"
+
+    // Ordered rules: first substring match on the window class wins.
+    // Run `hyprctl clients | grep class` to see your real class names
+    // and add more rows here for anything not covered.
+    readonly property var classIconRules: [
+        { match: ["firefox", "librewolf", "zen", "chromium", "chrome", "brave"], icon: "globe.svg" },
+        { match: ["kitty", "alacritty", "foot", "wezterm", "konsole", "xterm", "gnome-terminal"], icon: "terminal.svg" },
+        { match: ["discord", "telegram", "slack", "whatsapp", "element", "signal"], icon: "message.svg" },
+        { match: ["spotify", "mpv", "vlc", "rhythmbox"], icon: "music.svg" },
+        { match: ["code", "codium", "jetbrains", "idea", "pycharm", "clion", "sublime", "neovide", "nvim"], icon: "braces.svg" },
+        { match: ["thunar", "nautilus", "dolphin", "pcmanfm", "files"], icon: "folder.svg" },
+        { match: ["steam"], icon: "gamepad.svg" },
+        { match: ["obsidian", "notion"], icon: "notebook.svg" },
+        { match: ["gimp", "inkscape", "krita"], icon: "brush.svg" }
     ]
+
+    function iconForClass(cls) {
+        if (!cls) return root.defaultWsIcon
+        const c = cls.toLowerCase()
+        for (let i = 0; i < root.classIconRules.length; i++) {
+            const rule = root.classIconRules[i]
+            for (let j = 0; j < rule.match.length; j++) {
+                if (c.indexOf(rule.match[j]) !== -1) return rule.icon
+            }
+        }
+        return root.defaultWsIcon
+    }
+
+    // lastIpcObject (used below for window class) doesn't update on its
+    // own -- Quickshell's docs are explicit about this. Refresh on window
+    // open/close immediately, and on an interval as a safety net for
+    // anything that changes the "current app" without an open/close event.
+    Timer {
+        interval: 1500
+        running: true
+        repeat: true
+        onTriggered: Hyprland.refreshToplevels()
+    }
+
+    Connections {
+        target: Hyprland.toplevels
+        function onObjectInsertedPost() { Hyprland.refreshToplevels() }
+        function onObjectRemovedPost() { Hyprland.refreshToplevels() }
+    }
 
     BarShell {
         id: shell
@@ -63,7 +106,23 @@ Item {
                     property int wsId: index + 1
                     property var wsData: Hyprland.workspaces.values.find(w => w.id === wsId)
                     property bool isActive: Hyprland.focusedWorkspace?.id === wsId
-                    property bool isOccupied: !!wsData
+                    property bool isOccupied: !!wsData && wsData.toplevels.values.length > 0
+
+                    // Which window "represents" this workspace's icon: prefer the
+                    // globally focused window if it's in this workspace, else fall
+                    // back to the most recently opened one here.
+                    property var topWindow: {
+                        if (!wsPill.wsData || wsPill.wsData.toplevels.values.length === 0) return null
+                        const tls = wsPill.wsData.toplevels.values
+                        for (let i = 0; i < tls.length; i++) {
+                            if (tls[i].activated) return tls[i]
+                        }
+                        return tls[tls.length - 1]
+                    }
+
+                    readonly property string windowClass: (wsPill.topWindow && wsPill.topWindow.lastIpcObject)
+                        ? (wsPill.topWindow.lastIpcObject.class || "") : ""
+                    readonly property string wsIcon: root.iconForClass(wsPill.windowClass)
 
                     width: 20
                     height: 20
@@ -87,15 +146,7 @@ Item {
                         }
                     }
 
-                    Rectangle {
-                        visible: !wsPill.isActive && wsPill.isOccupied
-                        anchors.centerIn: parent
-                        width: 4
-                        height: 4
-                        color: "#7982a9"
-                        antialiasing: false
-                    }
-
+                    // Active pill background
                     Shape {
                         anchors.fill: parent
                         antialiasing: false
@@ -108,22 +159,17 @@ Item {
                         }
                     }
 
-                    Image {
-                        id: wsIconImg
+                    // Colorized via the same ColoredIcon component your other tray
+                    // icons use -- reads the SVG text and swaps currentColor for the
+                    // tint, no MultiEffect/layer plumbing involved.
+                    ColoredIcon {
                         anchors.centerIn: parent
                         width: 13
                         height: 13
-                        source: "file:///home/swami/.local/share/pixelarticons/svg/" + root.wsIcons[wsPill.index]
-                        smooth: false
-                        visible: false
-                    }
-
-                    MultiEffect {
-                        anchors.fill: wsIconImg
-                        source: wsIconImg
-                        visible: wsPill.isActive
-                        colorization: 1.0
-                        colorizationColor: "#1a1b26"
+                        visible: wsPill.isActive || wsPill.isOccupied
+                        iconName: (wsPill.isActive || wsPill.isOccupied) ? wsPill.wsIcon : ""
+                        tint: wsPill.isActive ? "#1a1b26" : "#a9b1d6"
+                        opacity: wsPill.isActive ? 1.0 : 0.9
                     }
 
                     MouseArea {
