@@ -114,6 +114,10 @@ Scope {
                         Region { item: powerMenuContent }
                         Region { item: wifiPanelContent }
                         Region { item: wifiClickCatcher }
+                        Region { item: batteryPanelContent }
+                        Region { item: batteryClickCatcher }
+                        Region { item: trayMenuContent }
+                        Region { item: trayMenuClickCatcher }
                     }
 
                     // --- Border strips, drawn edge-to-edge across the
@@ -175,6 +179,18 @@ Scope {
                     }
 
                     Rectangle {
+                        id: batteryClickCatcher
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        width: BatteryPanel.shown ? parent.width : 0
+                        height: BatteryPanel.shown ? parent.height : 0
+                        color: "transparent"
+                        antialiasing: false
+                        z: 3
+                        MouseArea { anchors.fill: parent; onClicked: BatteryPanel.hide() }
+                    }
+
+                    Rectangle {
                         id: wifiClickCatcher
                         anchors.top: parent.top
                         anchors.left: parent.left
@@ -188,6 +204,18 @@ Scope {
                             anchors.fill: parent
                             onClicked: WifiPanel.hide()
                         }
+                    }
+
+                    Rectangle {
+                        id: trayMenuClickCatcher
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        width: TrayMenu.shown ? parent.width : 0
+                        height: TrayMenu.shown ? parent.height : 0
+                        color: "transparent"
+                        antialiasing: false
+                        z: 9
+                        MouseArea { anchors.fill: parent; onClicked: TrayMenu.hide() }
                     }
 
                     // --- Left bar, same window/same coordinate space
@@ -210,6 +238,10 @@ Scope {
 
                     WifiPanelContent {
                         id: wifiPanelContent
+                    }
+
+                    BatteryPanelContent {
+                        id: batteryPanelContent
                     }
 
                     // --- Corner accents, pulled inward off the true
@@ -258,6 +290,10 @@ Scope {
                         anchors.rightMargin: manager.borderThickness
                         anchors.bottomMargin: manager.borderThickness
                         z: 10
+                    }
+
+                    TrayMenuContent {
+                        id: trayMenuContent
                     }
                 }
             }

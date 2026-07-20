@@ -6,6 +6,7 @@ import Quickshell.Bluetooth
 import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Window
 
 ColumnLayout {
     id: root
@@ -51,7 +52,7 @@ ColumnLayout {
             id: battArea
             anchors.fill: parent
             hoverEnabled: true
-            onClicked: console.log(parent.hasBattery ? Math.round(parent.pct * 100) + "%" : "no battery")
+            onClicked: BatteryPanel.toggle()
         }
         Rectangle {
             visible: battArea.containsMouse && !parent.hasBattery
@@ -131,6 +132,7 @@ ColumnLayout {
     Repeater {
         model: SystemTray.items.values.filter(item => !root.trayHidden.includes(item.id))
         delegate: Item {
+            id: trayIconRoot
             required property var modelData
             Layout.alignment: Qt.AlignHCenter
             width: root.iconSize + 4; height: root.iconSize + 4
@@ -153,9 +155,39 @@ ColumnLayout {
             }
 
             MouseArea {
+                id: trayArea
                 anchors.fill: parent
+                hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onClicked: (mouse) => { if (mouse.button === Qt.LeftButton) modelData.activate() }
+                onClicked: (mouse) => {
+                    if (mouse.button === Qt.LeftButton) {
+                        modelData.activate()
+                    } else if (mouse.button === Qt.RightButton && modelData.hasMenu) {
+                        const pos = mapToItem(null, mouse.x, mouse.y)
+                        TrayMenu.openFor(modelData, pos.x, pos.y)
+                    }
+                }
+            }
+
+            Rectangle {
+                visible: trayArea.containsMouse && modelData.hasMenu
+                anchors.left: parent.right
+                anchors.leftMargin: 6
+                anchors.verticalCenter: parent.verticalCenter
+                width: trayTip.width + 12
+                height: trayTip.height + 8
+                color: "#1a1b26"
+                border.color: "#414868"
+                border.width: 1
+                z: 20
+                Text {
+                    id: trayTip
+                    anchors.centerIn: parent
+                    text: "right-click for options"
+                    color: "#c0caf5"
+                    font.family: "Cozette"
+                    font.pixelSize: 10
+                }
             }
         }
     }
