@@ -16,6 +16,7 @@ let
       cp -r svg $out/share/pixelarticons/
     '';
   };
+  scriptPython = pkgs.python3.withPackages (ps: [ ps.pillow ]);
 in
 {
     home.stateVersion = "26.05";
@@ -63,6 +64,7 @@ in
       foliate
 
       pixelarticons
+      scriptPython
 
       (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [ 
         pkgs.kdePackages.qtwayland 
@@ -203,6 +205,21 @@ in
       RestartSec = 2;
     };
     Install.WantedBy = [ "graphical-session.target" ];
+  };
+
+  systemd.user.services.quickshell-theme-assets = {
+    Unit.Description = "Regenerate Quickshell themed bar assets";
+    Service = {
+      Type = "oneshot";
+      Environment = "PATH=${scriptPython}/bin:/run/current-system/sw/bin";
+      ExecStart = "%h/.nixos_dotfiles/quickshell/bar/scripts/generate-theme-assets.sh";
+    };
+  };
+
+  systemd.user.paths.quickshell-theme-assets = {
+    Unit.Description = "Watch colors.json for theme changes";
+    Path.PathModified = "%h/.nixos_dotfiles/quickshell/bar/theme/colors.json";
+    Install.WantedBy = [ "default.target" ];
   };
 
   services.mpd = {

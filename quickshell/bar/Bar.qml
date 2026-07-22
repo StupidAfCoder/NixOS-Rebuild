@@ -28,7 +28,7 @@ Item {
         { match: ["thunar", "nautilus", "dolphin", "pcmanfm", "files"], icon: "folder.svg" },
         { match: ["steam"], icon: "gamepad.svg" },
         { match: ["obsidian", "notion"], icon: "notebook.svg" },
-        { match: ["gimp", "inkscape", "krita"], icon: "brush.svg" }
+        { match: ["gimp", "inkscape", "krita" , "aseprite"], icon: "brush.svg" }
     ]
 
     function iconForClass(cls) {
@@ -252,16 +252,33 @@ Item {
                 onTriggered: now = new Date()
             }
 
-            // Dead center of the WHOLE zone — independent of the clock's height
-            Rectangle {
-                id: centerDot
+            // Dead center of the WHOLE zone — independent of the clock's
+            // height. This is also the application launcher trigger.
+            Item {
+                id: launcherIcon
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: 5
-                height: 5
-                color: launcherArea.containsMouse ? "#c0caf5" : "#7aa2f7"
-                antialiasing: false
+                width: 24
+                height: 24
                 z: 2
+
+                ReactiveImage {
+                    anchors.fill: parent
+                    visible: !launcherArea.containsMouse
+                    path: "/home/swami/.cache/quickshell/wizard-idle.png"
+                }
+
+                ColoredSprite {
+                    anchors.fill: parent
+                    visible: launcherArea.containsMouse
+                    accentSource: "file:///home/swami/.nixos_dotfiles/quickshell/bar/assets/anim/launcher-accent-spritesheet.png"
+                    hoverSource: "file:///home/swami/.nixos_dotfiles/quickshell/bar/assets/anim/launcher-hover-spritesheet.png"
+                    frameW: 24
+                    frameH: 24
+                    frameCount: 5
+                    fps: 8
+                    hovered: launcherArea.containsMouse
+                }
 
                 MouseArea {
                     id: launcherArea
@@ -274,7 +291,7 @@ Item {
             }
 
             MediaBarWidget {
-                anchors.top: centerDot.bottom
+                anchors.top: launcherIcon.bottom
                 anchors.topMargin: 14
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
