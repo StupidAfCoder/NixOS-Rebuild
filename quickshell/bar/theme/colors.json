@@ -1,3 +1,7 @@
 {
-  "accent": "#7aa2f7"
+  "accent": "#aec6ff",
+  "background": "#111318",
+  "surface": "#111318",
+  "foreground": "#e2e2e9",
+  "muted": "#8e9099"
 }

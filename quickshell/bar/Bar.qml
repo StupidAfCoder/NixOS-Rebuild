@@ -271,11 +271,13 @@ Item {
                 ColoredSprite {
                     anchors.fill: parent
                     visible: launcherArea.containsMouse
-                    accentSource: "file:///home/swami/.nixos_dotfiles/quickshell/bar/assets/anim/launcher-accent-spritesheet.png"
-                    hoverSource: "file:///home/swami/.nixos_dotfiles/quickshell/bar/assets/anim/launcher-hover-spritesheet.png"
+                    accentSource: "/home/swami/.cache/quickshell/launcher-accent-spritesheet.png"
+                    hoverSource: "/home/swami/.cache/quickshell/launcher-hover-spritesheet.png"
                     frameW: 24
                     frameH: 24
-                    frameCount: 5
+                    chargeFrameCount: 5
+                    hoverFrameCount: 5
+                    loopHover: true
                     fps: 8
                     hovered: launcherArea.containsMouse
                 }

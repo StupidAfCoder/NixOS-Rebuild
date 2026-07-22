@@ -21,10 +21,14 @@ python3 "$SCRIPTS/recolor_asset.py" \
     "$CACHE/wizard-idle.png" \
     "$THEME"
 
-# When you make the hover animation sprite sheet, add it here the same way:
-# python3 "$SCRIPTS/recolor_asset.py" \
-#     "$ASSETS/anim/launcher-hover-template.png" \
-#     "$CACHE/launcher-hover-spritesheet.png" \
-#     "$THEME"
+python3 "$SCRIPTS/recolor_asset.py" \
+    "$ASSETS/launcher-accent-template.png" \
+    "$CACHE/launcher-accent-spritesheet.png" \
+    "$THEME"
+
+python3 "$SCRIPTS/recolor_asset.py" \
+    "$ASSETS/launcher-hover-template.png" \
+    "$CACHE/launcher-hover-spritesheet.png" \
+    "$THEME"
 
 echo "theme assets regenerated"

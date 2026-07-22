@@ -84,7 +84,7 @@ ColumnLayout {
         Item {
             anchors.centerIn: parent
             width: root.iconSize; height: root.iconSize
-            visible: NetworkBackend.ethernetConnected
+            visible: NetworkBackend.ethernetOnline
 
             Rectangle { x: 6; y: 0; width: 4; height: 9; color: root.glowColor; antialiasing: false }
             Rectangle { x: 2; y: 9; width: 12; height: 2; color: root.glowColor; antialiasing: false }
@@ -96,7 +96,7 @@ ColumnLayout {
         ColoredIcon {
             anchors.centerIn: parent
             width: root.iconSize; height: root.iconSize
-            visible: !NetworkBackend.ethernetConnected
+            visible: !NetworkBackend.ethernetOnline
             iconName: "wifi.svg"
             tint: NetworkBackend.wifiConnected ? root.glowColor : root.dimColor
         }

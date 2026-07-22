@@ -11,10 +11,18 @@ Item {
     id: root
 
     // ---- Ethernet ----
-    property bool ethernetConnected: false
+    property bool ethernetConnected: false        // L2 link state only -- device says connected
     property string ethernetIface: ""
     property string ethernetConnectionName: ""
     property string ethernetIp: ""
+
+    // ---- Connectivity (real internet reachability, not just link state) ----
+    // One of "full" / "limited" / "portal" / "none" / "unknown", from NM's
+    // own periodic probe (networking.networkmanager.connectivity in
+    // configuration.nix). "full" is the only state that means "actually
+    // online" -- "limited"/"portal" mean a link with no real internet.
+    property string connectivityState: "unknown"
+    property bool ethernetOnline: ethernetConnected && connectivityState === "full"
 
     // ---- Wifi ----
     property bool wifiRadioEnabled: false
@@ -48,7 +56,10 @@ Item {
         return fields
     }
 
-    function refreshStatus() { deviceStatusProc.running = true }
+    function refreshStatus() {
+        deviceStatusProc.running = true
+        connectivityProc.running = true
+    }
 
     function scan(rescan) {
         scanning = true
@@ -153,6 +164,20 @@ Item {
         command: ["nmcli", "radio", "wifi"]
         stdout: StdioCollector {
             onStreamFinished: root.wifiRadioEnabled = this.text.trim() === "enabled"
+        }
+    }
+
+    // Real internet reachability, from NM's own probe -- see
+    // networking.networkmanager.connectivity in configuration.nix.
+    // Bare value: full / limited / portal / none / unknown.
+    Process {
+        id: connectivityProc
+        command: ["nmcli", "-t", "-g", "CONNECTIVITY", "general", "status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const state = this.text.trim()
+                root.connectivityState = state.length > 0 ? state : "unknown"
+            }
         }
     }
 

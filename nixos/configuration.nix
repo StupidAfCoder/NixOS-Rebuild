@@ -136,6 +136,16 @@ in
   # Enable networking
   networking.networkmanager.enable = true;
 
+  # NM's own connectivity probe (full/limited/portal/none), used by the
+  # bar's network icon to distinguish "link up" from "actually online".
+  # Default check interval is several minutes -- set to 15s so the icon
+  # reacts to a real outage in roughly one bar refresh cycle instead of lagging.
+  networking.networkmanager.connectionConfig = {
+    enable = true;
+    interval = 15;
+    uri = "http://detectportal.firefox.com/success.txt";
+  };
+
   # Set your time zone.
   time.timeZone = "Asia/Kolkata";
   time.hardwareClockInLocalTime = true;

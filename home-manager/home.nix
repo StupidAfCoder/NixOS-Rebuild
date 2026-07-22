@@ -93,6 +93,7 @@ in
   xdg.configFile."hypr/hyprland.lua".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/hyprland.lua";
   xdg.configFile."quickshell".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/quickshell";
   xdg.dataFile."pixelarticons".source = "${pixelarticons}/share/pixelarticons/";
+  xdg.configFile."matugen".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/matugen";
 
   xdg.mimeApps = {
     enable = true;
@@ -168,8 +169,8 @@ in
   gtk = {
     enable = true;
     theme = {
-      name = "Tokyonight-Dark";
-      package = pkgs.tokyonight-gtk-theme; 
+      name = "adw-gtk3";
+      package = pkgs.adw-gtk3;
     };
     iconTheme = {
       name = "Papirus-Dark";

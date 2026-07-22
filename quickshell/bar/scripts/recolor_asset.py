@@ -12,7 +12,7 @@ Generic template -> theme recolor tool.
   the new theme color is. That way shading always looks correct no
   matter what accent color a given wallust/matugen run produces.
 """
-import sys, json, colorsys
+import sys, os, json, colorsys, tempfile
 from PIL import Image
 
 def hex_to_rgb(h):
@@ -63,7 +63,22 @@ def recolor(template_path, role_map, theme, output_path):
                 nr, ng, nb = replacements[key]
                 px[x, y] = (nr, ng, nb, a)
 
-    im.save(output_path)
+    # Atomic write: save to a temp file in the SAME directory as the
+    # destination (guarantees the rename stays on one filesystem), then
+    # os.replace() it into place. A watcher (FileView/inotify) can then
+    # only ever see the fully-old or fully-new file -- never a
+    # half-written one mid-save. Without this, QML's Image decoder can
+    # catch the file mid-write and throw "Unsupported image format".
+    out_dir = os.path.dirname(os.path.abspath(output_path))
+    fd, tmp_path = tempfile.mkstemp(suffix='.png', dir=out_dir)
+    os.close(fd)
+    try:
+        im.save(tmp_path)
+        os.replace(tmp_path, output_path)
+    except Exception:
+        os.unlink(tmp_path)
+        raise
+
     return output_path
 
 if __name__ == '__main__':
