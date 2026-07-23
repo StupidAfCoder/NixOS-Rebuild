@@ -11,7 +11,7 @@ hl.monitor({
 ---------------------
 ---- MY PROGRAMS ----
 ---------------------
-local terminal    = "kitty"
+local terminal    = "foot"
 local fileManager = "thunar"
 local menu        = "fuzzel"
 local browser     = "firefox"
@@ -455,8 +455,7 @@ hl.window_rule({
 
 hl.window_rule({
     name = "terminal-opacity",
-    match = { class = "kitty" },
-    -- Use " override" to set an exact value rather than a multiplier
+    match = { class = "^(kitty|foot)$" },
     opacity = "0.8 override 0.55 override 1.0 override", 
 })
 

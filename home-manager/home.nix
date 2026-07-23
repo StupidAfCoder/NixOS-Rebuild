@@ -94,6 +94,7 @@ in
   xdg.configFile."quickshell".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/quickshell";
   xdg.dataFile."pixelarticons".source = "${pixelarticons}/share/pixelarticons/";
   xdg.configFile."matugen".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/matugen";
+  xdg.configFile."wallust".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/wallust";
 
   xdg.mimeApps = {
     enable = true;
@@ -253,10 +254,20 @@ in
     settings = {
       main = {
         dpi-aware = "yes";
-        font = "Cozette:size=13";
+        font = "Pixel Operator Mono:pixelsize=16";
+        include = "~/.config/foot/wallust-colors.ini";
+        pad = "8x8";
+      };
+      cursor = {
+        style = "block";
+        blink = "no";
       };
       mouse = {
         hide-when-typing = "yes";
+      };
+      csd = {
+        size = 0;
+        border-width = 0;
       };
     };
   };

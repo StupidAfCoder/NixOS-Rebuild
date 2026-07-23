@@ -1,0 +1,3 @@
+# ~/.nixos_dotfiles/wallust/wallust.toml
+[templates]
+foot = { template = 'foot-colors.ini', target = '~/.config/foot/wallust-colors.ini' }
