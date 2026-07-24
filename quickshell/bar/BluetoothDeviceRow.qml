@@ -27,7 +27,7 @@ RowLayout {
         Layout.preferredWidth: 14
         Layout.preferredHeight: 14
         iconName: root.iconForDevice(root.device)
-        tint: root.device.connected ? "#7aa2f7" : "#565f89"
+        tint: root.device.connected ? Colors.accent : Colors.onSurfaceVariant
     }
 
     ColumnLayout {
@@ -36,7 +36,7 @@ RowLayout {
 
         Text {
             text: root.device.name || root.device.address
-            color: root.device.connected ? "#c0caf5" : "#a9b1d6"
+            color: root.device.connected ? Colors.onSurface : Colors.onSurfaceVariant
             font.family: "Cozette"
             font.pixelSize: 9
             elide: Text.ElideRight
@@ -47,7 +47,7 @@ RowLayout {
             spacing: 4
             Text {
                 text: root.device.connected ? "connected" : (root.device.paired ? "paired" : "available")
-                color: root.device.connected ? "#9ece6a" : "#565f89"
+                color: root.device.connected ? Colors.success : Colors.onSurfaceVariant
                 font.family: "Cozette"
                 font.pixelSize: 7
             }
@@ -66,7 +66,7 @@ RowLayout {
                         color: {
                             const rssi = root.device.rssi || -90
                             const bars = rssi > -50 ? 4 : rssi > -65 ? 3 : rssi > -80 ? 2 : 1
-                            return index < bars ? "#9ece6a" : "#414868"
+                            return index < bars ? Colors.success : Colors.outlineVariant
                         }
                         Layout.alignment: Qt.AlignBottom
                     }
@@ -79,7 +79,7 @@ RowLayout {
     Text {
         visible: root.device.paired
         text: root.device.trusted ? "*" : "."
-        color: root.device.trusted ? "#e0af68" : "#565f89"
+        color: root.device.trusted ? Colors.warning : Colors.onSurfaceVariant
         font.family: "Cozette"
         font.pixelSize: 11
 
@@ -96,7 +96,7 @@ RowLayout {
         Layout.preferredWidth: connectText.width + 10
         Layout.preferredHeight: 16
         color: "transparent"
-        border.color: root.device.connected ? "#9ece6a" : "#414868"
+        border.color: root.device.connected ? Colors.success : Colors.outlineVariant
         border.width: 1
         antialiasing: false
 
@@ -104,7 +104,7 @@ RowLayout {
             id: connectText
             anchors.centerIn: parent
             text: root.device.connected ? "disconnect" : "connect"
-            color: root.device.connected ? "#9ece6a" : "#c0caf5"
+            color: root.device.connected ? Colors.success : Colors.onSurface
             font.family: "Cozette"
             font.pixelSize: 7
         }
@@ -121,7 +121,7 @@ RowLayout {
         Layout.preferredWidth: pairText.width + 10
         Layout.preferredHeight: 16
         color: "transparent"
-        border.color: "#414868"
+        border.color: Colors.outlineVariant
         border.width: 1
         antialiasing: false
 
@@ -129,7 +129,7 @@ RowLayout {
             id: pairText
             anchors.centerIn: parent
             text: "pair"
-            color: "#c0caf5"
+            color: Colors.onSurface
             font.family: "Cozette"
             font.pixelSize: 7
         }
@@ -144,7 +144,7 @@ RowLayout {
     Text {
         visible: root.device.paired
         text: "del"
-        color: "#f7768e"
+        color: Colors.error
         font.family: "Cozette"
         font.pixelSize: 7
 

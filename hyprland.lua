@@ -15,6 +15,7 @@ local terminal    = "foot"
 local fileManager = "thunar"
 local menu        = "fuzzel"
 local browser     = "firefox"
+local wallpaper_change = "/home/swami/.nixos_dotfiles/scripts/wallpaper-select.sh"
 
 -------------------
 ---- AUTOSTART ----
@@ -29,7 +30,7 @@ hl.on("hyprland.start", function ()
 
     --Wallpapers!
     hl.exec_cmd("awww-daemon")
-    hl.exec_cmd("awww img ~/Pictures/Wallpapers/cosmic_tokyo_night.png --transition-type center")
+    hl.exec_cmd("/home/swami/.nixos_dotfiles/scripts/restore-wallpaper.sh")
 
     --Kde authentication for sudo password gui
     hl.exec_cmd("lxqt-policykit-agent")
@@ -339,6 +340,7 @@ hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(wallpaper_change))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))

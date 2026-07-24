@@ -4,7 +4,7 @@ import Quickshell.Io
 Image {
     id: root
     property string iconName: ""
-    property color tint: "#c0caf5"
+    property color tint: Colors.onSurface
 
     readonly property string primaryDir: "/home/swami/.local/share/pixelarticons/svg/"
     readonly property string overrideDir: Qt.resolvedUrl("assets/")

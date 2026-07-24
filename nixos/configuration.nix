@@ -53,6 +53,7 @@ in
 	  NIXOS_OZONE_WL = "1";
     XCURSOR_THEME = "MeguminCursor";
     XCURSOR_SIZE = "24";
+    QT_QPA_PLATFORMTHEME = "qt6ct";
   };
 
   swapDevices = [{
@@ -211,7 +212,7 @@ in
 
   programs.qylock = {
             enable = true;
-            theme = "forest";          # any directory name under themes/
+            theme = "pixel-coffee";          # any directory name under themes/
             sddm.enable = true;             # installs theme + sets it active (default)
             #quickshell.enable = true;       # adds `qylock-lock` to PATH (default)
   };

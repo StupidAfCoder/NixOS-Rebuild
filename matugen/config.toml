@@ -15,3 +15,11 @@ output_path = '~/.config/gtk-3.0/gtk.css'
 [templates.gtk4_colors]
 input_path = '~/.config/matugen/templates/gtk-colors.css.hbs'
 output_path = '~/.config/gtk-4.0/gtk.css'
+
+[templates.qt6_colors]
+input_path = '~/.config/matugen/templates/qt-colors.conf.hbs'
+output_path = '~/.config/qt6ct/colors/matugen.conf'
+
+[templates.qt5_colors]
+input_path = '~/.config/matugen/templates/qt-colors.conf.hbs'
+output_path = '~/.config/qt5ct/colors/matugen.conf'

@@ -4,7 +4,7 @@ import QtQuick.Layouts
 Item {
     id: row
     required property var modelData
-    property color accent: "#7aa2f7"
+    property color accent: Colors.accent
     property bool expanded: false
     property string passwordDraft: ""
 
@@ -23,7 +23,7 @@ Item {
         anchors.top: parent.top
         width: parent.width
         height: 26
-        color: mainArea.containsMouse ? "#1f2335" : "transparent"
+        color: mainArea.containsMouse ? Colors.surfaceContainer : "transparent"
         antialiasing: false
     }
 
@@ -59,15 +59,15 @@ Item {
                         Layout.alignment: Qt.AlignBottom
                         antialiasing: false
                         color: (row.signalPct >= (index + 1) * 25)
-                            ? (row.inUse ? row.accent : "#a9b1d6")
-                            : "#292e42"
+                            ? (row.inUse ? row.accent : Colors.onSurfaceVariant)
+                            : Colors.surfaceContainerHigh
                     }
                 }
             }
 
             Text {
                 text: row.ssid
-                color: row.inUse ? row.accent : "#a9b1d6"
+                color: row.inUse ? row.accent : Colors.onSurfaceVariant
                 font.family: "Cozette"
                 font.pixelSize: 9
                 font.letterSpacing: 1
@@ -80,13 +80,13 @@ Item {
                 Layout.preferredWidth: 9
                 Layout.preferredHeight: 9
                 iconName: "lock.svg"
-                tint: "#565f89"
+                tint: Colors.onSurfaceVariant
             }
 
             Text {
                 visible: row.inUse
                 text: "\u2713"
-                color: "#9ece6a"
+                color: Colors.success
                 font.pixelSize: 9
             }
         }
@@ -104,8 +104,8 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 20
-                    color: "#0f0f16"
-                    border.color: "#414868"
+                    color: Colors.shadow
+                    border.color: Colors.outlineVariant
                     border.width: 1
                     antialiasing: false
                     visible: row.secured
@@ -113,7 +113,7 @@ Item {
                     TextInput {
                         anchors.fill: parent
                         anchors.margins: 4
-                        color: "#c0caf5"
+                        color: Colors.onSurface
                         font.family: "Cozette"
                         font.pixelSize: 9
                         echoMode: TextInput.Password
@@ -140,7 +140,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: "LINK"
-                        color: connectArea.containsMouse ? "#1a1b26" : row.accent
+                        color: connectArea.containsMouse ? Colors.background : row.accent
                         font.family: "Cozette"
                         font.pixelSize: 8
                     }
@@ -161,7 +161,7 @@ Item {
 
                 Text {
                     text: NetworkBackend.wifiIp !== "" ? NetworkBackend.wifiIp : "no ip"
-                    color: "#565f89"
+                    color: Colors.onSurfaceVariant
                     font.family: "Cozette"
                     font.pixelSize: 8
                     Layout.fillWidth: true
@@ -170,15 +170,15 @@ Item {
                 Rectangle {
                     Layout.preferredWidth: 60
                     Layout.preferredHeight: 20
-                    color: forgetArea.containsMouse ? "#f7768e" : "transparent"
-                    border.color: "#f7768e"
+                    color: forgetArea.containsMouse ? Colors.error : "transparent"
+                    border.color: Colors.error
                     border.width: 1
                     antialiasing: false
 
                     Text {
                         anchors.centerIn: parent
                         text: "FORGET"
-                        color: forgetArea.containsMouse ? "#1a1b26" : "#f7768e"
+                        color: forgetArea.containsMouse ? Colors.background : Colors.error
                         font.family: "Cozette"
                         font.pixelSize: 8
                     }

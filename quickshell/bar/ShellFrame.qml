@@ -31,8 +31,8 @@ Scope {
 
     property int barWidth: 32
     property int borderThickness: 4
-    property color frameColor: "#232939"
-    property color accentColor: "#565f89"
+    property color frameColor: Colors.background
+    property color accentColor: Colors.outline
 
     Variants {
         model: Quickshell.screens

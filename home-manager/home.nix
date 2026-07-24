@@ -96,6 +96,26 @@ in
   xdg.configFile."matugen".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/matugen";
   xdg.configFile."wallust".source = config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.nixos_dotfiles/wallust";
 
+  xdg.configFile."qt6ct/qt6ct.conf" = {
+    text = ''
+      [Appearance]
+      color_scheme_path=/home/swami/.config/qt6ct/colors/matugen.conf
+      custom_palette=true
+      style=kvantum
+    '';
+    force = true;
+  };
+
+  xdg.configFile."qt5ct/qt5ct.conf" = {
+    text = ''
+      [Appearance]
+      color_scheme_path=/home/swami/.config/qt5ct/colors/matugen.conf
+      custom_palette=true
+      style=kvantum
+    '';
+    force = true;
+  };
+
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
@@ -185,7 +205,7 @@ in
 
   qt = {
     enable = true;
-    platformTheme.name = "qtct";
+    platformTheme.name = "qt6ct";
     style.name = "kvantum";
   };
 

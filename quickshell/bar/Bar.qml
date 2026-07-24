@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import "pathgen.js" as PathGen
 import "."
+import "../bar"
 
 Item {
     id: root
@@ -140,7 +141,7 @@ Item {
                             y: wsPill.height / 2 - 9 + modelData.y
                             width: 2
                             height: 2
-                            color: "#e0af68"
+                            color: Colors.warning
                             opacity: 0.85
                             antialiasing: false
                         }
@@ -153,7 +154,7 @@ Item {
                         visible: wsPill.isActive
                         preferredRendererType: Shape.CurveRenderer
                         ShapePath {
-                            fillColor: "#7aa2f7"
+                            fillColor: Colors.accent
                             strokeColor: "transparent"
                             PathSvg { path: PathGen.chamferedRectPath(20, 20, 6) }
                         }
@@ -168,7 +169,7 @@ Item {
                         height: 13
                         visible: wsPill.isActive || wsPill.isOccupied
                         iconName: (wsPill.isActive || wsPill.isOccupied) ? wsPill.wsIcon : ""
-                        tint: wsPill.isActive ? "#1a1b26" : "#a9b1d6"
+                        tint: wsPill.isActive ? Colors.onAccent : Colors.onBackground
                         opacity: wsPill.isActive ? 1.0 : 0.9
                     }
 
@@ -203,20 +204,20 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "hh")
-                        color: "#c0caf5"; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
+                        color: Colors.onBackground; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "mm")
-                        color: "#c0caf5"; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
+                        color: Colors.onBackground; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                 }
 
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
-                    width: 16; height: 1; color: "#414868"; antialiasing: false
+                    width: 16; height: 1; color: Colors.outlineVariant; antialiasing: false
                 }
 
                 ColumnLayout {
@@ -225,19 +226,19 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "dd")
-                        color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 9
+                        color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 9
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "MM")
-                        color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 9
+                        color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 9
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "yy")
-                        color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 9
+                        color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 9
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                 }

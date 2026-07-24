@@ -18,8 +18,8 @@ Item {
 
     property int thickness: 4
     property real sizeScale: 10
-    property color color: "#565f89"
-    property color outlineColor: "#11131c"
+    property color color: Colors.outline
+    property color outlineColor: Colors.shadow
     property string corner: "topLeft"   // "topLeft" | "topRight" | "bottomLeft" | "bottomRight"
 
     readonly property int armLength: Math.max(8, Math.round(thickness * sizeScale))

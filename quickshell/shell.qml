@@ -19,7 +19,7 @@ ShellRoot {
     ShellFrame {
         barWidth: 40
         borderThickness: 10
-        frameColor: "#232939"
-        accentColor: "#565f89"
+        frameColor: Colors.background
+        accentColor: Colors.outline
     }
 }

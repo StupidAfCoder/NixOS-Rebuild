@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell.Services.Notifications as Notifs
 import Qt5Compat.GraphicalEffects
 import QtQuick.Shapes
+import "../bar"
 
 Item {
     id: root
@@ -11,8 +12,8 @@ Item {
 
     readonly property bool isCritical: root.notif && root.notif.urgency === Notifs.NotificationUrgency.Critical
     readonly property color urgencyColor: isCritical
-        ? "#f7768e"
-        : (root.notif && root.notif.urgency === Notifs.NotificationUrgency.Low ? "#565f89" : "#7aa2f7")
+    ? Colors.error
+    : (root.notif && root.notif.urgency === Notifs.NotificationUrgency.Low ? Colors.outline : Colors.accent)
 
     property bool expanded: false
     readonly property int extraLines: Math.max(0, bodyMeasure.lineCount - 1)
@@ -74,7 +75,7 @@ Item {
             preferredRendererType: Shape.CurveRenderer
 
             ShapePath {
-                fillColor: "#000000"
+                fillColor: Colors.shadow
                 strokeColor: "transparent"
                 PathSvg {
                     path: "M8,0 L" + card.width + ",0 L" + card.width + "," + card.height +
@@ -95,7 +96,7 @@ Item {
                 preferredRendererType: Shape.CurveRenderer
 
                 ShapePath {
-                    fillColor: "#1a1b26"
+                    fillColor: Colors.surfaceContainerLow
                     strokeColor: "transparent"
                     PathSvg {
                         path: "M8,0 L" + inner.width + ",0 L" + inner.width + "," + inner.height +
@@ -141,7 +142,7 @@ Item {
                     ColorOverlay {
                         anchors.fill: urgencyIcon
                         source: urgencyIcon
-                        color: "#1a1b26"
+                        color: Colors.background
                     }
                 }
 
@@ -188,7 +189,7 @@ Item {
                             Rectangle {
                                 id: closeBg
                                 anchors.fill: parent
-                                color: closeArea.containsMouse ? "#414868" : "transparent"
+                                color: closeArea.containsMouse ? Colors.outlineVariant : "transparent"
                                 antialiasing: false
 
                                 Repeater {
@@ -201,7 +202,7 @@ Item {
                                         y: modelData.y
                                         width: 2
                                         height: 2
-                                        color: "#1a1b26"
+                                        color: Colors.background
                                         antialiasing: false
                                         visible: closeArea.containsMouse
                                     }
@@ -221,7 +222,7 @@ Item {
                             ColorOverlay {
                                 anchors.fill: closeIcon
                                 source: closeIcon
-                                color: closeArea.containsMouse ? "#ff5555" : "#f7768e"
+                                color: closeArea.containsMouse ? Qt.lighter(Colors.error, 1.2) : Colors.error
                             }
 
                             MouseArea {
@@ -235,7 +236,7 @@ Item {
 
                     Text {
                         text: (root.notif && root.notif.summary) || ""
-                        color: "#acb0d0"
+                        color: Colors.onSurfaceVariant
                         font.family: "Pixel Operator"
                         font.pixelSize: 20
                         font.bold: true
@@ -247,7 +248,7 @@ Item {
                     Text {
                         id: bodyText
                         text: (root.notif && root.notif.body) || ""
-                        color: "#7982a9"
+                        color: Colors.onSurfaceVariant
                         font.family: "Cozette"
                         font.pixelSize: 13
                         renderType: Text.NativeRendering
@@ -284,7 +285,7 @@ Item {
                             ColorOverlay {
                                 anchors.fill: chevronIcon
                                 source: chevronIcon
-                                color: "#7aa2f7"
+                                color: Colors.accent
                             }
                         }
 

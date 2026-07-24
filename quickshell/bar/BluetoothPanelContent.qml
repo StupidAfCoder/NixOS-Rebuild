@@ -30,14 +30,14 @@ Item {
     Rectangle {
         id: panelBox
         anchors.fill: parent
-        color: "#1a1b26"
+        color: Colors.background
         antialiasing: false
 
         // border on three sides only -- the bottom edge blends into
         // the screen border strip instead of drawing its own seam
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#414868" }
-        Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: "#414868" }
-        Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: "#414868" }
+        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Colors.outlineVariant }
+        Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: Colors.outlineVariant }
+        Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: Colors.outlineVariant }
 
         MouseArea { anchors.fill: parent } // eat clicks so they don't fall through to desktop
 
@@ -49,9 +49,9 @@ Item {
             delegate: Item {
                 x: modelData.x; y: modelData.y
                 width: 10; height: 10
-                Rectangle { width: 10; height: 3; antialiasing: false; color: "#565f89" }
+                Rectangle { width: 10; height: 3; antialiasing: false; color: Colors.outline }
                 Rectangle {
-                    width: 3; height: 10; antialiasing: false; color: "#565f89"
+                    width: 3; height: 10; antialiasing: false; color: Colors.outline
                     x: modelData.hFlip ? 7 : 0
                 }
             }
@@ -68,7 +68,7 @@ Item {
 
                 Text {
                     text: "Bluetooth"
-                    color: "#c0caf5"
+                    color: Colors.onSurface
                     font.family: "Cozette"
                     font.pixelSize: 11
                     font.bold: true
@@ -79,12 +79,12 @@ Item {
                     id: closeBtn
                     width: 16; height: 16
                     antialiasing: false
-                    color: closeArea.containsMouse ? "#f7768e" : "transparent"
+                    color: closeArea.containsMouse ? Colors.error : "transparent"
 
                     Text {
                         anchors.centerIn: parent
                         text: "x"
-                        color: closeArea.containsMouse ? "#1a1b26" : "#e0af68"
+                        color: closeArea.containsMouse ? Colors.background : Colors.warning
                         font.family: "Cozette"
                         font.pixelSize: 11
                         font.bold: closeArea.containsMouse
@@ -108,7 +108,7 @@ Item {
                     Layout.preferredWidth: powerText.width + 12
                     Layout.preferredHeight: 18
                     color: "transparent"
-                    border.color: "#414868"
+                    border.color: Colors.outlineVariant
                     border.width: 1
                     antialiasing: false
                     visible: BluetoothPanel.adapter !== null
@@ -117,7 +117,7 @@ Item {
                         id: powerText
                         anchors.centerIn: parent
                         text: BluetoothPanel.adapter && BluetoothPanel.adapter.enabled ? "on" : "off"
-                        color: BluetoothPanel.adapter && BluetoothPanel.adapter.enabled ? "#7aa2f7" : "#565f89"
+                        color: BluetoothPanel.adapter && BluetoothPanel.adapter.enabled ? Colors.accent : Colors.onSurfaceVariant
                         font.family: "Cozette"
                         font.pixelSize: 8
                     }
@@ -132,7 +132,7 @@ Item {
                     Layout.preferredWidth: scanRow.width + 16
                     Layout.preferredHeight: 18
                     color: "transparent"
-                    border.color: "#414868"
+                    border.color: Colors.outlineVariant
                     border.width: 1
                     antialiasing: false
                     visible: BluetoothPanel.adapter !== null && BluetoothPanel.adapter.enabled
@@ -144,7 +144,7 @@ Item {
 
                         Rectangle {
                             width: 5; height: 5; antialiasing: false
-                            color: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? "#7aa2f7" : "#414868"
+                            color: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? Colors.accent : Colors.outlineVariant
                             SequentialAnimation on opacity {
                                 running: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering
                                 loops: Animation.Infinite
@@ -155,7 +155,7 @@ Item {
 
                         Text {
                             text: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? "scanning" : "scan"
-                            color: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? "#7aa2f7" : "#c0caf5"
+                            color: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? Colors.accent : Colors.onSurface
                             font.family: "Cozette"
                             font.pixelSize: 8
                         }
@@ -173,14 +173,14 @@ Item {
                     visible: BluetoothPanel.connectedCount > 0
                     Layout.preferredWidth: connText.width + 10
                     Layout.preferredHeight: 16
-                    color: "#7aa2f7"
+                    color: Colors.accent
                     antialiasing: false
 
                     Text {
                         id: connText
                         anchors.centerIn: parent
                         text: BluetoothPanel.connectedCount + " connected"
-                        color: "#1a1b26"
+                        color: Colors.background
                         font.family: "Cozette"
                         font.pixelSize: 8
                         font.bold: true
@@ -190,13 +190,13 @@ Item {
                 Text {
                     visible: BluetoothPanel.adapter && BluetoothPanel.adapter.devices.count > 0 && BluetoothPanel.connectedCount === 0
                     text: BluetoothPanel.adapter ? BluetoothPanel.adapter.devices.count + " known" : ""
-                    color: "#565f89"
+                    color: Colors.onSurfaceVariant
                     font.family: "Cozette"
                     font.pixelSize: 8
                 }
             }
 
-            Rectangle { Layout.fillWidth: true; height: 1; color: "#414868"; antialiasing: false }
+            Rectangle { Layout.fillWidth: true; height: 1; color: Colors.outlineVariant; antialiasing: false }
 
             Flickable {
                 Layout.fillWidth: true
@@ -221,7 +221,7 @@ Item {
                     Text {
                         visible: !BluetoothPanel.adapter || BluetoothPanel.adapter.devices.count === 0
                         text: BluetoothPanel.adapter === null ? "no adapter found" : "no devices -- try scan"
-                        color: "#565f89"
+                        color: Colors.onSurfaceVariant
                         font.family: "Cozette"
                         font.pixelSize: 9
                         Layout.topMargin: 12

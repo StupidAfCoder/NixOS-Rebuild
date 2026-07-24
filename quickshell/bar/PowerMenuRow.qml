@@ -5,14 +5,14 @@ Item {
     id: row
     property string label: ""
     property string iconName: ""
-    property color accent: "#7aa2f7"
+    property color accent: Colors.accent
     signal clicked
 
     Layout.preferredHeight: 26
 
     Rectangle {
         anchors.fill: parent
-        color: mouseArea.containsMouse ? "#1f2335" : "transparent"
+        color: mouseArea.containsMouse ? Colors.surfaceContainer : "transparent"
         antialiasing: false
     }
 
@@ -36,12 +36,12 @@ Item {
             Layout.preferredWidth: 11
             Layout.preferredHeight: 11
             iconName: row.iconName
-            tint: mouseArea.containsMouse ? row.accent : "#8a92b8"
+            tint: mouseArea.containsMouse ? row.accent : Colors.onSurfaceVariant
         }
 
         Text {
             text: row.label
-            color: mouseArea.containsMouse ? row.accent : "#a9b1d6"
+            color: mouseArea.containsMouse ? row.accent : Colors.onSurfaceVariant
             font.family: "Cozette"
             font.pixelSize: 9
             font.letterSpacing: 1

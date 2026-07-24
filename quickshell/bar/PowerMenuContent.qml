@@ -23,7 +23,7 @@ Item {
         id: bezel
         width: content.implicitWidth
         height: panelBox.height + 12
-        color: "#13141c"
+        color: Colors.shadow
         antialiasing: false
         z: 0
 
@@ -35,7 +35,7 @@ Item {
             delegate: Rectangle {
                 x: modelData.x; y: modelData.y
                 width: 2; height: 2
-                color: "#565f89"
+                color: Colors.outline
                 antialiasing: false
             }
         }
@@ -47,14 +47,14 @@ Item {
             anchors.topMargin: 6
             width: bezel.width - 12
             height: mainColumn.implicitHeight + 20
-            color: "#1a1b26"
+            color: Colors.background
             antialiasing: false
             z: 0
             clip: true
 
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#414868"; z: 2 }
-            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: "#414868"; z: 2 }
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#414868"; z: 2 }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Colors.outlineVariant; z: 2 }
+            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: Colors.outlineVariant; z: 2 }
+            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Colors.outlineVariant; z: 2 }
 
             Column {
                 anchors.fill: parent
@@ -65,7 +65,7 @@ Item {
                     delegate: Rectangle {
                         width: panelBox.width
                         height: 1
-                        color: "#c0caf5"
+                        color: Colors.onSurface
                         opacity: 0.02
                     }
                 }
@@ -86,9 +86,9 @@ Item {
                     x: modelData.x; y: modelData.y
                     width: 10; height: 10
                     z: 3
-                    Rectangle { width: 3; height: 10; antialiasing: false; color: "#565f89" }
+                    Rectangle { width: 3; height: 10; antialiasing: false; color: Colors.outline }
                     Rectangle {
-                        width: 10; height: 3; antialiasing: false; color: "#565f89"
+                        width: 10; height: 3; antialiasing: false; color: Colors.outline
                         y: modelData.vFlip ? 7 : 0
                     }
                 }
@@ -104,7 +104,7 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 120
-                    color: "#0f0f16"
+                    color: Colors.shadow
                     antialiasing: false
 
                     Repeater {
@@ -118,11 +118,11 @@ Item {
                             x: modelData.x; y: modelData.y
                             width: 10; height: 10
                             Rectangle {
-                                width: 3; height: 10; antialiasing: false; color: "#414868"
+                                width: 3; height: 10; antialiasing: false; color: Colors.outlineVariant
                                 x: modelData.hFlip ? 7 : 0
                             }
                             Rectangle {
-                                width: 10; height: 3; antialiasing: false; color: "#414868"
+                                width: 10; height: 3; antialiasing: false; color: Colors.outlineVariant
                                 y: modelData.vFlip ? 7 : 0
                             }
                         }
@@ -132,7 +132,7 @@ Item {
                         anchors.centerIn: parent
                         text: "[ animation\ngoes here ]"
                         horizontalAlignment: Text.AlignHCenter
-                        color: "#414868"
+                        color: Colors.outlineVariant
                         font.family: "Cozette"
                         font.pixelSize: 9
                     }
@@ -142,7 +142,7 @@ Item {
                         anchors.right: parent.right
                         anchors.bottom: parent.bottom
                         anchors.margins: 4
-                        color: "#9ece6a"
+                        color: Colors.success
                         antialiasing: false
 
                         SequentialAnimation on opacity {
@@ -153,7 +153,7 @@ Item {
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
 
                 PowerMenuRow { label: "LOCK"; iconName: "lock.svg"; Layout.fillWidth: true
                     onClicked: {
@@ -161,15 +161,15 @@ Item {
                         Quickshell.execDetached(["hyprlock"])
                     }
                 }
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
 
                 PowerMenuRow { label: "LOGOUT"; iconName: "logout.svg"; Layout.fillWidth: true
                     onClicked: {
                         PowerMenu.hide()
-                        Quickshell.execDetached(["hyprctl", "dispatch", "exit"])
+                        Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exit()"])
                     }
                 }
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
 
                 PowerMenuRow { label: "SLEEP"; iconName: "moon.svg"; Layout.fillWidth: true
                     onClicked: {
@@ -177,7 +177,7 @@ Item {
                         Quickshell.execDetached(["systemctl", "suspend"])
                     }
                 }
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
 
                 PowerMenuRow { label: "REBOOT"; iconName: "reload.svg"; Layout.fillWidth: true
                     onClicked: {
@@ -185,9 +185,9 @@ Item {
                         Quickshell.execDetached(["systemctl", "reboot"])
                     }
                 }
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
 
-                PowerMenuRow { label: "SHUTDOWN"; iconName: "power.svg"; accent: "#f7768e"; Layout.fillWidth: true
+                PowerMenuRow { label: "SHUTDOWN"; iconName: "power.svg"; accent: Colors.error; Layout.fillWidth: true
                     onClicked: {
                         PowerMenu.hide()
                         Quickshell.execDetached(["systemctl", "poweroff"])

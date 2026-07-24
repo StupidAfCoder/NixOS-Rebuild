@@ -25,14 +25,14 @@ Item {
         id: panelBox
         width: level.implicitWidth
         height: menuColumn.implicitHeight + 16
-        color: "#1a1b26"
+        color: Colors.background
         antialiasing: false
         z: 0
 
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#414868"; z: 1 }
-        Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: "#414868"; z: 1 }
-        Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: "#414868"; z: 1 }
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: "#414868"; z: 1 }
+        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Colors.outlineVariant; z: 1 }
+        Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: Colors.outlineVariant; z: 1 }
+        Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: Colors.outlineVariant; z: 1 }
+        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Colors.outlineVariant; z: 1 }
 
         Repeater {
             model: [
@@ -46,11 +46,11 @@ Item {
                 width: 10; height: 10
                 z: 2
                 Rectangle {
-                    width: 3; height: 10; antialiasing: false; color: "#565f89"
+                    width: 3; height: 10; antialiasing: false; color: Colors.outline
                     x: modelData.hFlip ? 7 : 0
                 }
                 Rectangle {
-                    width: 10; height: 3; antialiasing: false; color: "#565f89"
+                    width: 10; height: 3; antialiasing: false; color: Colors.outline
                     y: modelData.vFlip ? 7 : 0
                 }
             }
@@ -73,7 +73,7 @@ Item {
 
                     Component {
                         id: sepComp
-                        Rectangle { anchors.fill: parent; color: "#292e42"; antialiasing: false }
+                        Rectangle { anchors.fill: parent; color: Colors.surfaceContainerHigh; antialiasing: false }
                     }
 
                     Component {
@@ -81,7 +81,7 @@ Item {
                         Rectangle {
                             id: rowRect
                             anchors.fill: parent
-                            color: entryArea.containsMouse ? "#1f2335" : "transparent"
+                            color: entryArea.containsMouse ? Colors.surfaceContainer : "transparent"
                             antialiasing: false
                             opacity: modelData.enabled ? 1.0 : 0.4
 
@@ -91,7 +91,7 @@ Item {
                                 anchors.right: arrow.visible ? arrow.left : parent.right
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.text
-                                color: "#c0caf5"
+                                color: Colors.onSurface
                                 font.family: "Cozette"
                                 font.pixelSize: 9
                                 elide: Text.ElideRight
@@ -104,7 +104,7 @@ Item {
                                 anchors.rightMargin: 6
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: ">"
-                                color: "#565f89"
+                                color: Colors.onSurfaceVariant
                                 font.family: "Cozette"
                                 font.pixelSize: 9
                             }
@@ -133,7 +133,7 @@ Item {
             Text {
                 visible: opener.children.count === 0
                 text: "empty"
-                color: "#565f89"
+                color: Colors.onSurfaceVariant
                 font.family: "Cozette"
                 font.pixelSize: 9
                 Layout.alignment: Qt.AlignHCenter

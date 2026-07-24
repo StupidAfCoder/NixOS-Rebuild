@@ -36,7 +36,7 @@ Item {
             Text {
                 id: rotatedText
                 text: marqueeBox.label
-                color: "#7aa2f7"
+                color: Colors.accent
                 font.family: "Cozette"
                 font.pixelSize: 9
                 y: (rotWrap.height - height) / 2
@@ -83,7 +83,7 @@ Item {
                     required property int index
                     width: 2
                     antialiasing: false
-                    color: widget.playing ? "#7aa2f7" : "#565f89"
+                    color: widget.playing ? Colors.accent : Colors.outline
                     height: 4
                     anchors.bottom: parent.bottom
 
@@ -114,8 +114,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         width: 140
         height: previewCol.implicitHeight + 18
-        color: "#1a1b26"
-        border.color: "#414868"
+        color: Colors.background
+        border.color: Colors.outlineVariant
         border.width: 1
         antialiasing: false
         z: 30
@@ -131,11 +131,11 @@ Item {
                 x: modelData.x; y: modelData.y
                 width: 10; height: 10
                 Rectangle {
-                    width: 3; height: 10; antialiasing: false; color: "#565f89"
+                    width: 3; height: 10; antialiasing: false; color: Colors.outline
                     x: modelData.hFlip ? 7 : 0
                 }
                 Rectangle {
-                    width: 10; height: 3; antialiasing: false; color: "#565f89"
+                    width: 10; height: 3; antialiasing: false; color: Colors.outline
                     y: modelData.vFlip ? 7 : 0
                 }
             }
@@ -150,19 +150,19 @@ Item {
             Text {
                 width: parent.width
                 text: widget.active ? (widget.player.trackTitle || "Unknown Title") : ""
-                color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 10; font.bold: true
+                color: Colors.onSurface; font.family: "Cozette"; font.pixelSize: 10; font.bold: true
                 elide: Text.ElideRight
             }
             Text {
                 width: parent.width
                 text: widget.active ? (widget.player.trackArtist || "Unknown Artist") : ""
-                color: "#a9b1d6"; font.family: "Cozette"; font.pixelSize: 9
+                color: Colors.onSurfaceVariant; font.family: "Cozette"; font.pixelSize: 9
                 elide: Text.ElideRight
             }
             Text {
                 width: parent.width
                 text: widget.active ? (widget.playing ? "( Playing )" : "( Paused )") : ""
-                color: "#565f89"; font.family: "Cozette"; font.pixelSize: 8
+                color: Colors.onSurfaceVariant; font.family: "Cozette"; font.pixelSize: 8
             }
         }
     }

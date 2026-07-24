@@ -35,7 +35,7 @@ Item {
         id: bezel
         width: content.implicitWidth
         height: panelBox.height + 12
-        color: "#13141c"
+        color: Colors.shadow
         antialiasing: false
         z: 0
 
@@ -47,7 +47,7 @@ Item {
             delegate: Rectangle {
                 x: modelData.x; y: modelData.y
                 width: 2; height: 2
-                color: "#565f89"
+                color: Colors.outline
                 antialiasing: false
             }
         }
@@ -59,14 +59,14 @@ Item {
             anchors.topMargin: 6
             width: bezel.width - 12
             height: mainColumn.implicitHeight + 20
-            color: "#1a1b26"
+            color: Colors.background
             antialiasing: false
             z: 0
             clip: true
 
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#414868"; z: 2 }
-            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: "#414868"; z: 2 }
-            Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: "#414868"; z: 2 }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Colors.outlineVariant; z: 2 }
+            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: Colors.outlineVariant; z: 2 }
+            Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: Colors.outlineVariant; z: 2 }
 
             MouseArea { anchors.fill: parent; z: -1; onClicked: {} }
 
@@ -80,10 +80,10 @@ Item {
                     width: 10; height: 10
                     z: 3
                     Rectangle {
-                        width: 3; height: 10; antialiasing: false; color: "#565f89"
+                        width: 3; height: 10; antialiasing: false; color: Colors.outline
                         x: modelData.hFlip ? 7 : 0
                     }
-                    Rectangle { width: 10; height: 3; antialiasing: false; color: "#565f89" }
+                    Rectangle { width: 10; height: 3; antialiasing: false; color: Colors.outline }
                 }
             }
 
@@ -97,7 +97,7 @@ Item {
                 Text {
                     visible: !content.hasPlayer
                     text: "NO MEDIA PLAYING"
-                    color: "#565f89"
+                    color: Colors.onSurfaceVariant
                     font.family: "Cozette"
                     font.pixelSize: 9
                     Layout.alignment: Qt.AlignHCenter
@@ -115,7 +115,7 @@ Item {
                             required property int index
                             width: 6; height: 6
                             antialiasing: false
-                            color: index === MprisActive.players.values.indexOf(content.player) ? "#7aa2f7" : "#414868"
+                            color: index === MprisActive.players.values.indexOf(content.player) ? Colors.accent : Colors.outlineVariant
                             MouseArea {
                                 anchors.fill: parent
                                 onClicked: MprisActive.selectPlayer(parent.index)
@@ -132,8 +132,8 @@ Item {
                     Rectangle {
                         Layout.preferredWidth: 56
                         Layout.preferredHeight: 56
-                        color: "#16161e"
-                        border.color: "#414868"
+                        color: Colors.surfaceContainerLow
+                        border.color: Colors.outlineVariant
                         border.width: 1
                         antialiasing: false
                         clip: true
@@ -152,7 +152,7 @@ Item {
                             visible: !content.hasPlayer || content.player.trackArtUrl === ""
                             anchors.centerIn: parent
                             text: "\u266b"
-                            color: "#414868"
+                            color: Colors.outlineVariant
                             font.pixelSize: 20
                         }
                     }
@@ -164,7 +164,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: content.hasPlayer ? (content.player.trackTitle || "Unknown Title") : ""
-                            color: "#c0caf5"
+                            color: Colors.onSurface
                             font.family: "Cozette"
                             font.pixelSize: 10
                             font.bold: true
@@ -173,7 +173,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: content.hasPlayer ? (content.player.trackArtist || "Unknown Artist") : ""
-                            color: "#a9b1d6"
+                            color: Colors.onSurfaceVariant
                             font.family: "Cozette"
                             font.pixelSize: 9
                             elide: Text.ElideRight
@@ -182,7 +182,7 @@ Item {
                             Layout.fillWidth: true
                             visible: content.hasPlayer && content.player.trackAlbum !== ""
                             text: content.hasPlayer ? content.player.trackAlbum : ""
-                            color: "#565f89"
+                            color: Colors.onSurfaceVariant
                             font.family: "Cozette"
                             font.pixelSize: 8
                             elide: Text.ElideRight
@@ -214,7 +214,7 @@ Item {
                                     width: (progressTrack.width - (progressTrack.segCount - 1)) / progressTrack.segCount
                                     height: 10
                                     antialiasing: false
-                                    color: (index / progressTrack.segCount) < progressTrack.pct ? "#7aa2f7" : "#292e42"
+                                    color: (index / progressTrack.segCount) < progressTrack.pct ? Colors.accent : Colors.surfaceContainerHigh
                                 }
                             }
                         }
@@ -233,14 +233,14 @@ Item {
                         Layout.fillWidth: true
                         Text {
                             text: content.hasPlayer ? content.formatTime(content.player.position) : "0:00"
-                            color: "#565f89"
+                            color: Colors.onSurfaceVariant
                             font.family: "Cozette"
                             font.pixelSize: 8
                         }
                         Item { Layout.fillWidth: true }
                         Text {
                             text: content.hasPlayer ? content.formatTime(content.player.length) : "0:00"
-                            color: "#565f89"
+                            color: Colors.onSurfaceVariant
                             font.family: "Cozette"
                             font.pixelSize: 8
                         }
@@ -257,11 +257,11 @@ Item {
 
                     Rectangle {
                         Layout.preferredWidth: 28; Layout.preferredHeight: 22
-                        color: prevArea.containsMouse ? "#1f2335" : "transparent"
-                        border.color: "#414868"; border.width: 1
+                        color: prevArea.containsMouse ? Colors.surfaceContainer : "transparent"
+                        border.color: Colors.outlineVariant; border.width: 1
                         antialiasing: false
                         opacity: content.hasPlayer && content.player.canGoPrevious ? 1.0 : 0.35
-                        Text { anchors.centerIn: parent; text: "|<"; color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 9 }
+                        Text { anchors.centerIn: parent; text: "|<"; color: Colors.onSurface; font.family: "Cozette"; font.pixelSize: 9 }
                         MouseArea {
                             id: prevArea
                             anchors.fill: parent
@@ -274,14 +274,14 @@ Item {
 
                     Rectangle {
                         Layout.preferredWidth: 32; Layout.preferredHeight: 22
-                        color: playArea.containsMouse ? "#1f2335" : "transparent"
-                        border.color: "#7aa2f7"; border.width: 1
+                        color: playArea.containsMouse ? Colors.surfaceContainer : "transparent"
+                        border.color: Colors.accent; border.width: 1
                         antialiasing: false
                         opacity: content.hasPlayer && content.player.canTogglePlaying ? 1.0 : 0.35
                         Text {
                             anchors.centerIn: parent
                             text: content.isPlaying ? "||" : ">"
-                            color: "#7aa2f7"
+                            color: Colors.accent
                             font.family: "Cozette"
                             font.pixelSize: 10
                             font.bold: true
@@ -298,11 +298,11 @@ Item {
 
                     Rectangle {
                         Layout.preferredWidth: 28; Layout.preferredHeight: 22
-                        color: nextArea.containsMouse ? "#1f2335" : "transparent"
-                        border.color: "#414868"; border.width: 1
+                        color: nextArea.containsMouse ? Colors.surfaceContainer : "transparent"
+                        border.color: Colors.outlineVariant; border.width: 1
                         antialiasing: false
                         opacity: content.hasPlayer && content.player.canGoNext ? 1.0 : 0.35
-                        Text { anchors.centerIn: parent; text: ">|"; color: "#c0caf5"; font.family: "Cozette"; font.pixelSize: 9 }
+                        Text { anchors.centerIn: parent; text: ">|"; color: Colors.onSurface; font.family: "Cozette"; font.pixelSize: 9 }
                         MouseArea {
                             id: nextArea
                             anchors.fill: parent

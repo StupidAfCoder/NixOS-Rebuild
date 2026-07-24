@@ -1,21 +1,79 @@
-@define-color accent_color {{colors.primary.default.hex}};
-@define-color accent_bg_color {{colors.primary.default.hex}};
-@define-color accent_fg_color {{colors.background.default.hex}};
+@define-color m3_primary {{colors.primary.default.hex}};
+@define-color m3_on_primary {{colors.on_primary.default.hex}};
 
-@define-color window_bg_color {{colors.background.default.hex}};
-@define-color window_fg_color {{colors.on_background.default.hex}};
+@define-color m3_error {{colors.error.default.hex}};
+@define-color m3_on_error {{colors.on_error.default.hex}};
 
-@define-color view_bg_color {{colors.surface.default.hex}};
-@define-color view_fg_color {{colors.on_background.default.hex}};
+@define-color m3_background {{colors.background.default.hex}};
+@define-color m3_on_background {{colors.on_background.default.hex}};
 
-@define-color headerbar_bg_color {{colors.surface.default.hex}};
-@define-color headerbar_fg_color {{colors.on_background.default.hex}};
+@define-color m3_surface {{colors.surface.default.hex}};
+@define-color m3_on_surface {{colors.on_surface.default.hex}};
 
-@define-color card_bg_color {{colors.surface.default.hex}};
-@define-color card_fg_color {{colors.on_background.default.hex}};
+@define-color m3_surface_container_low {{colors.surface_container_low.default.hex}};
+@define-color m3_surface_container {{colors.surface_container.default.hex}};
+@define-color m3_surface_container_high {{colors.surface_container_high.default.hex}};
+@define-color m3_surface_container_highest {{colors.surface_container_highest.default.hex}};
 
-@define-color popover_bg_color {{colors.surface.default.hex}};
-@define-color popover_fg_color {{colors.on_background.default.hex}};
+@define-color m3_outline_variant {{colors.outline_variant.default.hex}};
+@define-color m3_shadow {{colors.shadow.default.hex}};
 
-@define-color dialog_bg_color {{colors.background.default.hex}};
-@define-color dialog_fg_color {{colors.on_background.default.hex}};
+@define-color accent_color @m3_primary;
+@define-color accent_bg_color @m3_primary;
+@define-color accent_fg_color @m3_on_primary;
+
+@define-color destructive_color @m3_error;
+@define-color destructive_bg_color @m3_error;
+@define-color destructive_fg_color @m3_on_error;
+
+@define-color success_color #8bd5a4;
+@define-color success_bg_color #8bd5a4;
+@define-color success_fg_color #16281d;
+
+@define-color warning_color #f5c069;
+@define-color warning_bg_color #f5c069;
+@define-color warning_fg_color #2b1d02;
+
+@define-color error_color @m3_error;
+@define-color error_bg_color @m3_error;
+@define-color error_fg_color @m3_on_error;
+
+@define-color window_bg_color @m3_background;
+@define-color window_fg_color @m3_on_background;
+
+@define-color view_bg_color @m3_surface;
+@define-color view_fg_color @m3_on_surface;
+
+@define-color headerbar_bg_color @m3_surface_container;
+@define-color headerbar_fg_color @m3_on_surface;
+@define-color headerbar_border_color @m3_outline_variant;
+@define-color headerbar_backdrop_color @m3_background;
+@define-color headerbar_shade_color alpha(@m3_shadow, 0.18);
+
+@define-color card_bg_color @m3_surface_container_low;
+@define-color card_fg_color @m3_on_surface;
+@define-color card_shade_color alpha(@m3_shadow, 0.12);
+
+@define-color dialog_bg_color @m3_surface_container_high;
+@define-color dialog_fg_color @m3_on_surface;
+
+@define-color popover_bg_color @m3_surface_container;
+@define-color popover_fg_color @m3_on_surface;
+@define-color popover_shade_color alpha(@m3_shadow, 0.16);
+
+@define-color thumbnail_bg_color @m3_surface_container_highest;
+@define-color thumbnail_fg_color @m3_on_surface;
+
+@define-color sidebar_bg_color @m3_surface_container_low;
+@define-color sidebar_fg_color @m3_on_surface;
+@define-color sidebar_backdrop_color @m3_background;
+@define-color sidebar_border_color @m3_outline_variant;
+@define-color sidebar_shade_color alpha(@m3_shadow, 0.12);
+
+@define-color secondary_sidebar_bg_color @m3_surface_container;
+@define-color secondary_sidebar_fg_color @m3_on_surface;
+@define-color secondary_sidebar_backdrop_color @m3_background;
+@define-color secondary_sidebar_border_color @m3_outline_variant;
+@define-color secondary_sidebar_shade_color alpha(@m3_shadow, 0.12);
+
+@define-color scrollbar_outline_color @m3_background;

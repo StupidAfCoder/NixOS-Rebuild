@@ -2,7 +2,7 @@ import QtQuick
 
 Item {
     id: root
-    property color surfaceColor: "#232939"
+    property color surfaceColor: Colors.background
 
     Rectangle {
         anchors.fill: parent

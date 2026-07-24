@@ -13,9 +13,9 @@ ColumnLayout {
     spacing: 12
 
     readonly property int iconSize: 16
-    readonly property color glowColor: "#7aa2f7"
-    readonly property color dimColor: "#565f89"
-    readonly property color warnColor: "#e0af68"
+    readonly property color glowColor: Colors.accent
+    readonly property color dimColor: Colors.outline
+    readonly property color warnColor: Colors.warning
 
     readonly property var trayFallback: ({
         "udiskie": "database.svg"
@@ -61,14 +61,14 @@ ColumnLayout {
             anchors.verticalCenter: parent.verticalCenter
             width: tipText.width + 12
             height: tipText.height + 8
-            color: "#1a1b26"
-            border.color: "#414868"
+            color: Colors.background
+            border.color: Colors.outlineVariant
             border.width: 1
             Text {
                 id: tipText
                 anchors.centerIn: parent
                 text: "No battery detected"
-                color: "#c0caf5"
+                color: Colors.onSurface
                 font.family: "Cozette"
                 font.pixelSize: 10
             }
@@ -176,15 +176,15 @@ ColumnLayout {
                 anchors.verticalCenter: parent.verticalCenter
                 width: trayTip.width + 12
                 height: trayTip.height + 8
-                color: "#1a1b26"
-                border.color: "#414868"
+                color: Colors.background
+                border.color: Colors.outlineVariant
                 border.width: 1
                 z: 20
                 Text {
                     id: trayTip
                     anchors.centerIn: parent
                     text: "right-click for options"
-                    color: "#c0caf5"
+                    color: Colors.onSurface
                     font.family: "Cozette"
                     font.pixelSize: 10
                 }

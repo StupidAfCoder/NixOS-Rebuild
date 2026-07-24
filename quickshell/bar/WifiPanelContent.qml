@@ -22,7 +22,7 @@ Item {
         id: bezel
         width: content.implicitWidth
         height: panelBox.height + 12
-        color: "#13141c"
+        color: Colors.shadow
         antialiasing: false
         z: 0
 
@@ -34,7 +34,7 @@ Item {
             delegate: Rectangle {
                 x: modelData.x; y: modelData.y
                 width: 2; height: 2
-                color: "#565f89"
+                color: Colors.outline
                 antialiasing: false
             }
         }
@@ -46,14 +46,14 @@ Item {
             anchors.topMargin: 6
             width: bezel.width - 12
             height: mainColumn.implicitHeight + 20
-            color: "#1a1b26"
+            color: Colors.background
             antialiasing: false
             z: 0
             clip: true
 
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: "#414868"; z: 2 }
-            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: "#414868"; z: 2 }
-            Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: "#414868"; z: 2 }
+            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Colors.outlineVariant; z: 2 }
+            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: Colors.outlineVariant; z: 2 }
+            Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: Colors.outlineVariant; z: 2 }
 
             Column {
                 anchors.fill: parent
@@ -64,7 +64,7 @@ Item {
                     delegate: Rectangle {
                         width: panelBox.width
                         height: 1
-                        color: "#c0caf5"
+                        color: Colors.onSurface
                         opacity: 0.02
                     }
                 }
@@ -82,10 +82,10 @@ Item {
                     width: 10; height: 10
                     z: 3
                     Rectangle {
-                        width: 3; height: 10; antialiasing: false; color: "#565f89"
+                        width: 3; height: 10; antialiasing: false; color: Colors.outline
                         x: modelData.hFlip ? 7 : 0
                     }
-                    Rectangle { width: 10; height: 3; antialiasing: false; color: "#565f89" }
+                    Rectangle { width: 10; height: 3; antialiasing: false; color: Colors.outline }
                 }
             }
 
@@ -100,8 +100,8 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 46
-                    color: "#0f0f16"
-                    border.color: "#292e42"
+                    color: Colors.shadow
+                    border.color: Colors.surfaceContainerHigh
                     border.width: 1
                     antialiasing: false
 
@@ -117,11 +117,11 @@ Item {
                             visible: NetworkBackend.ethernetConnected
                             Layout.preferredWidth: 14
                             Layout.preferredHeight: 14
-                            Rectangle { x: 5; y: 0; width: 4; height: 8; color: "#9ece6a"; antialiasing: false }
-                            Rectangle { x: 2; y: 8; width: 10; height: 2; color: "#9ece6a"; antialiasing: false }
-                            Rectangle { x: 0; y: 10; width: 2; height: 4; color: "#9ece6a"; antialiasing: false }
-                            Rectangle { x: 6; y: 10; width: 2; height: 4; color: "#9ece6a"; antialiasing: false }
-                            Rectangle { x: 12; y: 10; width: 2; height: 4; color: "#9ece6a"; antialiasing: false }
+                            Rectangle { x: 5; y: 0; width: 4; height: 8; color: Colors.success; antialiasing: false }
+                            Rectangle { x: 2; y: 8; width: 10; height: 2; color: Colors.success; antialiasing: false }
+                            Rectangle { x: 0; y: 10; width: 2; height: 4; color: Colors.success; antialiasing: false }
+                            Rectangle { x: 6; y: 10; width: 2; height: 4; color: Colors.success; antialiasing: false }
+                            Rectangle { x: 12; y: 10; width: 2; height: 4; color: Colors.success; antialiasing: false }
                         }
 
                         ColoredIcon {
@@ -129,7 +129,7 @@ Item {
                             Layout.preferredWidth: 14
                             Layout.preferredHeight: 14
                             iconName: "wifi.svg"
-                            tint: NetworkBackend.wifiConnected ? "#9ece6a" : "#565f89"
+                            tint: NetworkBackend.wifiConnected ? Colors.success : Colors.onSurfaceVariant
                         }
 
                         ColumnLayout {
@@ -140,7 +140,7 @@ Item {
                                 text: NetworkBackend.ethernetConnected ? "WIRED"
                                     : NetworkBackend.wifiConnected ? NetworkBackend.connectedSsid
                                     : "NOT CONNECTED"
-                                color: "#c0caf5"
+                                color: Colors.onSurface
                                 font.family: "Cozette"
                                 font.pixelSize: 9
                                 font.bold: true
@@ -153,7 +153,7 @@ Item {
                                     : NetworkBackend.wifiConnected
                                         ? (NetworkBackend.wifiIp !== "" ? NetworkBackend.wifiIp : "")
                                         : "no active connection"
-                                color: "#565f89"
+                                color: Colors.onSurfaceVariant
                                 font.family: "Cozette"
                                 font.pixelSize: 8
                                 elide: Text.ElideRight
@@ -163,7 +163,7 @@ Item {
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
 
                 // ---- wifi radio row ----
                 RowLayout {
@@ -173,7 +173,7 @@ Item {
 
                     Text {
                         text: NetworkBackend.busy ? "WIRELESS ..." : "WIRELESS"
-                        color: "#a9b1d6"
+                        color: Colors.onSurfaceVariant
                         font.family: "Cozette"
                         font.pixelSize: 9
                         font.letterSpacing: 1
@@ -183,8 +183,8 @@ Item {
                     Rectangle {
                         Layout.preferredWidth: 16
                         Layout.preferredHeight: 16
-                        color: scanArea.containsMouse ? "#1f2335" : "transparent"
-                        border.color: "#414868"
+                        color: scanArea.containsMouse ? Colors.surfaceContainer : "transparent"
+                        border.color: Colors.outlineVariant
                         border.width: 1
                         antialiasing: false
                         opacity: NetworkBackend.wifiRadioEnabled && !NetworkBackend.busy ? 1.0 : 0.3
@@ -192,7 +192,7 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: "\u21bb"
-                            color: "#7aa2f7"
+                            color: Colors.accent
                             font.pixelSize: 9
                         }
                         MouseArea {
@@ -208,8 +208,8 @@ Item {
                     Rectangle {
                         Layout.preferredWidth: 28
                         Layout.preferredHeight: 14
-                        color: NetworkBackend.wifiRadioEnabled ? "#2a3655" : "#16161e"
-                        border.color: NetworkBackend.wifiRadioEnabled ? "#7aa2f7" : "#414868"
+                        color: NetworkBackend.wifiRadioEnabled ? Colors.surfaceContainerHigh : Colors.surfaceContainerLow
+                        border.color: NetworkBackend.wifiRadioEnabled ? Colors.accent : Colors.outlineVariant
                         border.width: 1
                         antialiasing: false
 
@@ -217,7 +217,7 @@ Item {
                             width: 8; height: 8
                             y: 2
                             x: NetworkBackend.wifiRadioEnabled ? parent.width - width - 2 : 2
-                            color: NetworkBackend.wifiRadioEnabled ? "#7aa2f7" : "#565f89"
+                            color: NetworkBackend.wifiRadioEnabled ? Colors.accent : Colors.outline
                             antialiasing: false
                             Behavior on x { NumberAnimation { duration: 120 } }
                         }
@@ -231,12 +231,12 @@ Item {
                     }
                 }
 
-                Rectangle { Layout.fillWidth: true; height: 1; color: "#292e42"; antialiasing: false }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
 
                 Text {
                     visible: !NetworkBackend.wifiRadioEnabled
                     text: "wifi radio off"
-                    color: "#414868"
+                    color: Colors.onSurfaceVariant
                     font.family: "Cozette"
                     font.pixelSize: 8
                     Layout.alignment: Qt.AlignHCenter
@@ -247,7 +247,7 @@ Item {
                 Text {
                     visible: NetworkBackend.wifiRadioEnabled && NetworkBackend.networks.length === 0
                     text: NetworkBackend.scanning ? "scanning..." : "no networks found"
-                    color: "#414868"
+                    color: Colors.onSurfaceVariant
                     font.family: "Cozette"
                     font.pixelSize: 8
                     Layout.alignment: Qt.AlignHCenter
