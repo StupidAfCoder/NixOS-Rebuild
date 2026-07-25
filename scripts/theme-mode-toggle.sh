@@ -14,4 +14,5 @@ echo "$new" > "$MODE_FILE"
 wallpaper="$(cat "$WALL_STATE")"
 python3 ~/.nixos_dotfiles/scripts/generate-theme.py "$wallpaper" "$new"
 wallust run "$wallpaper"
+matugen image "$wallpaper" -m "$new" -t scheme-vibrant --source-color-index 0 --contrast 0.2
 notify-send "Theme" "Switched to $new mode"

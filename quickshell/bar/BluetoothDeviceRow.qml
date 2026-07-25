@@ -79,7 +79,7 @@ RowLayout {
     Text {
         visible: root.device.paired
         text: root.device.trusted ? "*" : "."
-        color: root.device.trusted ? Colors.warning : Colors.mutedOnBackground
+        color: root.device.trusted ? Colors.accentSecondary : Colors.mutedOnBackground
         font.family: "Cozette"
         font.pixelSize: 11
 

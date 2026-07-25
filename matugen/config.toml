@@ -4,10 +4,6 @@
 # We're not using matugen's own wallpaper-setting -- awww is already
 # driven from hyprland.lua's autostart block, so leave this alone.
 
-[templates.bar_colors]
-input_path = '~/.config/matugen/templates/bar-colors.json.hbs'
-output_path = '~/.nixos_dotfiles/quickshell/bar/theme/colors.json'
-
 [templates.gtk3_colors]
 input_path = '~/.config/matugen/templates/gtk-colors.css.hbs'
 output_path = '~/.config/gtk-3.0/gtk.css'

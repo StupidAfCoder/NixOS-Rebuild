@@ -232,6 +232,7 @@ in
     pkgs.nicotine-plus
     lxqt.lxqt-policykit
     megumin-cursor
+    hyprpolkitagent
 
     brightnessctl     # brightness widget
     ddcutil           # external monitor brightness control (optional)

@@ -76,8 +76,9 @@ echo "$selected_path" > "$STATE_FILE"
 #   seeing on-screen.
 # --contrast 0.2: 0.5 is already halfway to matugen's max and amplifies
 #   compression rather than fixing it once the seed is already flat.
-# matugen image "$selected_path" -m "$mode" -t scheme-vibrant --source-color-index 0 --contrast 0.2
 python3 ~/.nixos_dotfiles/scripts/generate-theme.py "$selected_path" "$mode"
 wallust run "$selected_path"
+matugen image "$selected_path" -m "$mode" -t scheme-vibrant --source-color-index 0 --contrast 0.2
+hyprctl reload
 
 notify-send "Wallpaper" "Switched to $choice"

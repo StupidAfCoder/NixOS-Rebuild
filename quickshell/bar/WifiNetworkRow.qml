@@ -86,7 +86,7 @@ Item {
             Text {
                 visible: row.inUse
                 text: "\u2713"
-                color: Colors.success
+                color: Colors.accentSecondary
                 font.pixelSize: 9
             }
         }

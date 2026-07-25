@@ -102,7 +102,7 @@ in
       [Appearance]
       color_scheme_path=/home/swami/.config/qt6ct/colors/matugen.conf
       custom_palette=true
-      style=kvantum
+      style=Fusion
     '';
     force = true;
   };
@@ -112,7 +112,7 @@ in
       [Appearance]
       color_scheme_path=/home/swami/.config/qt5ct/colors/matugen.conf
       custom_palette=true
-      style=kvantum
+      style=Fusion
     '';
     force = true;
   };
@@ -207,7 +207,7 @@ in
   qt = {
     enable = true;
     platformTheme.name = "qt6ct";
-    style.name = "fusion";
+    style.name = "Fusion";
   };
 
   #Systemd User defined Services

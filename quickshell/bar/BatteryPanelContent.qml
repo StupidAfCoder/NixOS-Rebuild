@@ -52,6 +52,7 @@ Item {
             width: bezel.width - 12
             height: mainColumn.implicitHeight + 20
             color: Colors.background
+            Behavior on color { ColorAnimation { duration: 350; easing.type: Easing.OutCubic } }
             antialiasing: false
             z: 0
             clip: true

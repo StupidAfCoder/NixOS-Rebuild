@@ -60,6 +60,7 @@ Item {
             width: bezel.width - 12
             height: mainColumn.implicitHeight + 20
             color: Colors.background
+            Behavior on color { ColorAnimation { duration: 350; easing.type: Easing.OutCubic } }
             antialiasing: false
             z: 0
             clip: true
@@ -141,7 +142,7 @@ Item {
                         Image {
                             anchors.fill: parent
                             anchors.margins: 2
-                            source: content.hasPlayer ? content.player.trackArtUrl : ""
+                            source: content.player?.trackArtUrl ? content.player.trackArtUrl : ""
                             fillMode: Image.PreserveAspectCrop
                             smooth: false
                             asynchronous: true
@@ -180,8 +181,8 @@ Item {
                         }
                         Text {
                             Layout.fillWidth: true
-                            visible: content.hasPlayer && content.player.trackAlbum !== ""
-                            text: content.hasPlayer ? content.player.trackAlbum : ""
+                            visible: content.player?.trackAlbum !== ""
+                            text: content.player?.trackAlbum ? content.player.trackAlbum : ""
                             color: Colors.mutedOnBackground
                             font.family: "Cozette"
                             font.pixelSize: 8
@@ -201,7 +202,7 @@ Item {
                         Layout.preferredHeight: 10
 
                         readonly property int segCount: 26
-                        readonly property real pct: (content.hasPlayer && content.player.length > 0)
+                        readonly property real pct: (content.player?.length > 0)
                             ? Math.min(1, content.player.position / content.player.length) : 0
 
                         Row {
@@ -214,14 +215,14 @@ Item {
                                     width: (progressTrack.width - (progressTrack.segCount - 1)) / progressTrack.segCount
                                     height: 10
                                     antialiasing: false
-                                    color: (index / progressTrack.segCount) < progressTrack.pct ? Colors.accent : Colors.surfaceContainerHigh
+                                    color: (index / progressTrack.segCount) < progressTrack.pct ? Colors.accentSecondary : Colors.surfaceContainerHigh
                                 }
                             }
                         }
 
                         MouseArea {
                             anchors.fill: parent
-                            enabled: content.hasPlayer && content.player.canSeek
+                            enabled: content.player?.canSeek
                             onClicked: (mouse) => {
                                 const frac = Math.min(1, Math.max(0, mouse.x / width))
                                 content.player.position = frac * content.player.length
@@ -260,13 +261,13 @@ Item {
                         color: prevArea.containsMouse ? Colors.surfaceContainer : "transparent"
                         border.color: Colors.outlineVariant; border.width: 1
                         antialiasing: false
-                        opacity: content.hasPlayer && content.player.canGoPrevious ? 1.0 : 0.35
+                        opacity: content.player?.canGoPrevious ? 1.0 : 0.35
                         Text { anchors.centerIn: parent; text: "|<"; color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 9 }
                         MouseArea {
                             id: prevArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            enabled: content.hasPlayer && content.player.canGoPrevious
+                            enabled: content.player?.canGoPrevious
                             cursorShape: Qt.PointingHandCursor
                             onClicked: content.player.previous()
                         }
@@ -277,7 +278,7 @@ Item {
                         color: playArea.containsMouse ? Colors.surfaceContainer : "transparent"
                         border.color: Colors.accent; border.width: 1
                         antialiasing: false
-                        opacity: content.hasPlayer && content.player.canTogglePlaying ? 1.0 : 0.35
+                        opacity: content.player?.canTogglePlaying ? 1.0 : 0.35
                         Text {
                             anchors.centerIn: parent
                             text: content.isPlaying ? "||" : ">"
@@ -290,7 +291,7 @@ Item {
                             id: playArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            enabled: content.hasPlayer && content.player.canTogglePlaying
+                            enabled: content.player?.canTogglePlaying
                             cursorShape: Qt.PointingHandCursor
                             onClicked: content.player.togglePlaying()
                         }
@@ -301,13 +302,13 @@ Item {
                         color: nextArea.containsMouse ? Colors.surfaceContainer : "transparent"
                         border.color: Colors.outlineVariant; border.width: 1
                         antialiasing: false
-                        opacity: content.hasPlayer && content.player.canGoNext ? 1.0 : 0.35
+                        opacity: content.player?.canGoNext ? 1.0 : 0.35
                         Text { anchors.centerIn: parent; text: ">|"; color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 9 }
                         MouseArea {
                             id: nextArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            enabled: content.hasPlayer && content.player.canGoNext
+                            enabled: content.player?.canGoNext
                             cursorShape: Qt.PointingHandCursor
                             onClicked: content.player.next()
                         }

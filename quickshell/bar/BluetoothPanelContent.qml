@@ -31,6 +31,7 @@ Item {
         id: panelBox
         anchors.fill: parent
         color: Colors.background
+        Behavior on color { ColorAnimation { duration: 350; easing.type: Easing.OutCubic } }
         antialiasing: false
 
         // border on three sides only -- the bottom edge blends into

@@ -30,6 +30,8 @@ Item {
             property string outline: "#565f89"
             property string outline_variant: "#414868"
             property string shadow: "#0f0f16"
+            property string accent_secondary: "#7aa2f7"
+            property string on_accent_secondary: "#1a1b26"
         }
     }
 
@@ -79,6 +81,8 @@ Item {
     readonly property color error: ensureContrast(Qt.color(adapter.error), background, minMutedContrast)
     readonly property color textOnError: Qt.color(adapter.on_error)
     readonly property color outline: ensureContrast(Qt.color(adapter.outline), background, minMutedContrast)
+    readonly property color accentSecondary: ensureContrast(Qt.color(adapter.accent_secondary), background, minMutedContrast)
+    readonly property color textOnAccentSecondary: Qt.color(adapter.on_accent_secondary)
 
     readonly property bool isLight: relLum(background) > 0.5
     readonly property color success: ensureContrast(Qt.hsla(0.36, 0.55, accent.hslLightness, 1), background, minMutedContrast)

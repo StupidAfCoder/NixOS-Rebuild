@@ -17,6 +17,7 @@ local menu        = "fuzzel"
 local browser     = "firefox"
 local wallpaper_change = "~/.nixos_dotfiles/scripts/wallpaper-select.sh"
 local theme_mode = "~/.nixos_dotfiles/scripts/theme-mode-toggle.sh"
+local colors = dofile("/home/swami/.nixos_dotfiles/hypr/colors.lua")
 
 -------------------
 ---- AUTOSTART ----
@@ -34,7 +35,7 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("/home/swami/.nixos_dotfiles/scripts/restore-wallpaper.sh")
 
     --Kde authentication for sudo password gui
-    hl.exec_cmd("lxqt-policykit-agent")
+    hl.exec_cmd("hyprpolkitagent")
 end)
 
 -------------------------------
@@ -90,8 +91,8 @@ hl.config({
         border_size = 2,
 
         col = {
-            active_border   = "rgba(565f89cc)",
-            inactive_border = "rgba(41486840)",
+            active_border   = colors.active_border,
+            inactive_border = colors.inactive_border,
         },
 
         resize_on_border = true,
@@ -258,7 +259,7 @@ hl.config({
 
 hl.config({
     misc = {
-        background_color = "0x13141c",   -- matches your bezel color from
+        background_color = colors.background,   -- matches your bezel color from
                                         -- PowerMenuContent -- the gap now
                                         -- reads as more console shell,
                                         -- not exposed wallpaper
