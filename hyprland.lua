@@ -15,7 +15,8 @@ local terminal    = "foot"
 local fileManager = "thunar"
 local menu        = "fuzzel"
 local browser     = "firefox"
-local wallpaper_change = "/home/swami/.nixos_dotfiles/scripts/wallpaper-select.sh"
+local wallpaper_change = "~/.nixos_dotfiles/scripts/wallpaper-select.sh"
+local theme_mode = "~/.nixos_dotfiles/scripts/theme-mode-toggle.sh"
 
 -------------------
 ---- AUTOSTART ----
@@ -172,7 +173,7 @@ hl.curve("crtSlide",   { type = "bezier", points = { {0.65, 0}, {0.35, 1} } })
 ---- THE COMPLETE ANIMATION TREE            ----
 ------------------------------------------------
 
-------------------------------------------------
+------------------------------------------------MODE_FILE="$HOME/.local/state/theme-mode/current"
 ---- THE COMPLETE ANIMATION TREE (revised)  ----
 ------------------------------------------------
 
@@ -341,6 +342,7 @@ hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(wallpaper_change))
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(theme_mode))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))

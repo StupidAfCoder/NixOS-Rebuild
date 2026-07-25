@@ -7,8 +7,11 @@ set -euo pipefail
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
 STATE_DIR="$HOME/.local/state/wallpaper"
 STATE_FILE="$STATE_DIR/current"
+MODE_FILE="$HOME/.local/state/theme-mode/current"
 
-mkdir -p "$STATE_DIR"
+mkdir -p "$STATE_DIR" "$(dirname "$MODE_FILE")"
+[ -f "$MODE_FILE" ] || echo "dark" > "$MODE_FILE"
+mode="$(cat "$MODE_FILE")"
 
 # Null-separated so filenames with spaces don't break the picker.
 mapfile -d '' -t entries < <(
@@ -73,7 +76,8 @@ echo "$selected_path" > "$STATE_FILE"
 #   seeing on-screen.
 # --contrast 0.2: 0.5 is already halfway to matugen's max and amplifies
 #   compression rather than fixing it once the seed is already flat.
-matugen image "$selected_path" -m dark -t scheme-vibrant --source-color-index 0 --contrast 0.2
+# matugen image "$selected_path" -m "$mode" -t scheme-vibrant --source-color-index 0 --contrast 0.2
+python3 ~/.nixos_dotfiles/scripts/generate-theme.py "$selected_path" "$mode"
 wallust run "$selected_path"
 
 notify-send "Wallpaper" "Switched to $choice"

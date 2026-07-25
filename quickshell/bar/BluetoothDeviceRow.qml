@@ -36,7 +36,7 @@ RowLayout {
 
         Text {
             text: root.device.name || root.device.address
-            color: root.device.connected ? Colors.onBackground : Colors.mutedOnBackground
+            color: root.device.connected ? Colors.textOnBackground : Colors.mutedOnBackground
             font.family: "Cozette"
             font.pixelSize: 9
             elide: Text.ElideRight
@@ -104,7 +104,7 @@ RowLayout {
             id: connectText
             anchors.centerIn: parent
             text: root.device.connected ? "disconnect" : "connect"
-            color: root.device.connected ? Colors.success : Colors.onBackground
+            color: root.device.connected ? Colors.success : Colors.textOnBackground
             font.family: "Cozette"
             font.pixelSize: 7
         }
@@ -129,7 +129,7 @@ RowLayout {
             id: pairText
             anchors.centerIn: parent
             text: "pair"
-            color: Colors.onBackground
+            color: Colors.textOnBackground
             font.family: "Cozette"
             font.pixelSize: 7
         }

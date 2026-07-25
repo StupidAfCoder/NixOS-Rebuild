@@ -68,7 +68,7 @@ ColumnLayout {
                 id: tipText
                 anchors.centerIn: parent
                 text: "No battery detected"
-                color: Colors.onBackground
+                color: Colors.textOnBackground
                 font.family: "Cozette"
                 font.pixelSize: 10
             }
@@ -184,7 +184,7 @@ ColumnLayout {
                     id: trayTip
                     anchors.centerIn: parent
                     text: "right-click for options"
-                    color: Colors.onBackground
+                    color: Colors.textOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 10
                 }

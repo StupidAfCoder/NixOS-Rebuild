@@ -91,7 +91,7 @@ Item {
                                 anchors.right: arrow.visible ? arrow.left : parent.right
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.text
-                                color: Colors.onBackground
+                                color: Colors.textOnBackground
                                 font.family: "Cozette"
                                 font.pixelSize: 9
                                 elide: Text.ElideRight

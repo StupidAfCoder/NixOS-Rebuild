@@ -64,7 +64,7 @@ Item {
                     delegate: Rectangle {
                         width: panelBox.width
                         height: 1
-                        color: Colors.onBackground
+                        color: Colors.textOnBackground
                         opacity: 0.02
                     }
                 }
@@ -140,7 +140,7 @@ Item {
                                 text: NetworkBackend.ethernetConnected ? "WIRED"
                                     : NetworkBackend.wifiConnected ? NetworkBackend.connectedSsid
                                     : "NOT CONNECTED"
-                                color: Colors.onBackground
+                                color: Colors.textOnBackground
                                 font.family: "Cozette"
                                 font.pixelSize: 9
                                 font.bold: true

@@ -68,7 +68,7 @@ Item {
 
                 Text {
                     text: "Bluetooth"
-                    color: Colors.onBackground
+                    color: Colors.textOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 11
                     font.bold: true
@@ -155,7 +155,7 @@ Item {
 
                         Text {
                             text: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? "scanning" : "scan"
-                            color: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? Colors.accent : Colors.onBackground
+                            color: BluetoothPanel.adapter && BluetoothPanel.adapter.discovering ? Colors.accent : Colors.textOnBackground
                             font.family: "Cozette"
                             font.pixelSize: 8
                         }

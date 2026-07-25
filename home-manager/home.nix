@@ -16,7 +16,7 @@ let
       cp -r svg $out/share/pixelarticons/
     '';
   };
-  scriptPython = pkgs.python3.withPackages (ps: [ ps.pillow ]);
+  scriptPython = pkgs.python3.withPackages (ps: [ ps.pillow ps.materialyoucolor ]);
 in
 {
     home.stateVersion = "26.05";
@@ -72,6 +72,7 @@ in
         pkgs.kdePackages.qtsvg          # SVG icon rendering in QML
         pkgs.kdePackages.qtmultimedia
       ])
+
     ];
 
   wayland.windowManager.hyprland = {
@@ -206,7 +207,7 @@ in
   qt = {
     enable = true;
     platformTheme.name = "qt6ct";
-    style.name = "kvantum";
+    style.name = "fusion";
   };
 
   #Systemd User defined Services

@@ -65,7 +65,7 @@ Item {
                     delegate: Rectangle {
                         width: panelBox.width
                         height: 1
-                        color: Colors.onBackground
+                        color: Colors.textOnBackground
                         opacity: 0.02
                     }
                 }

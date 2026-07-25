@@ -169,7 +169,7 @@ Item {
                         height: 13
                         visible: wsPill.isActive || wsPill.isOccupied
                         iconName: (wsPill.isActive || wsPill.isOccupied) ? wsPill.wsIcon : ""
-                        tint: wsPill.isActive ? Colors.onAccent : Colors.onBackground
+                        tint: wsPill.isActive ? Colors.textOnAccent : Colors.textOnBackground
                         opacity: wsPill.isActive ? 1.0 : 0.9
                     }
 
@@ -204,13 +204,13 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "hh")
-                        color: Colors.onBackground; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
+                        color: Colors.textOnBackground; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "mm")
-                        color: Colors.onBackground; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
+                        color: Colors.textOnBackground; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                 }
@@ -226,19 +226,19 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "dd")
-                        color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 9
+                        color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 9
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "MM")
-                        color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 9
+                        color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 9
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "yy")
-                        color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 9
+                        color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 9
                         renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
                     }
                 }
