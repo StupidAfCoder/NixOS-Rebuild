@@ -150,7 +150,7 @@ Item {
             Text {
                 width: parent.width
                 text: widget.active ? (widget.player.trackTitle || "Unknown Title") : ""
-                color: Colors.onSurface; font.family: "Cozette"; font.pixelSize: 10; font.bold: true
+                color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 10; font.bold: true
                 elide: Text.ElideRight
             }
             Text {

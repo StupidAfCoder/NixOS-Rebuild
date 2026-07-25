@@ -113,7 +113,7 @@ Item {
                     TextInput {
                         anchors.fill: parent
                         anchors.margins: 4
-                        color: Colors.onSurface
+                        color: Colors.onBackground
                         font.family: "Cozette"
                         font.pixelSize: 9
                         echoMode: TextInput.Password

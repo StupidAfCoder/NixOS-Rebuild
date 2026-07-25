@@ -236,7 +236,7 @@ Item {
 
                     Text {
                         text: (root.notif && root.notif.summary) || ""
-                        color: Colors.onSurfaceVariant
+                        color: Colors.mutedOnSurfaceContainer
                         font.family: "Pixel Operator"
                         font.pixelSize: 20
                         font.bold: true
@@ -248,7 +248,7 @@ Item {
                     Text {
                         id: bodyText
                         text: (root.notif && root.notif.body) || ""
-                        color: Colors.onSurfaceVariant
+                        color: Colors.mutedOnSurfaceContainer
                         font.family: "Cozette"
                         font.pixelSize: 13
                         renderType: Text.NativeRendering

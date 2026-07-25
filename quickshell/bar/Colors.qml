@@ -18,11 +18,11 @@ import QtQuick
 // contrast is undefined and wallpaper-dependent, which is exactly the
 // washed-out text you get on some images and not others.
 //
-// mutedOnBackground below is a version of on_surface_variant that has
-// been luminance-nudged (hue/saturation untouched) until it clears a
-// real WCAG contrast ratio against the *exact* background color in use
-// right now -- so it can never wash out, regardless of what matugen
-// hands us for a given wallpaper.
+// mutedOnBackground below is a version of on_surface_variant that gets
+// blended toward on_background (already MD3-guaranteed safe) until it
+// clears a real WCAG contrast ratio against the *exact* background
+// color in use right now -- so it can never wash out, regardless of
+// what matugen hands us for a given wallpaper.
 Item {
     id: root
 
@@ -32,8 +32,10 @@ Item {
     // Extra saturation punch applied after quantizing, for the pixel look.
     property real punchAmount: 0.10
     // WCAG contrast ratio floor for "muted" text/icons/tints.
-    // 4.5 = WCAG AA for normal-size text. Don't go below ~3.0.
-    property real minMutedContrast: 4.5
+    // 4.5 is WCAG AA for normal text, but at 8-9px in a thin bitmap
+    // font with no antialiasing, 4.5:1 still reads as dim. Pushed to
+    // 7.5 (near AAA) so labels are unambiguously legible at this size.
+    property real minMutedContrast: 7.5
 
     FileView {
         path: "/home/swami/.nixos_dotfiles/quickshell/bar/theme/colors.json"
@@ -80,20 +82,31 @@ Item {
         return (lighter + 0.05) / (darker + 0.05)
     }
 
-    // Nudges fg's lightness (hue/sat untouched) until it clears minRatio
-    // against bg, or hits the clamp. Same idea as Caelestia's
-    // alterColour() in Colours.qml -- correct luminance, not role, is
-    // what actually fixes contrast, since role-swapping just trades one
-    // undefined pairing for another.
+    // Nudges fg toward onBackground (which is ALREADY MD3-guaranteed to
+    // have strong contrast against background -- no math needed there)
+    // until the blend clears minRatio. Deliberately NOT hue-preserving
+    // HSL lightness search: Qt returns hslHue = -1 for near-grey/
+    // desaturated colors (undefined hue), and feeding -1 back into
+    // Qt.hsla() is undefined behaviour -- exactly the kind of thing a
+    // muted, low-saturation dark-mode role like on_surface_variant hits
+    // constantly. A plain RGB blend toward a color we already know is
+    // safe has no such edge case: worst case (t=1.0) we just return
+    // onBackground outright, which is guaranteed to pass.
+    function mix(c1, c2, t) {
+        return Qt.rgba(
+            c1.r + (c2.r - c1.r) * t,
+            c1.g + (c2.g - c1.g) * t,
+            c1.b + (c2.b - c1.b) * t,
+            1.0
+        )
+    }
+
     function ensureContrast(fg, bg, minRatio) {
         if (contrastRatio(fg, bg) >= minRatio) return fg
-        var goLighter = relLum(bg) < 0.5
         var c = fg
-        var l = c.hslLightness
-        for (var i = 0; i < 60; i++) {
-            l = Math.max(0.02, Math.min(0.98, l + (goLighter ? 0.02 : -0.02)))
-            c = Qt.hsla(c.hslHue, c.hslSaturation, l, c.a)
-            if (contrastRatio(c, bg) >= minRatio || l <= 0.02 || l >= 0.98) break
+        for (var t = 0.1; t <= 1.0; t += 0.1) {
+            c = mix(fg, onBackground, t)
+            if (contrastRatio(c, bg) >= minRatio) break
         }
         return c
     }
@@ -148,7 +161,19 @@ Item {
     // they're already sitting on a surface/surfaceVariant/
     // surfaceContainer* container -- that pairing is already
     // MD3-guaranteed and doesn't need correcting.
-    readonly property color mutedOnBackground: "#39ff14"
-    //readonly property color mutedOnBackground: ensureContrast(onSurfaceVariant, background, minMutedContrast)
+    // DEBUG CANARY -- uncomment this one line and comment out the real
+    // line below it, save, and look at any panel. If the text does NOT
+    // turn neon green, the running quickshell process is not reading
+    // this file at all (wrong config path, or it needs a restart) --
+    // that's a deployment problem, not a color-math problem, and no
+    // amount of editing this file will ever change what's on screen
+    // until that's fixed. If it DOES turn green, the pipeline works and
+    // we just need to tune the real formula below.
+    // readonly property color mutedOnBackground: "#39ff14"
+    readonly property color mutedOnBackground: ensureContrast(onSurfaceVariant, background, minMutedContrast)
     readonly property color mutedOnShadow: ensureContrast(onSurfaceVariant, shadow, minMutedContrast)
+    // Same idea, but for text sitting on a surfaceContainerLow panel
+    // (the notification card body) instead of plain background --
+    // different container color, so it needs its own corrected token.
+    readonly property color mutedOnSurfaceContainer: ensureContrast(onSurfaceVariant, surfaceContainerLow, minMutedContrast)
 }

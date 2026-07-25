@@ -164,7 +164,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: content.hasPlayer ? (content.player.trackTitle || "Unknown Title") : ""
-                            color: Colors.onSurface
+                            color: Colors.onBackground
                             font.family: "Cozette"
                             font.pixelSize: 10
                             font.bold: true
@@ -261,7 +261,7 @@ Item {
                         border.color: Colors.outlineVariant; border.width: 1
                         antialiasing: false
                         opacity: content.hasPlayer && content.player.canGoPrevious ? 1.0 : 0.35
-                        Text { anchors.centerIn: parent; text: "|<"; color: Colors.onSurface; font.family: "Cozette"; font.pixelSize: 9 }
+                        Text { anchors.centerIn: parent; text: "|<"; color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 9 }
                         MouseArea {
                             id: prevArea
                             anchors.fill: parent
@@ -302,7 +302,7 @@ Item {
                         border.color: Colors.outlineVariant; border.width: 1
                         antialiasing: false
                         opacity: content.hasPlayer && content.player.canGoNext ? 1.0 : 0.35
-                        Text { anchors.centerIn: parent; text: ">|"; color: Colors.onSurface; font.family: "Cozette"; font.pixelSize: 9 }
+                        Text { anchors.centerIn: parent; text: ">|"; color: Colors.onBackground; font.family: "Cozette"; font.pixelSize: 9 }
                         MouseArea {
                             id: nextArea
                             anchors.fill: parent

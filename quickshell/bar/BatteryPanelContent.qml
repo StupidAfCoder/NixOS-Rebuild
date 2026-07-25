@@ -69,7 +69,7 @@ Item {
                     delegate: Rectangle {
                         width: panelBox.width
                         height: 1
-                        color: Colors.onSurface
+                        color: Colors.onBackground
                         opacity: 0.02
                     }
                 }
@@ -138,7 +138,7 @@ Item {
 
                     Text {
                         text: Math.round(content.pct * 100) + "%" + (content.charging ? " \u26a1" : "")
-                        color: Colors.onSurface
+                        color: Colors.onBackground
                         font.family: "Cozette"
                         font.pixelSize: 10
                         font.bold: true
@@ -198,7 +198,7 @@ Item {
                                 }
                                 Text {
                                     text: modelData.toUpperCase()
-                                    color: active ? Colors.onSurface : Colors.mutedOnBackground
+                                    color: active ? Colors.onBackground : Colors.mutedOnBackground
                                     font.family: "Cozette"
                                     font.pixelSize: 9
                                     font.letterSpacing: 1
