@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import QtMultimedia
 import "."
 
 Item {
@@ -129,13 +130,23 @@ Item {
                         }
                     }
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: "[ animation\ngoes here ]"
-                        horizontalAlignment: Text.AlignHCenter
-                        color: Colors.outlineVariant
-                        font.family: "Cozette"
-                        font.pixelSize: 9
+                    Video {
+                        id: powerMenuVideo
+                        anchors.fill: parent
+                        anchors.margins: 1   // keep the 1px rivet corners visible over the edge
+                        source: "file:///home/swami/Videos/pixel-traffic.mp4"  // point at whatever clip you want
+                        fillMode: VideoOutput.PreserveAspectCrop
+                        smooth: false   // keep it crunchy/pixel, matches antialiasing:false everywhere else in this file
+                        muted: true
+                        loops: MediaPlayer.Infinite
+
+                        Connections {
+                            target: PowerMenu
+                            function onShownChanged() {
+                                if (PowerMenu.shown) powerMenuVideo.play()
+                                else powerMenuVideo.stop()
+                            }
+                        }
                     }
 
                     Rectangle {
