@@ -36,12 +36,12 @@ Item {
             Layout.preferredWidth: 11
             Layout.preferredHeight: 11
             iconName: row.iconName
-            tint: mouseArea.containsMouse ? row.accent : Colors.onSurfaceVariant
+            tint: mouseArea.containsMouse ? row.accent : Colors.mutedOnBackground
         }
 
         Text {
             text: row.label
-            color: mouseArea.containsMouse ? row.accent : Colors.onSurfaceVariant
+            color: mouseArea.containsMouse ? row.accent : Colors.mutedOnBackground
             font.family: "Cozette"
             font.pixelSize: 9
             font.letterSpacing: 1

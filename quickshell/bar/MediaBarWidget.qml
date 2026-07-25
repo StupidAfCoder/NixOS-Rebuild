@@ -156,13 +156,13 @@ Item {
             Text {
                 width: parent.width
                 text: widget.active ? (widget.player.trackArtist || "Unknown Artist") : ""
-                color: Colors.onSurfaceVariant; font.family: "Cozette"; font.pixelSize: 9
+                color: Colors.mutedOnBackground; font.family: "Cozette"; font.pixelSize: 9
                 elide: Text.ElideRight
             }
             Text {
                 width: parent.width
                 text: widget.active ? (widget.playing ? "( Playing )" : "( Paused )") : ""
-                color: Colors.onSurfaceVariant; font.family: "Cozette"; font.pixelSize: 8
+                color: Colors.mutedOnBackground; font.family: "Cozette"; font.pixelSize: 8
             }
         }
     }

@@ -97,7 +97,7 @@ Item {
                 Text {
                     visible: !content.hasPlayer
                     text: "NO MEDIA PLAYING"
-                    color: Colors.onSurfaceVariant
+                    color: Colors.mutedOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 9
                     Layout.alignment: Qt.AlignHCenter
@@ -173,7 +173,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: content.hasPlayer ? (content.player.trackArtist || "Unknown Artist") : ""
-                            color: Colors.onSurfaceVariant
+                            color: Colors.mutedOnBackground
                             font.family: "Cozette"
                             font.pixelSize: 9
                             elide: Text.ElideRight
@@ -182,7 +182,7 @@ Item {
                             Layout.fillWidth: true
                             visible: content.hasPlayer && content.player.trackAlbum !== ""
                             text: content.hasPlayer ? content.player.trackAlbum : ""
-                            color: Colors.onSurfaceVariant
+                            color: Colors.mutedOnBackground
                             font.family: "Cozette"
                             font.pixelSize: 8
                             elide: Text.ElideRight
@@ -233,14 +233,14 @@ Item {
                         Layout.fillWidth: true
                         Text {
                             text: content.hasPlayer ? content.formatTime(content.player.position) : "0:00"
-                            color: Colors.onSurfaceVariant
+                            color: Colors.mutedOnBackground
                             font.family: "Cozette"
                             font.pixelSize: 8
                         }
                         Item { Layout.fillWidth: true }
                         Text {
                             text: content.hasPlayer ? content.formatTime(content.player.length) : "0:00"
-                            color: Colors.onSurfaceVariant
+                            color: Colors.mutedOnBackground
                             font.family: "Cozette"
                             font.pixelSize: 8
                         }

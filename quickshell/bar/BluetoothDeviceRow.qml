@@ -27,7 +27,7 @@ RowLayout {
         Layout.preferredWidth: 14
         Layout.preferredHeight: 14
         iconName: root.iconForDevice(root.device)
-        tint: root.device.connected ? Colors.accent : Colors.onSurfaceVariant
+        tint: root.device.connected ? Colors.accent : Colors.mutedOnBackground
     }
 
     ColumnLayout {
@@ -36,7 +36,7 @@ RowLayout {
 
         Text {
             text: root.device.name || root.device.address
-            color: root.device.connected ? Colors.onSurface : Colors.onSurfaceVariant
+            color: root.device.connected ? Colors.onSurface : Colors.mutedOnBackground
             font.family: "Cozette"
             font.pixelSize: 9
             elide: Text.ElideRight
@@ -47,7 +47,7 @@ RowLayout {
             spacing: 4
             Text {
                 text: root.device.connected ? "connected" : (root.device.paired ? "paired" : "available")
-                color: root.device.connected ? Colors.success : Colors.onSurfaceVariant
+                color: root.device.connected ? Colors.success : Colors.mutedOnBackground
                 font.family: "Cozette"
                 font.pixelSize: 7
             }
@@ -79,7 +79,7 @@ RowLayout {
     Text {
         visible: root.device.paired
         text: root.device.trusted ? "*" : "."
-        color: root.device.trusted ? Colors.warning : Colors.onSurfaceVariant
+        color: root.device.trusted ? Colors.warning : Colors.mutedOnBackground
         font.family: "Cozette"
         font.pixelSize: 11
 

@@ -104,7 +104,7 @@ Item {
                                 anchors.rightMargin: 6
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: ">"
-                                color: Colors.onSurfaceVariant
+                                color: Colors.mutedOnBackground
                                 font.family: "Cozette"
                                 font.pixelSize: 9
                             }
@@ -133,7 +133,7 @@ Item {
             Text {
                 visible: opener.children.count === 0
                 text: "empty"
-                color: Colors.onSurfaceVariant
+                color: Colors.mutedOnBackground
                 font.family: "Cozette"
                 font.pixelSize: 9
                 Layout.alignment: Qt.AlignHCenter

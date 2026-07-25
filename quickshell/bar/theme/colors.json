@@ -1,24 +1,24 @@
 {
-  "accent": "#ffd0de",
-  "on_accent": "#461229",
+  "accent": "#ffb0ca",
+  "on_accent": "#55002c",
 
-  "error": "#ffd2cc",
-  "on_error": "#540003",
+  "error": "#ffb4ab",
+  "on_error": "#580003",
 
-  "background": "#191114",
-  "on_background": "#efdfe2",
+  "background": "#1c1014",
+  "on_background": "#f5dce2",
 
-  "surface": "#191114",
-  "on_surface": "#ffffff",
-  "surface_variant": "#514347",
-  "on_surface_variant": "#ecd7dc",
+  "surface": "#1c1014",
+  "on_surface": "#fae1e7",
+  "surface_variant": "#534247",
+  "on_surface_variant": "#d8c1c6",
 
-  "surface_container_low": "#241b1e",
-  "surface_container": "#2e2628",
-  "surface_container_high": "#3a3033",
+  "surface_container_low": "#26191d",
+  "surface_container": "#2d1f23",
+  "surface_container_high": "#38292e",
 
-  "outline": "#c0adb2",
-  "outline_variant": "#9d8c90",
+  "outline": "#a69196",
+  "outline_variant": "#725f65",
 
   "shadow": "#000000",
 

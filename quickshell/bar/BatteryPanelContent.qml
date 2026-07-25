@@ -154,7 +154,7 @@ Item {
                 Text {
                     visible: !content.hasBattery
                     text: "NO BATTERY \u00b7 DESKTOP"
-                    color: Colors.onSurfaceVariant
+                    color: Colors.mutedOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 9
                     Layout.alignment: Qt.AlignHCenter
@@ -163,7 +163,7 @@ Item {
 
                 Text {
                     text: "POWER PROFILE"
-                    color: Colors.onSurfaceVariant
+                    color: Colors.mutedOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 9
                     font.letterSpacing: 1
@@ -198,7 +198,7 @@ Item {
                                 }
                                 Text {
                                     text: modelData.toUpperCase()
-                                    color: active ? Colors.onSurface : Colors.onSurfaceVariant
+                                    color: active ? Colors.onSurface : Colors.mutedOnBackground
                                     font.family: "Cozette"
                                     font.pixelSize: 9
                                     font.letterSpacing: 1

@@ -117,7 +117,7 @@ Item {
                         id: powerText
                         anchors.centerIn: parent
                         text: BluetoothPanel.adapter && BluetoothPanel.adapter.enabled ? "on" : "off"
-                        color: BluetoothPanel.adapter && BluetoothPanel.adapter.enabled ? Colors.accent : Colors.onSurfaceVariant
+                        color: BluetoothPanel.adapter && BluetoothPanel.adapter.enabled ? Colors.accent : Colors.mutedOnBackground
                         font.family: "Cozette"
                         font.pixelSize: 8
                     }
@@ -190,7 +190,7 @@ Item {
                 Text {
                     visible: BluetoothPanel.adapter && BluetoothPanel.adapter.devices.count > 0 && BluetoothPanel.connectedCount === 0
                     text: BluetoothPanel.adapter ? BluetoothPanel.adapter.devices.count + " known" : ""
-                    color: Colors.onSurfaceVariant
+                    color: Colors.mutedOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 8
                 }
@@ -221,7 +221,7 @@ Item {
                     Text {
                         visible: !BluetoothPanel.adapter || BluetoothPanel.adapter.devices.count === 0
                         text: BluetoothPanel.adapter === null ? "no adapter found" : "no devices -- try scan"
-                        color: Colors.onSurfaceVariant
+                        color: Colors.mutedOnBackground
                         font.family: "Cozette"
                         font.pixelSize: 9
                         Layout.topMargin: 12

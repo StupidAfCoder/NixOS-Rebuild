@@ -59,7 +59,7 @@ Item {
                         Layout.alignment: Qt.AlignBottom
                         antialiasing: false
                         color: (row.signalPct >= (index + 1) * 25)
-                            ? (row.inUse ? row.accent : Colors.onSurfaceVariant)
+                            ? (row.inUse ? row.accent : Colors.mutedOnBackground)
                             : Colors.surfaceContainerHigh
                     }
                 }
@@ -67,7 +67,7 @@ Item {
 
             Text {
                 text: row.ssid
-                color: row.inUse ? row.accent : Colors.onSurfaceVariant
+                color: row.inUse ? row.accent : Colors.mutedOnBackground
                 font.family: "Cozette"
                 font.pixelSize: 9
                 font.letterSpacing: 1
@@ -80,7 +80,7 @@ Item {
                 Layout.preferredWidth: 9
                 Layout.preferredHeight: 9
                 iconName: "lock.svg"
-                tint: Colors.onSurfaceVariant
+                tint: Colors.mutedOnBackground
             }
 
             Text {
@@ -161,7 +161,7 @@ Item {
 
                 Text {
                     text: NetworkBackend.wifiIp !== "" ? NetworkBackend.wifiIp : "no ip"
-                    color: Colors.onSurfaceVariant
+                    color: Colors.mutedOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 8
                     Layout.fillWidth: true

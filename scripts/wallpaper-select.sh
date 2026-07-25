@@ -54,7 +54,26 @@ awww img "$selected_path" \
 echo "$selected_path" > "$STATE_FILE"
 
 # ---- retheme everything off the same image ----
-matugen image "$selected_path" --source-color-index 0 --contrast 0.5
+# -m dark: pin the mode explicitly instead of relying on matugen's
+#   current default, so a future matugen version can't silently flip
+#   the whole theme on you.
+# --source-color-index 0: keep this -- it's what makes the run
+#   non-interactive (matugen otherwise drops you into an arrow-key
+#   picker over candidate seed colors, which breaks a script called
+#   from fuzzel). Index 0 is just "most frequent pixel", so on a
+#   low-saturation wallpaper (cream background, desaturated art) it can
+#   grab a near-neutral seed.
+# -t scheme-vibrant: this is the actual lever for the "some wallpapers
+#   wash out" problem -- it's matugen's real flag (the previous
+#   "--prefer vibrant" suggestion doesn't exist in matugen's CLI, it
+#   was a made-up flag). scheme-vibrant pushes chroma/tonal separation
+#   in the *harmonization algorithm itself*, so even a near-neutral
+#   seed color still produces roles with real lightness separation
+#   instead of the compressed, everything-is-one-tone palette you're
+#   seeing on-screen.
+# --contrast 0.2: 0.5 is already halfway to matugen's max and amplifies
+#   compression rather than fixing it once the seed is already flat.
+matugen image "$selected_path" -t scheme-vibrant --source-color-index 0 --contrast 0.2
 wallust run "$selected_path"
 
 notify-send "Wallpaper" "Switched to $choice"

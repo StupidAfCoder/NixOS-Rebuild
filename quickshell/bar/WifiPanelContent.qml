@@ -129,7 +129,7 @@ Item {
                             Layout.preferredWidth: 14
                             Layout.preferredHeight: 14
                             iconName: "wifi.svg"
-                            tint: NetworkBackend.wifiConnected ? Colors.success : Colors.onSurfaceVariant
+                            tint: NetworkBackend.wifiConnected ? Colors.success : Colors.mutedOnBackground
                         }
 
                         ColumnLayout {
@@ -153,7 +153,7 @@ Item {
                                     : NetworkBackend.wifiConnected
                                         ? (NetworkBackend.wifiIp !== "" ? NetworkBackend.wifiIp : "")
                                         : "no active connection"
-                                color: Colors.onSurfaceVariant
+                                color: Colors.mutedOnBackground
                                 font.family: "Cozette"
                                 font.pixelSize: 8
                                 elide: Text.ElideRight
@@ -173,7 +173,7 @@ Item {
 
                     Text {
                         text: NetworkBackend.busy ? "WIRELESS ..." : "WIRELESS"
-                        color: Colors.onSurfaceVariant
+                        color: Colors.mutedOnBackground
                         font.family: "Cozette"
                         font.pixelSize: 9
                         font.letterSpacing: 1
@@ -236,7 +236,7 @@ Item {
                 Text {
                     visible: !NetworkBackend.wifiRadioEnabled
                     text: "wifi radio off"
-                    color: Colors.onSurfaceVariant
+                    color: Colors.mutedOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 8
                     Layout.alignment: Qt.AlignHCenter
@@ -247,7 +247,7 @@ Item {
                 Text {
                     visible: NetworkBackend.wifiRadioEnabled && NetworkBackend.networks.length === 0
                     text: NetworkBackend.scanning ? "scanning..." : "no networks found"
-                    color: Colors.onSurfaceVariant
+                    color: Colors.mutedOnBackground
                     font.family: "Cozette"
                     font.pixelSize: 8
                     Layout.alignment: Qt.AlignHCenter
