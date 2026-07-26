@@ -7,6 +7,7 @@ import QtQuick.Effects
 import "pathgen.js" as PathGen
 import "."
 import "../bar"
+import "../wallpaper"
 
 Item {
     id: root
@@ -265,22 +266,7 @@ Item {
 
                 ReactiveImage {
                     anchors.fill: parent
-                    visible: !launcherArea.containsMouse
                     path: "/home/swami/.cache/quickshell/wizard-idle.png"
-                }
-
-                ColoredSprite {
-                    anchors.fill: parent
-                    visible: launcherArea.containsMouse
-                    accentSource: "/home/swami/.cache/quickshell/launcher-accent-spritesheet.png"
-                    hoverSource: "/home/swami/.cache/quickshell/launcher-hover-spritesheet.png"
-                    frameW: 24
-                    frameH: 24
-                    chargeFrameCount: 5
-                    hoverFrameCount: 5
-                    loopHover: true
-                    fps: 8
-                    hovered: launcherArea.containsMouse
                 }
 
                 MouseArea {
@@ -289,7 +275,7 @@ Item {
                     anchors.margins: -4
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: console.log("launcher trigger clicked")
+                    onClicked: WallpaperLauncher.toggle()
                 }
             }
 

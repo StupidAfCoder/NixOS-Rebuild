@@ -3,6 +3,7 @@ import Quickshell
 import QtQuick
 import "notifications"
 import "bar"
+import "wallpaper"
 
 ShellRoot {
     id: root

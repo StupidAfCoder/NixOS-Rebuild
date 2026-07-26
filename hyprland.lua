@@ -15,7 +15,7 @@ local terminal    = "foot"
 local fileManager = "thunar"
 local menu        = "fuzzel"
 local browser     = "firefox"
-local wallpaper_change = "~/.nixos_dotfiles/scripts/wallpaper-select.sh"
+local wallpaper_change = "qs ipc call wallpaper toggle"
 local theme_mode = "~/.nixos_dotfiles/scripts/theme-mode-toggle.sh"
 local colors = dofile("/home/swami/.nixos_dotfiles/hypr/colors.lua")
 
@@ -34,8 +34,6 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("/home/swami/.nixos_dotfiles/scripts/restore-wallpaper.sh")
 
-    --Kde authentication for sudo password gui
-    hl.exec_cmd("hyprpolkitagent")
 end)
 
 -------------------------------

@@ -2,30 +2,8 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick
 import "."
+import "../wallpaper"
 
-// Why this file exists (read this before touching seam/corner code):
-//
-// The old setup used FOUR separate layer-shell windows (left bar, top
-// border, bottom border, right border), each independently positioned
-// with hand-computed margins, plus "seam stub" rectangles trying to
-// paper over the gap between them. That's fighting the compositor:
-// four different Wayland surfaces will never share a coordinate space
-// perfectly, so the seam between the bar and the border was always
-// one rounding error away from cracking.
-//
-// caelestia-shell solves this by never having a seam to align in the
-// first place: it draws its bar + border as ONE window per screen
-// (ContentWindow) that sets exclusionMode: ExclusionMode.Ignore so it
-// can paint over the *entire* output ignoring layer-shell exclusion
-// zones, then uses a second, purely invisible set of windows
-// (Exclusions.qml) just to reserve strut space with the compositor so
-// normal app windows don't get covered. The visible bar and the
-// visible border are literally the same Item tree in the same window
-// -- there is nothing left to misalign.
-//
-// This file reproduces that pattern: `frame` below is the one and
-// only surface that draws pixels, and `struts` below reserve layout
-// space but draw nothing.
 Scope {
     id: manager
 
@@ -42,10 +20,6 @@ Scope {
                 id: screenRoot
                 required property var modelData
 
-                // === Struts: invisible, exclusiveZone-only windows ===
-                // These exist purely so Hyprland reserves space for the
-                // bar + border and doesn't let maximized/tiled windows
-                // slide underneath them. They render nothing.
                 PanelWindow {
                     screen: screenRoot.modelData
                     WlrLayershell.layer: WlrLayer.Top
@@ -85,10 +59,6 @@ Scope {
                     color: "transparent"
                 }
 
-                // === The single visible surface ===
-                // Fullscreen, ignores exclusion zones (its own struts
-                // above included) so it can paint the bar and the
-                // border strips as one continuous, seam-proof scene.
                 PanelWindow {
                     id: frame
                     screen: screenRoot.modelData
@@ -98,15 +68,18 @@ Scope {
                     anchors { top: true; bottom: true; left: true; right: true }
                     color: "transparent"
 
-                    // CRITICAL: without a mask, this window is a
-                    // fullscreen input sink -- it would swallow every
-                    // click/scroll over the ENTIRE monitor, not just
-                    // the bar, even though only the bar has anything
-                    // interactive in it. Restrict hit-testing to just
-                    // the bar's rectangle so everything else (border
-                    // strips, and the empty space over your other
-                    // windows) passes clicks straight through to
-                    // whatever's underneath.
+                    property bool anyPanelShown: WallpaperLauncher.shown
+                        || PowerMenu.shown
+                        || WifiPanel.shown
+                        || BatteryPanel.shown
+                        || TrayMenu.shown
+                        || MediaPanel.shown
+                        || BluetoothPanel.shown
+
+                    WlrLayershell.keyboardFocus: anyPanelShown
+                        ? WlrKeyboardFocus.Exclusive
+                        : WlrKeyboardFocus.None
+
                     mask: Region {
                         Region { item: barArea }
                         Region { item: bluetoothPanelContent }
@@ -120,13 +93,10 @@ Scope {
                         Region { item: trayMenuClickCatcher }
                         Region { item: mediaPanelContent }
                         Region { item: mediaClickCatcher }
+                        Region { item: wallpaperLauncherContent }
+                        Region { item: wallpaperClickCatcher }
                     }
 
-                    // --- Border strips, drawn edge-to-edge across the
-                    // FULL window. The bar (below) is opaque and sits
-                    // visually on top of the left end of the top/bottom
-                    // strips -- that's deliberate overlap, not a seam,
-                    // so there is no gap for it to ever crack open. ---
                     Rectangle {
                         anchors { left: parent.left; right: parent.right; top: parent.top }
                         height: manager.borderThickness
@@ -148,20 +118,10 @@ Scope {
                         z: 5
                     }
 
-                    // --- Full-screen dim scrim, only "live" while the
-                    // power menu is open. Clicking it closes the menu.
-                    // visible-gated so it drops out of the mask below
-                    // when hidden -- confirm Region actually excludes
-                    // invisible items on your Quickshell version; if
-                    // not, tell me and I'll switch this to a
-                    // width/height-collapse trick instead. ---
                     Rectangle {
                         id: dimScrim
                         anchors.top: parent.top
                         anchors.left: parent.left
-                        // width/height collapse to 0 when hidden -- this is the actual
-                        // fix. `visible: false` alone does NOT shrink the mask region,
-                        // since Region tracks geometry, not paint state.
                         width: PowerMenu.shown ? parent.width : 0
                         height: PowerMenu.shown ? parent.height : 0
                         color: "black"
@@ -232,8 +192,18 @@ Scope {
                         MouseArea { anchors.fill: parent; onClicked: MediaPanel.hide() }
                     }
 
-                    // --- Left bar, same window/same coordinate space
-                    // as the border strips above it in the tree. ---
+                    Rectangle {
+                        id: wallpaperClickCatcher
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        width: WallpaperLauncher.shown ? parent.width : 0
+                        height: WallpaperLauncher.shown ? parent.height : 0
+                        color: "transparent"
+                        antialiasing: false
+                        z: 3
+                        MouseArea { anchors.fill: parent; onClicked: WallpaperLauncher.hide() }
+                    }
+
                     Bar {
                         id: barArea
                         anchors.left: parent.left
@@ -262,13 +232,11 @@ Scope {
                         id: mediaPanelContent
                     }
 
-                    // --- Corner accents, pulled inward off the true
-                    // screen corner by exactly the bar/border
-                    // thickness, so each bracket's apex sits at the
-                    // INNER seam -- where the frame meets the actual
-                    // desktop area -- rather than flush with the
-                    // physical monitor edge. That inward pull is what
-                    // sells the "screen inside a screen" look. ---
+                    WallpaperLauncherContent {
+                        id: wallpaperLauncherContent
+                        topOffset: manager.borderThickness
+                    }
+
                     CornerAccent {
                         corner: "topLeft"
                         thickness: manager.borderThickness
@@ -312,6 +280,28 @@ Scope {
 
                     TrayMenuContent {
                         id: trayMenuContent
+                    }
+
+                    Item {
+                        id: keyCatcher
+                        anchors.fill: parent
+
+                        Connections {
+                            target: frame
+                            function onAnyPanelShownChanged() {
+                                if (frame.anyPanelShown) keyCatcher.forceActiveFocus()
+                            }
+                        }
+
+                        Keys.onEscapePressed: {
+                            if (WallpaperLauncher.shown) WallpaperLauncher.hide()
+                            else if (PowerMenu.shown) PowerMenu.hide()
+                            else if (WifiPanel.shown) WifiPanel.hide()
+                            else if (BatteryPanel.shown) BatteryPanel.hide()
+                            else if (TrayMenu.shown) TrayMenu.hide()
+                            else if (MediaPanel.shown) MediaPanel.hide()
+                            else if (BluetoothPanel.shown) BluetoothPanel.hide()
+                        }
                     }
                 }
             }
