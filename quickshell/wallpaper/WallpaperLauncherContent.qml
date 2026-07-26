@@ -93,6 +93,15 @@ Item {
             Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Bar.Colors.outlineVariant }
             Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: Bar.Colors.outlineVariant }
 
+            Text {
+                anchors.centerIn: parent
+                visible: WallpaperBackend.scanning
+                text: "Loading wallpapers..."
+                font.family: "Cozette"
+                font.pixelSize: 10
+                color: Bar.Colors.textOnBackground
+            }
+
             Column {
                 anchors.fill: parent
                 spacing: 2
@@ -214,7 +223,7 @@ Item {
                                         Bar.CornerAccent {
                                             corner: "topLeft"
                                             thickness: 2
-                                            sizeScale: 4
+                                            sizeScale: 10
                                             color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
                                             anchors.top: parent.top
                                             anchors.left: parent.left
@@ -222,7 +231,7 @@ Item {
                                         Bar.CornerAccent {
                                             corner: "topRight"
                                             thickness: 2
-                                            sizeScale: 4
+                                            sizeScale: 6
                                             color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
                                             anchors.top: parent.top
                                             anchors.right: parent.right
@@ -230,7 +239,7 @@ Item {
                                         Bar.CornerAccent {
                                             corner: "bottomLeft"
                                             thickness: 2
-                                            sizeScale: 4
+                                            sizeScale: 6
                                             color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
                                             anchors.bottom: parent.bottom
                                             anchors.left: parent.left
@@ -238,7 +247,7 @@ Item {
                                         Bar.CornerAccent {
                                             corner: "bottomRight"
                                             thickness: 2
-                                            sizeScale: 4
+                                            sizeScale: 10
                                             color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
                                             anchors.bottom: parent.bottom
                                             anchors.right: parent.right

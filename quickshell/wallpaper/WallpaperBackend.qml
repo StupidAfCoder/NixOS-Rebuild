@@ -12,8 +12,10 @@ Item {
 
     property var wallpapers: []
     property bool applying: false
+    property bool scanning: false
 
     function refresh() {
+        scanning = true
         if (root.homeDir === "") homeProc.running = true
         else scanProc.running = true
     }
@@ -45,9 +47,9 @@ Item {
     Process {
         id: scanProc
         command: ["find", root.wallpaperDir, "-maxdepth", "1", "-type", "f",
-                  "(", "-iname", "*.png", "-o", "-iname", "*.jpg",
-                       "-o", "-iname", "*.jpeg", "-o", "-iname", "*.webp", ")",
-                  "-print0"]
+            "(", "-iname", "*.png", "-o", "-iname", "*.jpg",
+            "-o", "-iname", "*.jpeg", "-o", "-iname", "*.webp", ")",
+            "-print0"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const found = []
@@ -58,6 +60,7 @@ Item {
                 }
                 found.sort((a, b) => a.name.localeCompare(b.name))
                 root.wallpapers = found
+                root.scanning = false
             }
         }
     }

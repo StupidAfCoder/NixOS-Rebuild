@@ -6,7 +6,11 @@ import QtQuick
 Item {
     id: root
     property bool shown: false
-    function toggle() { shown = !shown }
+
+    function toggle() {
+        shown = !shown
+        if (shown) WallpaperBackend.refresh()
+    }
     function hide() { shown = false }
 
     IpcHandler {

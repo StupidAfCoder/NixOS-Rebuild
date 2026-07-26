@@ -431,6 +431,14 @@ hl.window_rule({
 })
 
 hl.window_rule({
+    name = "zathura opacity",
+    match = {
+        class = "org.pwmt.zathura"
+    },
+    opacity = "0.9 override 0.55 override 1.0 override",
+})
+
+hl.window_rule({
     match = {
         title = "Authentication Required"
     },
