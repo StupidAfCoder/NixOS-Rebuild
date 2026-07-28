@@ -223,7 +223,7 @@ Item {
                                         Bar.CornerAccent {
                                             corner: "topLeft"
                                             thickness: 2
-                                            sizeScale: 10
+                                            sizeScale: 24
                                             color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
                                             anchors.top: parent.top
                                             anchors.left: parent.left
@@ -231,7 +231,7 @@ Item {
                                         Bar.CornerAccent {
                                             corner: "topRight"
                                             thickness: 2
-                                            sizeScale: 6
+                                            sizeScale: 24
                                             color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
                                             anchors.top: parent.top
                                             anchors.right: parent.right
@@ -239,7 +239,7 @@ Item {
                                         Bar.CornerAccent {
                                             corner: "bottomLeft"
                                             thickness: 2
-                                            sizeScale: 6
+                                            sizeScale: 24
                                             color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
                                             anchors.bottom: parent.bottom
                                             anchors.left: parent.left
@@ -247,7 +247,7 @@ Item {
                                         Bar.CornerAccent {
                                             corner: "bottomRight"
                                             thickness: 2
-                                            sizeScale: 10
+                                            sizeScale: 24
                                             color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
                                             anchors.bottom: parent.bottom
                                             anchors.right: parent.right

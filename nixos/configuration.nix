@@ -147,6 +147,8 @@ in
     uri = "http://detectportal.firefox.com/success.txt";
   };
 
+  networking.nameservers = [ "1.1.1.1" "1.0.0.1" ];
+
   # Set your time zone.
   time.timeZone = "Asia/Kolkata";
   time.hardwareClockInLocalTime = true;
@@ -178,7 +180,10 @@ in
     description = "Yash";
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [];
+    shell = pkgs.zsh;
   };
+
+  programs.zsh.enable = true;
 
   programs.hyprland = {
     enable = true;
@@ -256,9 +261,12 @@ in
     aubio
 
     aseprite
+    cloudflare-warp
 
     vscodium-fhs
   ];
+
+  services.cloudflare-warp.enable = true;
 
   xdg.portal = {
     enable = true;

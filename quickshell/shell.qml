@@ -4,6 +4,7 @@ import QtQuick
 import "notifications"
 import "bar"
 import "wallpaper"
+import "./launcher"
 
 ShellRoot {
     id: root
@@ -23,4 +24,6 @@ ShellRoot {
         frameColor: Colors.background
         accentColor: Colors.outline
     }
+
+    AppLauncherContent {}
 }
