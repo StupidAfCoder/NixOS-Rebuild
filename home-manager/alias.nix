@@ -16,5 +16,6 @@
       clean-all = "sudo nix-collect-garbage -d";
 
       se = "sudoedit";
+      search = "nix search nixpkgs";
     };
 }

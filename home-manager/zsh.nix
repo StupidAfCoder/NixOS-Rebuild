@@ -22,6 +22,30 @@
       ];
       theme = ""; # empty — starship owns the prompt, not oh-my-zsh
     };
+
+    initContent = ''
+        # Dynamically loads one or multiple packages into an ephemeral Nix shell
+        test-pkg() {
+        # 1. Guard clause: Ensure at least one argument is provided
+        if [ $# -eq 0 ]; then
+          echo "Error: Supply at least one package name."
+          return 1
+        fi
+
+        # 2. Initialize an empty array
+        local pkgs=()
+
+        # 3. Loop through every argument passed to the function
+        for pkg in "$@"; do
+          # Prepend the required nixpkgs# flake reference to each item
+          pkgs+=("nixpkgs#$pkg")
+        done
+
+        # 4. Execute nix shell with the fully expanded array
+        # Note: ''${...} is required to escape Nix string interpolation so Zsh can read it
+        nix shell "''${pkgs[@]}"
+      }
+    '';
   };
 
   programs.starship = {
