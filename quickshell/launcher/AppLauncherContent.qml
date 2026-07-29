@@ -18,7 +18,7 @@ Item {
     property int selectedIndex: -1
     property int totalAppsCount: 0
 
-    // PROXY PROPERTY FOR LAYOUT ENGINE ANIMATION
+    // LAYOUT PROXY ANIMATION
     property int currentBottomMargin: AppLauncher.shown ? dockGap : -(bezel.height + 40)
 
     anchors.horizontalCenter: parent.horizontalCenter
@@ -26,9 +26,15 @@ Item {
     anchors.bottomMargin: currentBottomMargin
     implicitWidth: bezel.width
     implicitHeight: bezel.height
-    opacity: AppLauncher.shown ? 1 : 0
+
+    // MASSIVE Z-INDEX: Forces it above ShellFrame's dimScrim (z:3) and corners (z:10)
+    z: 100
+
+    // CRT Power-on Animation
     visible: opacity > 0.01
-    z: 6
+    opacity: AppLauncher.shown ? 1 : 0
+    scale: AppLauncher.shown ? 1.0 : 0.90
+    transformOrigin: Item.Bottom
 
     Behavior on currentBottomMargin {
         NumberAnimation {
@@ -40,16 +46,30 @@ Item {
 
     Behavior on opacity {
         NumberAnimation {
-            duration: 180
-            easing.type: Easing.OutCubic
+            duration: 150
+            easing.type: Easing.OutQuad
         }
+    }
+
+    Behavior on scale {
+        NumberAnimation {
+            duration: 250
+            easing.type: Easing.OutBack
+            easing.overshoot: 1.3
+        }
+    }
+
+    // FOCUS STEALER: Overrides the keyCatcher in your ShellFrame
+    Timer {
+        id: focusStealer
+        interval: 50
+        running: false
+        onTriggered: searchField.forceActiveFocus()
     }
 
     onVisibleChanged: {
         if (visible)
-            Qt.callLater(function () {
-                searchField.forceActiveFocus();
-            });
+            focusStealer.start();
     }
 
     Connections {
@@ -57,12 +77,15 @@ Item {
         function onShownChanged() {
             if (AppLauncher.shown) {
                 searchField.text = "";
-                content.refreshApps();
+                // FORCE A CLEAN REBUILD: Fixes the delegate overlapping bug
+                content.refreshApps(true);
+            } else {
+                // FLUSH MEMORY ON HIDE: Prevents frozen transitions
+                appsModel.clear();
             }
         }
     }
 
-    // stable identity for diffing
     function keyFor(e) {
         return (e && e.id !== undefined && e.id !== "") ? e.id : (e ? e.name : "");
     }
@@ -71,7 +94,7 @@ Item {
         id: appsModel
     }
 
-    function refreshApps() {
+    function refreshApps(instant = false) {
         var all = [...DesktopEntries.applications.values].filter(function (e) {
             return e && e.name && !e.noDisplay;
         }).sort(function (a, b) {
@@ -99,11 +122,26 @@ Item {
             });
         }
 
+        // INSTANT REBUILD PATH (Fixes Overlap Bug)
+        if (instant) {
+            appsModel.clear();
+            for (var i = 0; i < result.length; i++) {
+                appsModel.append({
+                    key: keyFor(result[i]),
+                    appRef: result[i]
+                });
+            }
+            content.selectedIndex = appsModel.count > 0 ? 0 : -1;
+            listView.positionViewAtIndex(0, ListView.Beginning);
+            return;
+        }
+
+        // DIFFING PATH (Smooth filtering while typing)
         var resultKeys = result.map(keyFor);
 
-        for (var i = appsModel.count - 1; i >= 0; i--) {
-            if (resultKeys.indexOf(appsModel.get(i).key) === -1)
-                appsModel.remove(i);
+        for (var idx = appsModel.count - 1; idx >= 0; idx--) {
+            if (resultKeys.indexOf(appsModel.get(idx).key) === -1)
+                appsModel.remove(idx);
         }
 
         for (var j = 0; j < result.length; j++) {
@@ -152,6 +190,7 @@ Item {
         color: Bar.Colors.shadow
         antialiasing: false
 
+        // Corner structural pixels
         Repeater {
             model: [
                 {
@@ -186,10 +225,27 @@ Item {
             anchors.centerIn: parent
             width: content.panelWidth
             height: content.headerHeight + content.listHeight + 40
-            color: Qt.rgba(Bar.Colors.background.r, Bar.Colors.background.g, Bar.Colors.background.b, 0.72)
+            color: Qt.rgba(Bar.Colors.background.r, Bar.Colors.background.g, Bar.Colors.background.b, 0.85)
             antialiasing: false
             clip: true
 
+            // HARDWARE SCANLINES
+            Column {
+                anchors.fill: parent
+                spacing: 2
+                z: 10
+                Repeater {
+                    model: Math.ceil(panelBox.height / 3)
+                    delegate: Rectangle {
+                        width: panelBox.width
+                        height: 1
+                        color: Bar.Colors.textOnBackground
+                        opacity: 0.04
+                    }
+                }
+            }
+
+            // Outline Box
             Rectangle {
                 anchors.top: parent.top
                 width: parent.width
@@ -215,20 +271,6 @@ Item {
                 color: Bar.Colors.outlineVariant
             }
 
-            Column {
-                anchors.fill: parent
-                spacing: 2
-                Repeater {
-                    model: Math.ceil(panelBox.height / 3)
-                    delegate: Rectangle {
-                        width: panelBox.width
-                        height: 1
-                        color: Bar.Colors.textOnBackground
-                        opacity: 0.02
-                    }
-                }
-            }
-
             Item {
                 id: header
                 anchors.top: parent.top
@@ -243,22 +285,6 @@ Item {
                     anchors.fill: parent
                     color: Bar.Colors.surfaceContainer
                     antialiasing: false
-
-                    SequentialAnimation {
-                        id: searchFlickerAnim
-                        NumberAnimation {
-                            target: searchBox
-                            property: "opacity"
-                            to: 0.55
-                            duration: 35
-                        }
-                        NumberAnimation {
-                            target: searchBox
-                            property: "opacity"
-                            to: 1.0
-                            duration: 90
-                        }
-                    }
 
                     Rectangle {
                         anchors.top: parent.top
@@ -287,15 +313,17 @@ Item {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        spacing: 6
+                        anchors.leftMargin: 12
+                        anchors.rightMargin: 12
+                        spacing: 8
 
-                        Bar.ColoredIcon {
-                            Layout.preferredWidth: 10
-                            Layout.preferredHeight: 10
-                            iconName: "search.svg"
-                            tint: Bar.Colors.mutedOnBackground
+                        // Console Input Prefix
+                        Text {
+                            text: ">"
+                            color: Bar.Colors.accent
+                            font.family: "Cozette"
+                            font.pixelSize: 10
+                            font.bold: true
                         }
 
                         TextInput {
@@ -311,7 +339,7 @@ Item {
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: "SEARCH FROM " + content.totalAppsCount + " APPS"
+                                text: "SYSTEM.QUERY_APPS(" + content.totalAppsCount + ")"
                                 font: searchField.font
                                 color: Bar.Colors.mutedOnBackground
                                 opacity: 0.5
@@ -319,11 +347,9 @@ Item {
                             }
 
                             onTextChanged: {
-                                content.refreshApps();
-                                searchFlickerAnim.restart();
+                                content.refreshApps(false);
                             }
 
-                            // FIXED SIGNAL HANDLER: standard block execution
                             Keys.onPressed: {
                                 if (event.key === Qt.Key_Escape) {
                                     AppLauncher.hide();
@@ -341,23 +367,22 @@ Item {
                                 }
                             }
 
-                            cursorVisible: false
-                            Rectangle {
-                                x: searchField.positionToRectangle(searchField.cursorPosition).x
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 1
-                                height: 11
-                                color: Bar.Colors.accent
-                                visible: searchField.activeFocus
-                                SequentialAnimation on opacity {
-                                    loops: Animation.Infinite
-                                    NumberAnimation {
-                                        to: 0.0
-                                        duration: 500
-                                    }
-                                    NumberAnimation {
-                                        to: 1.0
-                                        duration: 500
+                            cursorVisible: true
+                            cursorDelegate: Component {
+                                Rectangle {
+                                    width: 6
+                                    height: 10
+                                    color: Bar.Colors.accent
+                                    SequentialAnimation on opacity {
+                                        loops: Animation.Infinite
+                                        NumberAnimation {
+                                            to: 0.0
+                                            duration: 400
+                                        }
+                                        NumberAnimation {
+                                            to: 1.0
+                                            duration: 400
+                                        }
                                     }
                                 }
                             }
@@ -382,18 +407,12 @@ Item {
             Text {
                 anchors.centerIn: listView
                 visible: appsModel.count === 0
-                text: "NO APPS FOUND"
+                text: "ERR: NO TARGET FOUND"
                 font.family: "Cozette"
                 font.pixelSize: 10
                 font.letterSpacing: 1
-                color: Bar.Colors.mutedOnBackground
+                color: Bar.Colors.error
                 z: 4
-                opacity: visible ? 1 : 0
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 150
-                    }
-                }
             }
 
             ListView {
@@ -415,47 +434,40 @@ Item {
                 add: Transition {
                     SequentialAnimation {
                         PauseAnimation {
-                            duration: Math.min(ViewTransition.index * 12, 120)
+                            duration: Math.min(ViewTransition.index * 15, 150)
                         }
                         ParallelAnimation {
                             NumberAnimation {
                                 property: "opacity"
                                 from: 0
                                 to: 1
-                                duration: 140
+                                duration: 100
                             }
                             NumberAnimation {
                                 property: "x"
-                                from: 24
+                                from: -10
                                 to: 0
-                                duration: 180
-                                easing.type: Easing.OutCubic
+                                duration: 150
+                                easing.type: Easing.OutQuad
                             }
                         }
                     }
                 }
+
                 remove: Transition {
-                    ParallelAnimation {
-                        NumberAnimation {
-                            property: "opacity"
-                            from: 1
-                            to: 0
-                            duration: 110
-                        }
-                        NumberAnimation {
-                            property: "x"
-                            from: 0
-                            to: -24
-                            duration: 130
-                            easing.type: Easing.InCubic
-                        }
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 50
                     }
                 }
+
                 displaced: Transition {
                     NumberAnimation {
                         property: "y"
-                        duration: 160
-                        easing.type: Easing.OutCubic
+                        duration: 150
+                        easing.type: Easing.OutQuad
                     }
                 }
 
@@ -467,40 +479,48 @@ Item {
                     property bool isSelected: index === content.selectedIndex
                     property bool active: rowArea.containsMouse || row.isSelected
 
-                    property real blinkOpacity: 1
-
-                    // FIXED SCOPE: Animation is attached correctly to the Item scope
-                    SequentialAnimation on blinkOpacity {
-                        running: row.isSelected
-                        loops: Animation.Infinite
-                        NumberAnimation {
-                            to: 0.35
-                            duration: 280
-                        }
-                        NumberAnimation {
-                            to: 1.0
-                            duration: 280
-                        }
-                        onStopped: row.blinkOpacity = 1
-                    }
-
+                    // Inverted Row Highlight
                     Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 2
-                        color: Bar.Colors.accent
-                        antialiasing: false
-                        visible: row.active
-                        // BINDING: Dynamically pull the animated property from the parent scope
-                        opacity: row.isSelected ? row.blinkOpacity : 1
+                        anchors.fill: parent
+                        color: Bar.Colors.surfaceContainerHigh
+                        opacity: row.active ? 0.4 : 0
+                        Behavior on opacity {
+                            NumberAnimation {
+                                duration: 100
+                            }
+                        }
                     }
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 14
+                        anchors.leftMargin: 4
                         anchors.rightMargin: 12
                         spacing: 12
+
+                        // JRPG Menu Cursor
+                        Text {
+                            text: "[▶]"
+                            font.family: "Cozette"
+                            font.pixelSize: 10
+                            color: Bar.Colors.accent
+                            Layout.preferredWidth: 20
+                            opacity: row.isSelected ? 1 : 0
+
+                            SequentialAnimation on x {
+                                loops: Animation.Infinite
+                                running: row.isSelected
+                                NumberAnimation {
+                                    to: 2
+                                    duration: 300
+                                    easing.type: Easing.InOutQuad
+                                }
+                                NumberAnimation {
+                                    to: 0
+                                    duration: 300
+                                    easing.type: Easing.InOutQuad
+                                }
+                            }
+                        }
 
                         Item {
                             Layout.preferredWidth: content.iconSize + 10
@@ -508,48 +528,10 @@ Item {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: row.active ? Bar.Colors.surfaceContainerHigh : Bar.Colors.surfaceContainer
+                                color: "transparent"
                                 border.width: 1
-                                border.color: Bar.Colors.outlineVariant
+                                border.color: row.active ? Bar.Colors.accent : Bar.Colors.outlineVariant
                                 antialiasing: false
-                                Behavior on color {
-                                    ColorAnimation {
-                                        duration: 120
-                                    }
-                                }
-                            }
-
-                            Bar.CornerAccent {
-                                corner: "topLeft"
-                                thickness: 1
-                                sizeScale: 2
-                                color: row.active ? Bar.Colors.accent : Bar.Colors.outline
-                                anchors.top: parent.top
-                                anchors.left: parent.left
-                            }
-                            Bar.CornerAccent {
-                                corner: "topRight"
-                                thickness: 1
-                                sizeScale: 2
-                                color: row.active ? Bar.Colors.accent : Bar.Colors.outline
-                                anchors.top: parent.top
-                                anchors.right: parent.right
-                            }
-                            Bar.CornerAccent {
-                                corner: "bottomLeft"
-                                thickness: 1
-                                sizeScale: 2
-                                color: row.active ? Bar.Colors.accent : Bar.Colors.outline
-                                anchors.bottom: parent.bottom
-                                anchors.left: parent.left
-                            }
-                            Bar.CornerAccent {
-                                corner: "bottomRight"
-                                thickness: 1
-                                sizeScale: 2
-                                color: row.active ? Bar.Colors.accent : Bar.Colors.outline
-                                anchors.bottom: parent.bottom
-                                anchors.right: parent.right
                             }
 
                             PixelAppIcon {
@@ -557,6 +539,7 @@ Item {
                                 width: content.iconSize
                                 height: content.iconSize
                                 iconSource: row.app ? Quickshell.iconPath(row.app.icon, "application-x-executable") : ""
+                                opacity: row.active ? 1.0 : 0.7
                             }
                         }
 
@@ -566,11 +549,12 @@ Item {
 
                             Text {
                                 Layout.fillWidth: true
-                                text: row.app ? row.app.name : ""
+                                text: row.app ? row.app.name.toUpperCase() : ""
                                 color: row.active ? Bar.Colors.accent : Bar.Colors.textOnBackground
                                 font.family: "Cozette"
                                 font.pixelSize: 10
                                 font.letterSpacing: 1
+                                font.bold: row.active
                                 elide: Text.ElideRight
                             }
 
