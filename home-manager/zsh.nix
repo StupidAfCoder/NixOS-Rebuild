@@ -27,10 +27,6 @@
   programs.starship = {
     enable = true;
     enableZshIntegration = true;
-    settings = {
-      add_newline = false;
-      scan_timeout = 10;
-    };
   };
 
   # these two are the ones that will actually make your terminal life easier —

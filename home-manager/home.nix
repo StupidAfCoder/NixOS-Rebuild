@@ -84,6 +84,7 @@ in
     imagemagick
     neovim
     nixfmt
+    godot
 
     (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [
       pkgs.kdePackages.qtwayland
@@ -96,7 +97,7 @@ in
   programs.rmpc = {
     enable = true;
     config = ''
-      Config(
+      ConfigFile(
           address: "127.0.0.1:6600",
       )
     '';
@@ -294,7 +295,7 @@ in
     settings = {
       main = {
         dpi-aware = "yes";
-        font = "Pixel Operator Mono:pixelsize=16";
+        font = "Pixel Operator Mono:pixelsize=16,JetBrainsMono Nerd Font:pixelsize=16";
         include = "~/.config/foot/wallust-colors.ini";
         pad = "8x8";
       };

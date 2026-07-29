@@ -3,6 +3,7 @@ backend = "wal"
 color_space = "salience"
 palette = "harddark16"
 saturation = 50
+check_contrast = true  
 
 [templates]
 foot = { template = 'foot-colors.ini', target = '~/.config/foot/wallust-colors.ini' }
@@ -10,3 +11,4 @@ pywalfox = { template = 'pywalfox-colors.json', target = '~/.cache/wal/colors.js
 vscode = { template = 'vscode.json', target = '~/.cache/wallust/colors.json' }
 vscode2 = { template = 'vscode', target = '~/.cache/wallust/colors' }
 zathura = { template = 'zathura-colors', target = '~/.config/zathura/colors-wallust' }
+starship = { template = 'starship.toml', target = '~/.config/starship.toml' }

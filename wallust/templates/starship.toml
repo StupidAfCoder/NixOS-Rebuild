@@ -1,0 +1,82 @@
+# ==========================================
+# WALLUST V3 TEMPLATE -> STARSHIP.TOML
+# RETRO DOS/CRT ASCII ART PIPELINE
+# ==========================================
+
+add_newline = true
+
+# The structure uses strict 8-bit box drawing characters (╔, ═, ╡, ╚).
+# The $fill module creates a dynamic upper pipeline that stretches across the terminal.
+format = '''
+[╔═╡](bold {{color8}})[$username](bold {{color2}})[@](bold {{color8}})[$hostname](bold {{color4}})[╞═╡](bold {{color8}})[$directory](bold {{color6}})[╞](bold {{color8}}) $git_branch$git_status$nodejs$rust$python$golang$c$fill[╡](bold {{color8}})[$time](bold {{color5}})[╞═╗](bold {{color8}})
+[╚═>](bold {{color8}}) $character'''
+
+[fill]
+symbol = "═"
+style = "bold {{color8}}"
+
+[username]
+show_always = true
+format = ' [$user]($style) '
+
+[hostname]
+ssh_only = false
+format = '[$hostname]($style) '
+
+[directory]
+# The literal single quotes ('...') ensure Starship reads \[ correctly.
+format = '[\[$path\]]($style)'
+truncation_length = 3
+truncate_to_repo = true
+read_only = " [RO]"
+style = "bold {{color6}}"
+
+[character]
+# MS-DOS blinking cursor style
+success_symbol = '[_](bold {{color2}})'
+error_symbol   = '[X](bold {{color1}})'
+vimcmd_symbol  = '[<](bold {{color2}})'
+
+[git_branch]
+style = "bold {{color3}}"
+format = '[ \[$branch\] ]($style)'
+
+[git_status]
+style = "bold {{color1}}"
+format = '([\[$all_status$ahead_behind\]]($style)) '
+
+[nodejs]
+style = "bold {{color2}}"
+format = '[ \[JS:$version\] ]($style)'
+
+[rust]
+style = "bold {{color3}}"
+format = '[ \[RS:$version\] ]($style)'
+
+[python]
+style = "bold {{color4}}"
+format = '[ \[PY:$version\] ]($style)'
+
+[golang]
+style = "bold {{color6}}"
+format = '[ \[GO:$version\] ]($style)'
+
+[c]
+style = "bold {{color5}}"
+format = '[ \[C:$version\] ]($style)'
+
+[cmd_duration]
+min_time = 2000
+style = "bold {{color8}}"
+format = '[ \[T:$duration\] ]($style)'
+
+[status]
+disabled = false
+success_symbol = ""
+style = "bold {{color1}}"
+format = '[ \[ERR:$status\] ]($style)'
+
+[time]
+disabled = false
+format = ' [$time]($style) '
+time_format = "%H:%M:%S"

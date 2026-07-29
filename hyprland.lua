@@ -13,7 +13,7 @@ hl.monitor({
 ---------------------
 local terminal    = "foot"
 local fileManager = "thunar"
-local menu        = "fuzzel"
+local menu        = "qs ipc call launcher toggle"
 local browser     = "firefox"
 local wallpaper_change = "qs ipc call wallpaper toggle"
 local theme_mode = "~/.nixos_dotfiles/scripts/theme-mode-toggle.sh"

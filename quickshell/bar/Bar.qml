@@ -8,6 +8,7 @@ import "pathgen.js" as PathGen
 import "."
 import "../bar"
 import "../wallpaper"
+import "../launcher"
 
 Item {
     id: root
@@ -22,27 +23,56 @@ Item {
     // Run `hyprctl clients | grep class` to see your real class names
     // and add more rows here for anything not covered.
     readonly property var classIconRules: [
-        { match: ["firefox", "librewolf", "zen", "chromium", "chrome", "brave"], icon: "globe.svg" },
-        { match: ["kitty", "alacritty", "foot", "wezterm", "konsole", "xterm", "gnome-terminal"], icon: "terminal.svg" },
-        { match: ["discord", "telegram", "slack", "whatsapp", "element", "signal"], icon: "message.svg" },
-        { match: ["spotify", "mpv", "vlc", "rhythmbox"], icon: "music.svg" },
-        { match: ["code", "codium", "jetbrains", "idea", "pycharm", "clion", "sublime", "neovide", "nvim"], icon: "braces.svg" },
-        { match: ["thunar", "nautilus", "dolphin", "pcmanfm", "files"], icon: "folder.svg" },
-        { match: ["steam"], icon: "gamepad.svg" },
-        { match: ["obsidian", "notion"], icon: "notebook.svg" },
-        { match: ["gimp", "inkscape", "krita" , "aseprite"], icon: "brush.svg" }
+        {
+            match: ["firefox", "librewolf", "zen", "chromium", "chrome", "brave"],
+            icon: "globe.svg"
+        },
+        {
+            match: ["kitty", "alacritty", "foot", "wezterm", "konsole", "xterm", "gnome-terminal"],
+            icon: "terminal.svg"
+        },
+        {
+            match: ["discord", "telegram", "slack", "whatsapp", "element", "signal"],
+            icon: "message.svg"
+        },
+        {
+            match: ["spotify", "mpv", "vlc", "rhythmbox"],
+            icon: "music.svg"
+        },
+        {
+            match: ["code", "codium", "jetbrains", "idea", "pycharm", "clion", "sublime", "neovide", "nvim"],
+            icon: "braces.svg"
+        },
+        {
+            match: ["thunar", "nautilus", "dolphin", "pcmanfm", "files"],
+            icon: "folder.svg"
+        },
+        {
+            match: ["steam"],
+            icon: "gamepad.svg"
+        },
+        {
+            match: ["obsidian", "notion"],
+            icon: "notebook.svg"
+        },
+        {
+            match: ["gimp", "inkscape", "krita", "aseprite"],
+            icon: "brush.svg"
+        }
     ]
 
     function iconForClass(cls) {
-        if (!cls) return root.defaultWsIcon
-        const c = cls.toLowerCase()
+        if (!cls)
+            return root.defaultWsIcon;
+        const c = cls.toLowerCase();
         for (let i = 0; i < root.classIconRules.length; i++) {
-            const rule = root.classIconRules[i]
+            const rule = root.classIconRules[i];
             for (let j = 0; j < rule.match.length; j++) {
-                if (c.indexOf(rule.match[j]) !== -1) return rule.icon
+                if (c.indexOf(rule.match[j]) !== -1)
+                    return rule.icon;
             }
         }
-        return root.defaultWsIcon
+        return root.defaultWsIcon;
     }
 
     // lastIpcObject (used below for window class) doesn't update on its
@@ -58,8 +88,12 @@ Item {
 
     Connections {
         target: Hyprland.toplevels
-        function onObjectInsertedPost() { Hyprland.refreshToplevels() }
-        function onObjectRemovedPost() { Hyprland.refreshToplevels() }
+        function onObjectInsertedPost() {
+            Hyprland.refreshToplevels();
+        }
+        function onObjectRemovedPost() {
+            Hyprland.refreshToplevels();
+        }
     }
 
     BarShell {
@@ -90,7 +124,7 @@ Item {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: console.log("power button clicked")
+                onClicked: AppLauncher.toggle()
             }
         }
 
@@ -114,24 +148,47 @@ Item {
                     // globally focused window if it's in this workspace, else fall
                     // back to the most recently opened one here.
                     property var topWindow: {
-                        if (!wsPill.wsData || wsPill.wsData.toplevels.values.length === 0) return null
-                        const tls = wsPill.wsData.toplevels.values
+                        if (!wsPill.wsData || wsPill.wsData.toplevels.values.length === 0)
+                            return null;
+                        const tls = wsPill.wsData.toplevels.values;
                         for (let i = 0; i < tls.length; i++) {
-                            if (tls[i].activated) return tls[i]
+                            if (tls[i].activated)
+                                return tls[i];
                         }
-                        return tls[tls.length - 1]
+                        return tls[tls.length - 1];
                     }
 
-                    readonly property string windowClass: (wsPill.topWindow && wsPill.topWindow.lastIpcObject)
-                        ? (wsPill.topWindow.lastIpcObject.class || "") : ""
+                    readonly property string windowClass: (wsPill.topWindow && wsPill.topWindow.lastIpcObject) ? (wsPill.topWindow.lastIpcObject.class || "") : ""
                     readonly property string wsIcon: root.iconForClass(wsPill.windowClass)
 
                     width: 20
                     height: 20
 
                     readonly property var staticDots: [
-                        {x: 1, y: 2}, {x: 14, y: 1}, {x: 4, y: 15},
-                        {x: 16, y: 12}, {x: 9, y: 8}, {x: 2, y: 10}
+                        {
+                            x: 1,
+                            y: 2
+                        },
+                        {
+                            x: 14,
+                            y: 1
+                        },
+                        {
+                            x: 4,
+                            y: 15
+                        },
+                        {
+                            x: 16,
+                            y: 12
+                        },
+                        {
+                            x: 9,
+                            y: 8
+                        },
+                        {
+                            x: 2,
+                            y: 10
+                        }
                     ]
 
                     Repeater {
@@ -157,7 +214,9 @@ Item {
                         ShapePath {
                             fillColor: Colors.accent
                             strokeColor: "transparent"
-                            PathSvg { path: PathGen.chamferedRectPath(20, 20, 6) }
+                            PathSvg {
+                                path: PathGen.chamferedRectPath(20, 20, 6)
+                            }
                         }
                     }
 
@@ -177,14 +236,17 @@ Item {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            Hyprland.dispatch('hl.dsp.focus({ workspace = "' + wsPill.wsId + '" })')
+                            Hyprland.dispatch('hl.dsp.focus({ workspace = "' + wsPill.wsId + '" })');
                         }
                     }
                 }
             }
         }
 
-        BarDivider { Layout.alignment: Qt.AlignHCenter; barWidth: 32 }
+        BarDivider {
+            Layout.alignment: Qt.AlignHCenter
+            barWidth: 32
+        }
 
         Item {
             id: middleZone
@@ -205,20 +267,31 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "hh")
-                        color: Colors.textOnBackground; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
-                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
+                        color: Colors.textOnBackground
+                        font.family: "Pixel Operator"
+                        font.pixelSize: 14
+                        font.bold: true
+                        renderType: Text.NativeRendering
+                        horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "mm")
-                        color: Colors.textOnBackground; font.family: "Pixel Operator"; font.pixelSize: 14; font.bold: true
-                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
+                        color: Colors.textOnBackground
+                        font.family: "Pixel Operator"
+                        font.pixelSize: 14
+                        font.bold: true
+                        renderType: Text.NativeRendering
+                        horizontalAlignment: Text.AlignHCenter
                     }
                 }
 
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
-                    width: 16; height: 1; color: Colors.outlineVariant; antialiasing: false
+                    width: 16
+                    height: 1
+                    color: Colors.outlineVariant
+                    antialiasing: false
                 }
 
                 ColumnLayout {
@@ -227,20 +300,29 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "dd")
-                        color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 9
-                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
+                        color: Colors.textOnBackground
+                        font.family: "Cozette"
+                        font.pixelSize: 9
+                        renderType: Text.NativeRendering
+                        horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "MM")
-                        color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 9
-                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
+                        color: Colors.textOnBackground
+                        font.family: "Cozette"
+                        font.pixelSize: 9
+                        renderType: Text.NativeRendering
+                        horizontalAlignment: Text.AlignHCenter
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         text: Qt.formatDateTime(clockTimer.now, "yy")
-                        color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 9
-                        renderType: Text.NativeRendering; horizontalAlignment: Text.AlignHCenter
+                        color: Colors.textOnBackground
+                        font.family: "Cozette"
+                        font.pixelSize: 9
+                        renderType: Text.NativeRendering
+                        horizontalAlignment: Text.AlignHCenter
                     }
                 }
             }
@@ -287,9 +369,12 @@ Item {
             }
         }
 
-        BarDivider { Layout.alignment: Qt.AlignHCenter; barWidth: 32 }
+        BarDivider {
+            Layout.alignment: Qt.AlignHCenter
+            barWidth: 32
+        }
 
-    // --- System tray ---
+        // --- System tray ---
         SystemTray {
             Layout.alignment: Qt.AlignHCenter
         }
