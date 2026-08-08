@@ -4,6 +4,7 @@ import QtQuick
 import "."
 import "../wallpaper"
 import "../launcher"
+import "../osd"
 
 Scope {
     id: manager
@@ -97,6 +98,12 @@ Scope {
                     mask: Region {
                         Region {
                             item: barArea
+                        }
+                        Region {
+                            item: rightEdgePanel.hoverStripItem
+                        }
+                        Region {
+                            item: rightEdgePanel.panelBezelItem
                         }
                         Region {
                             item: bluetoothPanelContent
@@ -359,6 +366,11 @@ Scope {
                     // also add the content instance, right after WallpaperLauncherContent { ... }
                     AppLauncherContent {
                         id: appLauncherContent
+                    }
+
+                    RightEdgePanel {
+                        id: rightEdgePanel
+                        stripWidth: manager.borderThickness
                     }
 
                     CornerAccent {

@@ -44,6 +44,8 @@
         # 4. Execute nix shell with the fully expanded array
         # Note: ''${...} is required to escape Nix string interpolation so Zsh can read it
         nix shell "''${pkgs[@]}"
+
+        eval "$(direnv hook zsh)"
       }
     '';
   };

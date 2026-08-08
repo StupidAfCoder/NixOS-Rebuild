@@ -80,6 +80,10 @@ in
     pixelarticons
     scriptPython
 
+    libreoffice-fresh
+    localsend
+    chromium
+
     pywalfox-native
     imagemagick
     neovim

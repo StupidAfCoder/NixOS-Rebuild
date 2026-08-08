@@ -2,24 +2,29 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, inputs, ... }:
+{
+  config,
+  pkgs,
+  inputs,
+  ...
+}:
 
 let
   # Define your custom system package right here in memory
   megumin-cursor = pkgs.stdenvNoCC.mkDerivation {
     pname = "megumin-cursor";
     version = "1.0";
-    
+
     # Point this strictly to the local Git-tracked folder
-    src = ./assets/MeguminCursor; 
-    
+    src = ./assets/MeguminCursor;
+
     # We don't need to 'make' or 'build' anything, just install
-    dontBuild = true; 
-    
+    dontBuild = true;
+
     installPhase = ''
       # Create the standard Linux icon directory structure inside the Nix store
       mkdir -p $out/share/icons/MeguminCursor
-      
+
       # Copy all files from the source into the new store path
       cp -R . $out/share/icons/MeguminCursor/
     '';
@@ -42,31 +47,34 @@ let
   };
 in
 {
-  imports =
-    [ # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-    ];
+  imports = [
+    # Include the results of the hardware scan.
+    ./hardware-configuration.nix
+  ];
 
   environment.sessionVariables = {
-  	# Force applications to use the NVIDIA VA-API driver
-  	LIBVA_DRIVER_NAME = "nvidia";
-	  NIXOS_OZONE_WL = "1";
+    # Force applications to use the NVIDIA VA-API driver
+    LIBVA_DRIVER_NAME = "nvidia";
+    NIXOS_OZONE_WL = "1";
     XCURSOR_THEME = "MeguminCursor";
     XCURSOR_SIZE = "24";
     QT_QPA_PLATFORMTHEME = "qt6ct";
   };
 
-  swapDevices = [{
-    device = "/var/lib/swapfile";
-    size = 16 * 1024; # 16 GiB safety net
-  }];
-
+  swapDevices = [
+    {
+      device = "/var/lib/swapfile";
+      size = 16 * 1024; # 16 GiB safety net
+    }
+  ];
 
   boot.zswap.enable = true;
 
   boot.kernel.sysctl = {
     "vm.swappiness" = 40;
   };
+
+  boot.kernelModules = [ "i2c-dev" ];
 
   systemd.oomd.enable = true;
   security.polkit.enable = true;
@@ -80,7 +88,7 @@ in
   services.tlp.enable = true;
 
   # Thunar backend services for Trash, Networking, and Thumbnails
-  services.gvfs.enable = true; 
+  services.gvfs.enable = true;
   services.tumbler.enable = true;
 
   security.rtkit.enable = true; # Gives audio high-priority processing
@@ -90,18 +98,20 @@ in
     alsa.support32Bit = true;
     pulse.enable = true;
     # If you ever want to use JACK for pro audio, uncomment this:
-    # jack.enable = true; 
+    # jack.enable = true;
   };
 
-  security.pam.services.hyprlock = {};
+  security.pam.services.hyprlock = { };
 
   hardware.bluetooth = {
     enable = true;
     powerOnBoot = true;
   };
 
-
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
 
   # Bootloader.
   boot.loader.systemd-boot.enable = false;
@@ -117,15 +127,20 @@ in
     elegant-grub2-theme = {
       enable = true;
       theme = "mountain"; # Options: forest, mojave, mountain, wave
-      type = "blur";    # Options: window, float, sharp, blur
-      side = "left";    # Options: left, right
-      color = "dark";   # Options: dark, light
+      type = "blur"; # Options: window, float, sharp, blur
+      side = "left"; # Options: left, right
+      color = "dark"; # Options: dark, light
       screen = "1080p"; # Options: 1080p, 2k, 4k
-      logo = "system";  # Options: default, system
+      logo = "system"; # Options: default, system
     };
   };
 
-  boot.initrd.kernelModules = [ "nvidia" "nvidia_modeset" "nvidia_uvm" "nvidia_drm" ];
+  boot.initrd.kernelModules = [
+    "nvidia"
+    "nvidia_modeset"
+    "nvidia_uvm"
+    "nvidia_drm"
+  ];
 
   networking.hostName = "nixos"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -147,7 +162,10 @@ in
     uri = "http://detectportal.firefox.com/success.txt";
   };
 
-  networking.nameservers = [ "1.1.1.1" "1.0.0.1" ];
+  networking.nameservers = [
+    "1.1.1.1"
+    "1.0.0.1"
+  ];
 
   # Set your time zone.
   time.timeZone = "Asia/Kolkata";
@@ -178,12 +196,23 @@ in
   users.users."swami" = {
     isNormalUser = true;
     description = "Yash";
-    extraGroups = [ "networkmanager" "wheel" ];
-    packages = with pkgs; [];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "video"
+      "i2c"
+    ];
+    packages = with pkgs; [ ];
     shell = pkgs.zsh;
   };
 
   programs.zsh.enable = true;
+
+  # configuration.nix (or wherever your system config lives)
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
 
   programs.hyprland = {
     enable = true;
@@ -198,7 +227,7 @@ in
     };
 
     package = pkgs.kdePackages.sddm;
-  
+
     extraPackages = [
       pkgs.kdePackages.qtsvg
       pkgs.kdePackages.qtdeclarative
@@ -216,10 +245,10 @@ in
   };
 
   programs.qylock = {
-            enable = true;
-            theme = "pixel-coffee";          # any directory name under themes/
-            sddm.enable = true;             # installs theme + sets it active (default)
-            #quickshell.enable = true;       # adds `qylock-lock` to PATH (default)
+    enable = true;
+    theme = "pixel-coffee"; # any directory name under themes/
+    sddm.enable = true; # installs theme + sets it active (default)
+    #quickshell.enable = true;       # adds `qylock-lock` to PATH (default)
   };
 
   # Allow unfree packages
@@ -232,18 +261,18 @@ in
     kitty
     git
     wget
-    firefox     
+    firefox
     inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
     pkgs.nicotine-plus
     lxqt.lxqt-policykit
     megumin-cursor
     hyprpolkitagent
 
-    brightnessctl     # brightness widget
-    ddcutil           # external monitor brightness control (optional)
-    lm_sensors        # temp/sensor widgets
-    libqalculate      # if you build a calculator module
-    # ffmpeg-full.override { withUnfree = true; }	
+    brightnessctl # brightness widget
+    ddcutil # external monitor brightness control (optional)
+    lm_sensors # temp/sensor widgets
+    libqalculate # if you build a calculator module
+    # ffmpeg-full.override { withUnfree = true; }
 
     kdePackages.qt6ct
     libsForQt5.qtstyleplugin-kvantum
@@ -254,7 +283,7 @@ in
     cmake
     ninja
     pkg-config
-    clang-tools       # clang-format, clangd
+    clang-tools # clang-format, clangd
     qt6.qtdeclarative # QML tooling incl. qmlformat, qmllint
 
     libcava
@@ -274,37 +303,43 @@ in
   };
 
   hardware.graphics = {
- 	  enable = true;
+    enable = true;
 
-	  enable32Bit = true;
-	  extraPackages = with pkgs; [
-    		nvidia-vaapi-driver
-  	];
+    enable32Bit = true;
+    extraPackages = with pkgs; [
+      nvidia-vaapi-driver
+    ];
   };
 
-  services.xserver.videoDrivers = ["nvidia"];
+  services.xserver.videoDrivers = [ "nvidia" ];
 
   hardware.nvidia = {
-	  modesetting.enable = true;
-	  powerManagement.enable = true;
-	  powerManagement.finegrained = false;
-	  open = true;
-	  nvidiaSettings = true;
-	  package = config.boot.kernelPackages.nvidiaPackages.stable;
+    modesetting.enable = true;
+    powerManagement.enable = true;
+    powerManagement.finegrained = false;
+    open = true;
+    nvidiaSettings = true;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
-	
+
   nix.gc = {
     automatic = true;
     dates = "weekly";
     options = "--delete-older-than 30d";
   };
 
+  services.udev.packages = [ pkgs.brightnessctl ];
+
+  services.udev.extraRules = ''
+    KERNEL=="i2c-[0-9]*", GROUP="i2c", MODE="0660"
+  '';
+
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
     cozette
     google-fonts
-    nerd-fonts.caskaydia-cove  # good icon coverage if you want it — swap for any nerd font you like
-    rubik                      # optional, only if you like Caelestia's UI typeface
+    nerd-fonts.caskaydia-cove # good icon coverage if you want it — swap for any nerd font you like
+    rubik # optional, only if you like Caelestia's UI typeface
     material-symbols
     pixel-operator
   ];
@@ -326,6 +361,8 @@ in
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];
+  networking.firewall.allowedTCPPorts = [ 53317 ];
+  networking.firewall.allowedUDPPorts = [ 53317 ];
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
