@@ -1,12 +1,33 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail   # dropped -e: a failed attempt inside the retry loop shouldn't kill the script
 
-# override with `env OSD_DDCUTIL_DISPLAY=2 ...` if you ever have multiple
-# DDC-capable monitors and need a specific one
 DDCUTIL_DISPLAY="${OSD_DDCUTIL_DISPLAY:-1}"
 
 has_backlight() {
     [ -n "$(ls -A /sys/class/backlight 2>/dev/null)" ]
+}
+
+ddc_get() {
+    for attempt in 1 2 3; do
+        out="$(ddcutil getvcp 10 --brief --display "$DDCUTIL_DISPLAY" 2>/dev/null)"
+        if [ -n "$out" ]; then
+            echo "$out" | awk '{ printf "%d\n", ($4/$5)*100 }'
+            return 0
+        fi
+        sleep 0.3
+    done
+    return 1
+}
+
+ddc_set() {
+    local pct="$1"
+    for attempt in 1 2 3; do
+        if ddcutil setvcp 10 --display "$DDCUTIL_DISPLAY" "$pct" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 0.3
+    done
+    return 1
 }
 
 case "${1:-}" in
@@ -14,8 +35,7 @@ case "${1:-}" in
         if has_backlight; then
             brightnessctl -c backlight -m | grep -oP '\d+(?=%)'
         else
-            ddcutil getvcp 10 --brief --display "$DDCUTIL_DISPLAY" \
-                | awk '{ printf "%d\n", ($4/$5)*100 }'
+            ddc_get
         fi
         ;;
     set)
@@ -23,7 +43,7 @@ case "${1:-}" in
         if has_backlight; then
             brightnessctl -c backlight set "${pct}%" >/dev/null
         else
-            ddcutil setvcp 10 --display "$DDCUTIL_DISPLAY" "$pct" >/dev/null
+            ddc_set "$pct"
         fi
         ;;
     *)

@@ -76,6 +76,10 @@ in
 
   boot.kernelModules = [ "i2c-dev" ];
 
+  boot.extraModprobeConfig = ''
+    options nvidia NVreg_RegistryDwords="RMUseSwI2c=0x01;RMI2cSpeed=100"
+  '';
+
   systemd.oomd.enable = true;
   security.polkit.enable = true;
 
@@ -272,6 +276,7 @@ in
     ddcutil # external monitor brightness control (optional)
     lm_sensors # temp/sensor widgets
     libqalculate # if you build a calculator module
+    inetutils
     # ffmpeg-full.override { withUnfree = true; }
 
     kdePackages.qt6ct
@@ -280,9 +285,11 @@ in
 
     adw-gtk3
 
+    gcc
     cmake
     ninja
     pkg-config
+    clang
     clang-tools # clang-format, clangd
     qt6.qtdeclarative # QML tooling incl. qmlformat, qmllint
 
@@ -343,6 +350,8 @@ in
     material-symbols
     pixel-operator
   ];
+
+  users.groups.i2c = { };
 
   nix.settings.auto-optimise-store = true;
   # Some programs need SUID wrappers, can be configured further or are

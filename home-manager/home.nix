@@ -25,6 +25,10 @@ let
     ps.pillow
     ps.materialyoucolor
   ]);
+  pkgs-unstable = import inputs.nixpkgs-unstable {
+    system = pkgs.system;
+    config.allowUnfree = true;
+  };
 in
 {
   home.stateVersion = "26.05";
@@ -88,7 +92,8 @@ in
     imagemagick
     neovim
     nixfmt
-    godot
+    papers
+    pkgs-unstable.godot_4
 
     (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [
       pkgs.kdePackages.qtwayland
@@ -163,6 +168,8 @@ in
       "image/gif" = [ "imv.desktop" ];
       "image/webp" = [ "imv.desktop" ];
       "image/svg+xml" = [ "imv.desktop" ];
+
+      "application/pdf" = [ "org.gnome.Papers.desktop" ];
     };
   };
 

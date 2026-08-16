@@ -4,10 +4,11 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     nur.url = "github:nix-community/NUR";
-    
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
-      inputs.nixpkgs.follows = "nixpkgs"; 
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     quickshell = {
@@ -26,34 +27,42 @@
     };
   };
 
-  outputs = { self, nixpkgs, qylock, home-manager, ... }@inputs: {
-    
-    nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      
-      specialArgs = { inherit inputs; }; 
-      
-      modules = [
-        ./nixos/hardware-configuration.nix
-        ./nixos/configuration.nix
-        { nixpkgs.overlays = [ inputs.nur.overlays.default ]; }
-        
-        ##Grub theme
-        inputs.elegant-grub2-themes.nixosModules.default
-        ##SDDM theme
-        qylock.nixosModules.default
+  outputs =
+    {
+      self,
+      nixpkgs,
+      qylock,
+      home-manager,
+      ...
+    }@inputs:
+    {
 
-        home-manager.nixosModules.home-manager
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.backupFileExtension = "backup";
-          
-          home-manager.extraSpecialArgs = { inherit inputs; };
+      nixosConfigurations.nixos = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
 
-          home-manager.users.swami = import ./home-manager/home.nix;
-        }
-      ];
+        specialArgs = { inherit inputs; };
+
+        modules = [
+          ./nixos/hardware-configuration.nix
+          ./nixos/configuration.nix
+          { nixpkgs.overlays = [ inputs.nur.overlays.default ]; }
+
+          ##Grub theme
+          inputs.elegant-grub2-themes.nixosModules.default
+          ##SDDM theme
+          qylock.nixosModules.default
+
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
+
+            home-manager.extraSpecialArgs = { inherit inputs; };
+
+            home-manager.users.swami = import ./home-manager/home.nix;
+          }
+        ];
+      };
     };
-  };
 }
