@@ -7,7 +7,7 @@ check_contrast = true
 
 [templates]
 foot = { template = 'foot-colors.ini', target = '~/.config/foot/wallust-colors.ini' }
-pywalfox = { template = 'pywalfox-colors.json', target = '~/.cache/wal/colors.json', pywal = true }
+pywalfox = { template = 'pywalfox-colors.json', target = '~/.cache/wal/colors.json'}
 vscode = { template = 'vscode.json', target = '~/.cache/wallust/colors.json' }
 vscode2 = { template = 'vscode', target = '~/.cache/wallust/colors' }
 zathura = { template = 'zathura-colors', target = '~/.config/zathura/colors-wallust' }

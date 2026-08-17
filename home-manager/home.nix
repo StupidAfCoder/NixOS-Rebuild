@@ -186,7 +186,6 @@ in
 
   programs.firefox = {
     enable = true;
-    nativeMessagingHosts = [ pkgs.pywalfox-native ];
     profiles.default.extensions.packages = [
       pkgs.nur.repos.rycee.firefox-addons.pywalfox
     ];
@@ -240,6 +239,26 @@ in
   };
 
   #Systemd User defined Services
+  systemd.user.services.pywalfox-install-manifest = {
+    Unit.Description = "Regenerate Pywalfox native messaging manifest";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.pywalfox-native}/bin/pywalfox install";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+  systemd.user.services.pywalfox = {
+    Unit = {
+      Description = "Pywalfox native daemon";
+      After = [ "pywalfox-install-manifest.service" ];
+    };
+    Service = {
+      Type = "forking";
+      ExecStart = "${pkgs.pywalfox-native}/bin/pywalfox start";
+      Restart = "on-failure";
+    };
+  };
+
   systemd.user.services.quickshell = {
     Unit = {
       Description = "Quickshell desktop shell";
