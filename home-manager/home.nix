@@ -97,6 +97,8 @@ in
     pkgs-unstable.godot_4
     wf-recorder
     obs-studio
+    parabolic
+    cava
 
     (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [
       pkgs.kdePackages.qtwayland
@@ -106,13 +108,123 @@ in
     ])
   ];
 
+  xdg.desktopEntries.rmpc = {
+    name = "rmpc";
+    genericName = "Music Player";
+    exec = "foot -e rmpc";
+    icon = "audio-x-generic";
+    terminal = false;
+    categories = [
+      "Audio"
+      "Player"
+    ];
+  };
+
   programs.rmpc = {
     enable = true;
     config = ''
-      ConfigFile(
-          address: "127.0.0.1:6600",
-      )
+            #![enable(implicit_some)]
+            #![enable(unwrap_newtypes)]
+            #![enable(unwrap_variant_newtypes)]
+            (
+                address: "127.0.0.1:6600",
+                password: None,
+                theme: Some("wallust"),
+                cache_dir: Some("/home/swami/.cache/rmpc"),
+                volume_step: 5,
+                max_fps: 60,
+                enable_mouse: true,
+                enable_config_hot_reload: true,
+                album_art: (
+                    method: Auto,
+                    max_size_px: (width: 1200, height: 1200),
+                    vertical_align: Center,
+                    horizontal_align: Center,
+                ),
+                keybinds: (
+                    global: {
+                        "q": Quit,
+                        "p": TogglePause,
+                        ">": NextTrack,
+                        "<": PreviousTrack,
+                        ".": VolumeUp,
+                        ",": VolumeDown,
+                        "1": SwitchToTab("Queue"),
+                        "2": SwitchToTab("Directories"),
+                        "3": SwitchToTab("Artists"),
+                        "4": SwitchToTab("Albums"),
+                        "5": SwitchToTab("Playlists"),
+                        "7": SwitchToTab("Search"),
+                        "8": SwitchToTab("Visualizer"),
+                    },
+                    navigation: {
+                        "k": Up,
+                        "j": Down,
+                        "h": Left,
+                        "l": Right,
+                        "/": EnterSearch,
+                        "a": Add,
+                        "d": Delete,
+                    },
+                ),
+                cava: (
+          framerate: 60,
+          autosens: true,
+          sensitivity: 100,
+          lower_cutoff_freq: 50,
+          higher_cutoff_freq: 10000,
+          input: (
+              method: Fifo,
+              source: "/tmp/mpd.fifo",
+              sample_rate: 44100,
+              channels: 2,
+              sample_bits: 16,
+          ),
+          smoothing: (
+              noise_reduction: 77,
+              monstercat: true,
+              waves: false,
+          ),
+          eq: [],
+      ),
+        tabs: [
+          ( name: "Queue", pane: Split(
+            direction: Horizontal,
+            panes: [
+              ( size: "70%", pane: Pane(Queue) ),
+              ( size: "30%", pane: Pane(AlbumArt) ),
+            ],
+          ) ),
+          ( name: "Directories", pane: Pane(Directories) ),
+          ( name: "Artists", pane: Pane(Artists) ),
+          ( name: "Albums", pane: Pane(Albums) ),
+          ( name: "Playlists", pane: Pane(Playlists) ),
+          ( name: "Search", pane: Pane(Search) ),
+          ( name: "Visualizer", pane: Pane(Cava) ),
+      ],
+
+            )
     '';
+  };
+
+  programs.ncmpcpp = {
+    enable = true;
+    package = pkgs.ncmpcpp.override { visualizerSupport = true; };
+    mpdMusicDir = "${config.home.homeDirectory}/Music";
+    settings = {
+      mpd_host = "127.0.0.1";
+      mpd_port = "6600";
+
+      visualizer_data_source = "/tmp/mpd.fifo";
+      visualizer_output_name = "cava_fifo";
+      visualizer_in_stereo = "yes";
+      visualizer_type = "ellipse";
+      visualizer_look = "●●";
+      visualizer_color = "green, magenta";
+      visualizer_fps = "60";
+
+      colors_enabled = "yes";
+    };
   };
 
   programs.mpv = {
@@ -331,6 +443,12 @@ in
       audio_output {
         type "pulse"
         name "PipeWire PulseAudio"
+      }
+      audio_output {
+        type "fifo"
+        name "cava_fifo"
+        path "/tmp/mpd.fifo"
+        format "44100:16:2"
       }
     '';
   };

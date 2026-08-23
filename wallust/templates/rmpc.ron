@@ -1,0 +1,38 @@
+#![enable(implicit_some)]
+#![enable(unwrap_newtypes)]
+#![enable(unwrap_variant_newtypes)]
+(
+    default_album_art_path: None,
+    format_tag_separator: " :: ",
+    browser_column_widths: [20, 38, 42],
+    background_color: "{{background}}",
+    text_color: "{{foreground}}",
+    header_background_color: "{{background}}",
+    modal_background_color: "{{color0}}",
+    modal_backdrop: false,
+    preview_label_style: (fg: "{{color5}}"),
+    preview_metadata_group_style: (fg: "{{color6}}", modifiers: "Bold"),
+    highlighted_item_style: (fg: "{{color3}}", modifiers: "Bold"),
+    current_item_style: (fg: "{{background}}", bg: "{{color2}}", modifiers: "Bold"),
+    borders_style: (fg: "{{color2}}"),
+    highlight_border_style: (fg: "{{color5}}"),
+    symbols: (
+        song: "♪",
+        dir: "▶",
+        playlist: "☰",
+        marker: "●",
+        ellipsis: "...",
+    ),
+    cava: (
+        bar_symbols: ['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'],
+        bg_color: "{{background}}",
+        bar_width: 2,
+        bar_spacing: 1,
+        orientation: Bottom,
+        bar_color: Gradient({
+            0: "{{color2}}",
+            50: "{{color10}}",
+            100: "{{color5}}",
+        }),
+    ),
+)

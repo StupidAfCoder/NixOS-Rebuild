@@ -12,3 +12,4 @@ vscode = { template = 'vscode.json', target = '~/.cache/wallust/colors.json' }
 vscode2 = { template = 'vscode', target = '~/.cache/wallust/colors' }
 zathura = { template = 'zathura-colors', target = '~/.config/zathura/colors-wallust' }
 starship = { template = 'starship.toml', target = '~/.config/starship.toml' }
+rmpc = { template = 'rmpc.ron', target = '~/.config/rmpc/themes/wallust.ron' }
