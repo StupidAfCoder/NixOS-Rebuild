@@ -342,6 +342,8 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(wallpaper_change))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(theme_mode))
+hl.bind(mainMod .. " + R" , hl.dsp.exec_cmd("~/.nixos_dotfiles/scripts/start-recording.sh"))
+hl.bind(mainMod .. " + SHIFT + R" , hl.dsp.exec_cmd("~/.nixos_dotfiles/scripts/stop-recording.sh"))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
@@ -440,6 +442,14 @@ hl.window_rule({
 
 hl.window_rule({
     match = {
+        class = "io.github.celluloid_player.Celluloid"
+    },
+    float = true,
+    center = true,
+})
+
+hl.window_rule({
+    match = {
         title = "Authentication Required"
     },
     float = true,
@@ -455,6 +465,27 @@ hl.window_rule({
     float = true,
     center = true,
     pin = true,
+})
+
+hl.window_rule({
+    match = {
+        class = "thunar"
+    },
+    opacity = "0.75 override 0.45 override 1.0 override"
+})
+
+hl.window_rule({
+    match = {
+        class = "org.gnome.Papers"
+    },
+    opacity = "0.75 override 0.45 override 1.0 override" 
+})
+
+hl.window_rule({
+    match = {
+        class = "firefox"
+    },
+    opacity = "0.85 override 0.45 override 1.0 override"
 })
 
 hl.window_rule({

@@ -47,6 +47,7 @@ in
     hyprlock
     brave
     discord
+    gnome-text-editor
 
     (pkgs.thunar.override {
       thunarPlugins = with pkgs; [
@@ -94,6 +95,8 @@ in
     nixfmt
     papers
     pkgs-unstable.godot_4
+    wf-recorder
+    obs-studio
 
     (inputs.quickshell.packages.${pkgs.stdenv.hostPlatform.system}.default.withModules [
       pkgs.kdePackages.qtwayland
@@ -110,6 +113,14 @@ in
           address: "127.0.0.1:6600",
       )
     '';
+  };
+
+  programs.mpv = {
+    enable = true;
+    config = {
+      hwdec = "auto-safe";
+      vo = "gpu";
+    };
   };
 
   wayland.windowManager.hyprland = {
@@ -170,6 +181,20 @@ in
       "image/svg+xml" = [ "imv.desktop" ];
 
       "application/pdf" = [ "org.gnome.Papers.desktop" ];
+      "text/plain" = [ "org.gnome.TextEditor.desktop" ];
+      "text/markdown" = [ "org.gnome.TextEditor.desktop" ];
+      "text/x-python" = [ "org.gnome.TextEditor.desktop" ];
+      "text/x-csrc" = [ "org.gnome.TextEditor.desktop" ];
+      "text/x-c++src" = [ "org.gnome.TextEditor.desktop" ];
+      "application/json" = [ "org.gnome.TextEditor.desktop" ];
+      "application/x-yaml" = [ "org.gnome.TextEditor.desktop" ];
+      "text/x-shellscript" = [ "org.gnome.TextEditor.desktop" ];
+      "application/xml" = [ "org.gnome.TextEditor.desktop" ];
+
+      "video/mp4" = [ "io.github.celluloid_player.Celluloid.desktop" ];
+      "video/x-matroska" = [ "io.github.celluloid_player.Celluloid.desktop" ];
+      "video/webm" = [ "io.github.celluloid_player.Celluloid.desktop" ];
+      "video/x-msvideo" = [ "io.github.celluloid_player.Celluloid.desktop" ];
     };
   };
 

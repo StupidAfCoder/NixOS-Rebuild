@@ -59,6 +59,7 @@ in
     XCURSOR_THEME = "MeguminCursor";
     XCURSOR_SIZE = "24";
     QT_QPA_PLATFORMTHEME = "qt6ct";
+    LD_LIBRARY_PATH = [ "/run/opengl-driver/lib" ];
   };
 
   swapDevices = [
@@ -292,9 +293,15 @@ in
     clang
     clang-tools # clang-format, clangd
     qt6.qtdeclarative # QML tooling incl. qmlformat, qmllint
+    mpv
+    celluloid
 
     libcava
     aubio
+    dust
+    gdu
+    desktop-file-utils
+    qdirstat
 
     aseprite
     cloudflare-warp
