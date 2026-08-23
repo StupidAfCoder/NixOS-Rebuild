@@ -175,7 +175,7 @@ in
           higher_cutoff_freq: 10000,
           input: (
               method: Fifo,
-              source: "/tmp/mpd.fifo",
+              source: "/tmp/mpd_rmpc.fifo",
               sample_rate: 44100,
               channels: 2,
               sample_bits: 16,
@@ -189,10 +189,17 @@ in
       ),
         tabs: [
           ( name: "Queue", pane: Split(
-            direction: Horizontal,
+           direction: Horizontal,
             panes: [
               ( size: "70%", pane: Pane(Queue) ),
-              ( size: "30%", pane: Pane(AlbumArt) ),
+              ( size: "30%", pane: Split(
+                direction: Vertical,
+                  panes: [
+                    ( size: "55%", pane: Pane(AlbumArt) ),
+                    ( size: "45%", pane: Pane(Lyrics) ),
+                  ],
+                )
+              ),
             ],
           ) ),
           ( name: "Directories", pane: Pane(Directories) ),
@@ -215,7 +222,7 @@ in
       mpd_host = "127.0.0.1";
       mpd_port = "6600";
 
-      visualizer_data_source = "/tmp/mpd.fifo";
+      visualizer_data_source = "/tmp/mpd_ncmpcpp.fifo";
       visualizer_output_name = "cava_fifo";
       visualizer_in_stereo = "yes";
       visualizer_type = "ellipse";
@@ -446,8 +453,14 @@ in
       }
       audio_output {
         type "fifo"
-        name "cava_fifo"
-        path "/tmp/mpd.fifo"
+        name "cava_rmpc"
+        path "/tmp/mpd_rmpc.fifo"
+        format "44100:16:2"
+      }
+      audio_output {
+        type "fifo"
+        name "cava_ncmpcpp"
+        path "/tmp/mpd_ncmpcpp.fifo"
         format "44100:16:2"
       }
     '';

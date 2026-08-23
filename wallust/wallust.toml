@@ -1,8 +1,8 @@
 # ~/.nixos_dotfiles/wallust/wallust.toml
 backend = "wal"
 color_space = "salience"
-palette = "harddark16"
-saturation = 50
+palette = "saliencedarkdistributed"
+saturation = 65
 check_contrast = true  
 
 [templates]

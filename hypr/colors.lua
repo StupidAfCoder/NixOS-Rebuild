@@ -1,5 +1,5 @@
 return {
-    active_border = "rgba(ff8d88cc)",
-    inactive_border = "rgba(6b394340)",
+    active_border = "rgba(ff924ccc)",
+    inactive_border = "rgba(673f1a40)",
     background = "0x000000",
 }
