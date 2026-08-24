@@ -242,6 +242,13 @@ in
     };
   };
 
+  programs.btop = {
+    enable = true;
+    settings = {
+      color_theme = "wallust";
+    };
+  };
+
   wayland.windowManager.hyprland = {
     enable = true;
 
@@ -502,6 +509,7 @@ in
   programs.bash.enable = true;
 
   imports = [
+    ./fastfetch.nix
     ./alias.nix
     ./ssh.nix
     ./kitty.nix

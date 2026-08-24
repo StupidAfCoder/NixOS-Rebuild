@@ -17,5 +17,6 @@
 
       se = "sudoedit";
       search = "nix search nixpkgs";
+      ff = "fastfetch";
     };
 }

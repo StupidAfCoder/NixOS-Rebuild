@@ -5,6 +5,7 @@ import "."
 import "../wallpaper"
 import "../launcher"
 import "../osd"
+import "../sysstats"
 
 Scope {
     id: manager
@@ -91,7 +92,7 @@ Scope {
                     }
                     color: "transparent"
 
-                    property bool anyPanelShown: WallpaperLauncher.shown || AppLauncher.shown || PowerMenu.shown || WifiPanel.shown || BatteryPanel.shown || TrayMenu.shown || MediaPanel.shown || BluetoothPanel.shown
+                    property bool anyPanelShown: WallpaperLauncher.shown || AppLauncher.shown || PowerMenu.shown || WifiPanel.shown || BatteryPanel.shown || TrayMenu.shown || MediaPanel.shown || BluetoothPanel.shown || SysStatsPanel.shown
 
                     WlrLayershell.keyboardFocus: anyPanelShown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
@@ -152,6 +153,12 @@ Scope {
                         }
                         Region {
                             item: appLauncherClickCatcher
+                        }
+                        Region {
+                            item: sysStatsPanel.hoverStripItem
+                        }
+                        Region {
+                            item: sysStatsPanel.panelBezelItem
                         }
                     }
 
@@ -289,6 +296,34 @@ Scope {
                         }
                     }
 
+                    Rectangle {
+                        id: sysStatsClickCatcher
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        width: SysStatsPanel.shown ? parent.width : 0
+                        height: SysStatsPanel.shown ? parent.height : 0
+                        color: "transparent"
+                        antialiasing: false
+                        z: 3
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: SysStatsPanel.hide()
+                        }
+                    }
+
+                    MouseArea {
+                        id: sysStatsHoverTrigger
+                        anchors.top: parent.top
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 200                              // tune to taste — this is the "hot zone" width
+                        height: manager.borderThickness + 4
+                        hoverEnabled: true
+                        acceptedButtons: Qt.NoButton
+                        z: 10
+                        onEntered: SysStatsPanel.show()
+                        onExited: SysStatsPanel.scheduleHide()
+                    }
+
                     Bar {
                         id: barArea
                         anchors.left: parent.left
@@ -363,6 +398,11 @@ Scope {
                         topOffset: manager.borderThickness
                     }
 
+                    SysStatsPanelContent {
+                        id: sysStatsPanelContent
+                        topOffset: manager.borderThickness
+                    }
+
                     // also add the content instance, right after WallpaperLauncherContent { ... }
                     AppLauncherContent {
                         id: appLauncherContent
@@ -371,6 +411,11 @@ Scope {
                     RightEdgePanel {
                         id: rightEdgePanel
                         stripWidth: manager.borderThickness
+                    }
+
+                    SysStatsPanelContent {
+                        id: sysStatsPanel
+                        topOffset: manager.borderThickness
                     }
 
                     CornerAccent {
@@ -447,6 +492,8 @@ Scope {
                                 MediaPanel.hide();
                             else if (BluetoothPanel.shown)
                                 BluetoothPanel.hide();
+                            else if (SysStatsPanel.shown)
+                                SysStatsPanel.hide();
                         }
                     }
                 }

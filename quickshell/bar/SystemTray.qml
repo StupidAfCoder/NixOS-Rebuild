@@ -18,8 +18,8 @@ ColumnLayout {
     readonly property color warnColor: Colors.warning
 
     readonly property var trayFallback: ({
-        "udiskie": "database.svg"
-    })
+            "udiskie": "database.svg"
+        })
     // apps that already have a dedicated indicator elsewhere in the bar --
     // don't show their raw tray icon too
     readonly property var trayHidden: ["blueman"]
@@ -27,7 +27,8 @@ ColumnLayout {
     // ---------------- Battery ----------------
     Item {
         Layout.alignment: Qt.AlignHCenter
-        width: root.iconSize + 4; height: root.iconSize + 4
+        width: root.iconSize + 4
+        height: root.iconSize + 4
 
         readonly property bool hasBattery: UPower.displayDevice.ready && UPower.displayDevice.isLaptopBattery
         readonly property real pct: UPower.displayDevice.percentage
@@ -35,14 +36,16 @@ ColumnLayout {
 
         ColoredIcon {
             anchors.centerIn: parent
-            width: root.iconSize; height: root.iconSize
+            width: root.iconSize
+            height: root.iconSize
             visible: parent.hasBattery
             iconName: parent.pct < 0.2 ? "battery-low.svg" : parent.pct < 0.6 ? "battery-medium.svg" : "battery-full.svg"
             tint: parent.pct < 0.2 ? root.warnColor : root.glowColor
         }
         ColoredIcon {
             anchors.centerIn: parent
-            width: root.iconSize; height: root.iconSize
+            width: root.iconSize
+            height: root.iconSize
             visible: !parent.hasBattery
             iconName: "cancel.svg"
             tint: root.dimColor
@@ -79,23 +82,61 @@ ColumnLayout {
     Item {
         id: netItem
         Layout.alignment: Qt.AlignHCenter
-        width: root.iconSize + 4; height: root.iconSize + 4
+        width: root.iconSize + 4
+        height: root.iconSize + 4
 
         Item {
             anchors.centerIn: parent
-            width: root.iconSize; height: root.iconSize
+            width: root.iconSize
+            height: root.iconSize
             visible: NetworkBackend.ethernetOnline
 
-            Rectangle { x: 6; y: 0; width: 4; height: 9; color: root.glowColor; antialiasing: false }
-            Rectangle { x: 2; y: 9; width: 12; height: 2; color: root.glowColor; antialiasing: false }
-            Rectangle { x: 0; y: 11; width: 2; height: 5; color: root.glowColor; antialiasing: false }
-            Rectangle { x: 7; y: 11; width: 2; height: 5; color: root.glowColor; antialiasing: false }
-            Rectangle { x: 14; y: 11; width: 2; height: 5; color: root.glowColor; antialiasing: false }
+            Rectangle {
+                x: 6
+                y: 0
+                width: 4
+                height: 9
+                color: root.glowColor
+                antialiasing: false
+            }
+            Rectangle {
+                x: 2
+                y: 9
+                width: 12
+                height: 2
+                color: root.glowColor
+                antialiasing: false
+            }
+            Rectangle {
+                x: 0
+                y: 11
+                width: 2
+                height: 5
+                color: root.glowColor
+                antialiasing: false
+            }
+            Rectangle {
+                x: 7
+                y: 11
+                width: 2
+                height: 5
+                color: root.glowColor
+                antialiasing: false
+            }
+            Rectangle {
+                x: 14
+                y: 11
+                width: 2
+                height: 5
+                color: root.glowColor
+                antialiasing: false
+            }
         }
 
         ColoredIcon {
             anchors.centerIn: parent
-            width: root.iconSize; height: root.iconSize
+            width: root.iconSize
+            height: root.iconSize
             visible: !NetworkBackend.ethernetOnline
             iconName: "wifi.svg"
             tint: NetworkBackend.wifiConnected ? root.glowColor : root.dimColor
@@ -109,7 +150,8 @@ ColumnLayout {
     // ---------------- Bluetooth ----------------
     Item {
         Layout.alignment: Qt.AlignHCenter
-        width: root.iconSize + 4; height: root.iconSize + 4
+        width: root.iconSize + 4
+        height: root.iconSize + 4
         visible: Bluetooth.defaultAdapter !== null
 
         readonly property bool powered: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled
@@ -117,7 +159,8 @@ ColumnLayout {
 
         ColoredIcon {
             anchors.centerIn: parent
-            width: root.iconSize; height: root.iconSize
+            width: root.iconSize
+            height: root.iconSize
             iconName: !parent.powered ? "bluetooth-off.svg" : parent.anyConnected ? "bluetooth-connected.svg" : "bluetooth.svg"
             tint: parent.powered ? root.glowColor : root.dimColor
         }
@@ -135,7 +178,8 @@ ColumnLayout {
             id: trayIconRoot
             required property var modelData
             Layout.alignment: Qt.AlignHCenter
-            width: root.iconSize + 4; height: root.iconSize + 4
+            width: root.iconSize + 4
+            height: root.iconSize + 4
 
             readonly property bool overridden: modelData.id in root.trayFallback
 
@@ -148,7 +192,8 @@ ColumnLayout {
             }
             ColoredIcon {
                 anchors.centerIn: parent
-                width: root.iconSize; height: root.iconSize
+                width: root.iconSize
+                height: root.iconSize
                 visible: parent.overridden
                 iconName: root.trayFallback[modelData.id] || ""
                 tint: root.dimColor
@@ -159,12 +204,12 @@ ColumnLayout {
                 anchors.fill: parent
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onClicked: (mouse) => {
+                onClicked: mouse => {
                     if (mouse.button === Qt.LeftButton) {
-                        modelData.activate()
+                        modelData.activate();
                     } else if (mouse.button === Qt.RightButton && modelData.hasMenu) {
-                        const pos = mapToItem(null, mouse.x, mouse.y)
-                        TrayMenu.openFor(modelData, pos.x, pos.y)
+                        const pos = mapToItem(null, mouse.x, mouse.y);
+                        TrayMenu.openFor(modelData, pos.x, pos.y);
                     }
                 }
             }
@@ -196,11 +241,13 @@ ColumnLayout {
     Item {
         Layout.alignment: Qt.AlignHCenter
         Layout.topMargin: 6
-        width: root.iconSize + 4; height: root.iconSize + 4
+        width: root.iconSize + 4
+        height: root.iconSize + 4
 
         ColoredIcon {
             anchors.centerIn: parent
-            width: root.iconSize; height: root.iconSize
+            width: root.iconSize
+            height: root.iconSize
             iconName: "power.svg"
             tint: root.glowColor
         }

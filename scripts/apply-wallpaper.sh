@@ -25,5 +25,6 @@ wallust run "$selected_path"
 matugen image "$selected_path" -m "$mode" -t scheme-vibrant --source-color-index 0 --contrast 0.2
 hyprctl reload
 pywalfox update
+killall -SIGUSR1 zsh
 
 notify-send "Wallpaper" "Switched to $(basename "$selected_path")"

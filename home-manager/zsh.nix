@@ -47,12 +47,98 @@
 
         eval "$(direnv hook zsh)"
       }
+      TRAPUSR1() {
+        zle reset-prompt
+      }
     '';
   };
 
   programs.starship = {
     enable = true;
     enableZshIntegration = true;
+    settings = {
+      add_newline = true;
+      format = "[ $username@$hostname ](bg:blue fg:black bold) [$directory](bold cyan)$git_branch$git_status$nodejs$rust$python$golang$c$character";
+      right_format = "[$time](bold purple)";
+
+      username = {
+        show_always = true;
+        format = "$user";
+        style_user = "bg:blue fg:black bold";
+        style_root = "bg:red fg:black bold";
+      };
+
+      hostname = {
+        ssh_only = false;
+        format = "$hostname";
+        style = "bg:blue fg:black bold";
+      };
+
+      directory = {
+        format = "[$path]($style) ";
+        truncation_length = 3;
+        truncate_to_repo = true;
+        read_only = "[RO]";
+        style = "bold cyan";
+      };
+
+      character = {
+        success_symbol = "[_](bold green)";
+        error_symbol = "[X](bold red)";
+        vimcmd_symbol = "[<](bold green)";
+      };
+
+      git_branch = {
+        symbol = "";
+        style = "bold yellow";
+        format = "[\\[$branch\\]]($style) ";
+      };
+
+      git_status = {
+        style = "bold red";
+        format = "[\\[$all_status$ahead_behind\\]]($style) ";
+      };
+
+      nodejs = {
+        symbol = "JS";
+        style = "bold green";
+        format = "[\\[$symbol:$version\\]]($style) ";
+      };
+
+      rust = {
+        symbol = "RS";
+        style = "bold yellow";
+        format = "[\\[$symbol:$version\\]]($style) ";
+      };
+
+      python = {
+        symbol = "PY";
+        style = "bold blue";
+        format = "[\\[$symbol:$version\\]]($style) ";
+      };
+
+      golang = {
+        symbol = "GO";
+        style = "bold cyan";
+        format = "[\\[$symbol:$version\\]]($style) ";
+      };
+
+      c = {
+        symbol = "C";
+        style = "bold purple";
+        format = "[\\[$symbol:$version\\]]($style) ";
+      };
+
+      fill = {
+        disabled = true;
+      };
+
+      time = {
+        disabled = false;
+        format = "[$time]($style)";
+        style = "bold purple";
+      };
+    };
   };
 
   # these two are the ones that will actually make your terminal life easier —

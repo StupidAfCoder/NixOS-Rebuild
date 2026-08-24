@@ -8,8 +8,8 @@ Item {
     property int topOffset: 4
     property int cols: 4
     property int rows: 3
-    property int cellSize: 96
-    property int cellSpacing: 8
+    property int cellSize: 108
+    property int cellSpacing: 14
 
     readonly property int perPage: cols * rows
     readonly property int pageWidth: cols * (cellSize + cellSpacing) - cellSpacing
@@ -21,36 +21,44 @@ Item {
     implicitHeight: WallpaperLauncher.shown ? bezel.height : 0
     anchors.centerIn: parent
     opacity: WallpaperLauncher.shown ? 1 : 0
-    scale: WallpaperLauncher.shown ? 1 : 0.96
+    scale: WallpaperLauncher.shown ? 1 : 0.97
     visible: opacity > 0.01
     z: 6
 
-    Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+    Behavior on opacity {
+        NumberAnimation {
+            duration: 220
+            easing.type: Easing.OutCubic
+        }
+    }
+    Behavior on scale {
+        NumberAnimation {
+            duration: 220
+            easing.type: Easing.OutCubic
+        }
+    }
 
     NumberAnimation {
         id: snapAnim
         target: pager
         property: "contentX"
-        duration: 220
+        duration: 260
         easing.type: Easing.OutCubic
     }
 
     function clampX(x) {
-        return Math.max(0, Math.min(pager.contentWidth - pager.width, x))
+        return Math.max(0, Math.min(pager.contentWidth - pager.width, x));
     }
-
     function pageBy(delta) {
-        snapAnim.stop()
-        snapAnim.to = content.clampX(pager.contentX + delta * content.pageWidth)
-        snapAnim.restart()
+        snapAnim.stop();
+        snapAnim.to = content.clampX(pager.contentX + delta * content.pageWidth);
+        snapAnim.restart();
     }
-
     function snapToNearest() {
-        const target = Math.round(pager.contentX / content.pageWidth) * content.pageWidth
-        snapAnim.stop()
-        snapAnim.to = content.clampX(target)
-        snapAnim.restart()
+        const target = Math.round(pager.contentX / content.pageWidth) * content.pageWidth;
+        snapAnim.stop();
+        snapAnim.to = content.clampX(target);
+        snapAnim.restart();
     }
 
     Timer {
@@ -58,77 +66,64 @@ Item {
         interval: 350
     }
 
+    // soft backdrop stand-in for a drop shadow -- avoids depending on
+    // an unverified shadow component, cheap and reliable
+    Rectangle {
+        anchors.centerIn: parent
+        width: panelBox.width + 24
+        height: panelBox.height + 24
+        radius: 20
+        color: Bar.Colors.shadow
+        opacity: 0.55
+        antialiasing: true
+    }
+
     Rectangle {
         id: bezel
         anchors.centerIn: parent
-        width: panelBox.width + 12
-        height: panelBox.height + 12
-        color: Bar.Colors.shadow
-        antialiasing: false
-
-        Repeater {
-            model: [
-                { x: 3, y: 3 }, { x: bezel.width - 5, y: 3 },
-                { x: 3, y: bezel.height - 5 }, { x: bezel.width - 5, y: bezel.height - 5 }
-            ]
-            delegate: Rectangle {
-                x: modelData.x; y: modelData.y
-                width: 2; height: 2
-                color: Bar.Colors.outline
-                antialiasing: false
-            }
-        }
+        width: panelBox.width + 2
+        height: panelBox.height + 2
+        radius: 16
+        color: Bar.Colors.outlineVariant
+        antialiasing: true
 
         Rectangle {
             id: panelBox
             anchors.centerIn: parent
-            width: content.pageWidth + 56
-            height: content.pageHeight + 32
-            color: Bar.Colors.background
-            antialiasing: false
+            width: content.pageWidth + 64
+            height: content.pageHeight + 48
+            radius: 15
+            color: Bar.Colors.surfaceContainerLow
+            antialiasing: true
             clip: true
-
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Bar.Colors.outlineVariant }
-            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: Bar.Colors.outlineVariant }
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Bar.Colors.outlineVariant }
-            Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: Bar.Colors.outlineVariant }
 
             Text {
                 anchors.centerIn: parent
                 visible: WallpaperBackend.scanning
                 text: "Loading wallpapers..."
                 font.family: "Cozette"
-                font.pixelSize: 10
-                color: Bar.Colors.textOnBackground
-            }
-
-            Column {
-                anchors.fill: parent
-                spacing: 2
-                Repeater {
-                    model: Math.ceil(panelBox.height / 3)
-                    delegate: Rectangle {
-                        width: panelBox.width
-                        height: 1
-                        color: Bar.Colors.textOnBackground
-                        opacity: 0.02
-                    }
-                }
+                font.pixelSize: 11
+                color: Bar.Colors.mutedOnBackground
             }
 
             Text {
                 anchors.left: parent.left
                 anchors.verticalCenter: pager.verticalCenter
-                anchors.leftMargin: 10
-                text: "<"
-                font.family: "Cozette"
-                font.pixelSize: 14
-                color: leftArrowArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
-                opacity: content.currentPage > 0 ? 1 : 0.25
+                anchors.leftMargin: 14
+                text: "‹"
+                font.pixelSize: 22
+                font.weight: Font.Light
+                color: leftArrowArea.containsMouse ? Bar.Colors.accent : Bar.Colors.mutedOnBackground
+                opacity: content.currentPage > 0 ? 1 : 0.2
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+                }
                 MouseArea {
                     id: leftArrowArea
                     anchors.fill: parent
-                    anchors.margins: -6
+                    anchors.margins: -10
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     enabled: content.currentPage > 0
@@ -139,16 +134,21 @@ Item {
             Text {
                 anchors.right: parent.right
                 anchors.verticalCenter: pager.verticalCenter
-                anchors.rightMargin: 10
-                text: ">"
-                font.family: "Cozette"
-                font.pixelSize: 14
-                color: rightArrowArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
-                opacity: content.currentPage < content.pageCount - 1 ? 1 : 0.25
+                anchors.rightMargin: 14
+                text: "›"
+                font.pixelSize: 22
+                font.weight: Font.Light
+                color: rightArrowArea.containsMouse ? Bar.Colors.accent : Bar.Colors.mutedOnBackground
+                opacity: content.currentPage < content.pageCount - 1 ? 1 : 0.2
+                Behavior on color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+                }
                 MouseArea {
                     id: rightArrowArea
                     anchors.fill: parent
-                    anchors.margins: -6
+                    anchors.margins: -10
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     enabled: content.currentPage < content.pageCount - 1
@@ -159,7 +159,7 @@ Item {
             Flickable {
                 id: pager
                 anchors.top: parent.top
-                anchors.topMargin: 8
+                anchors.topMargin: 16
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: content.pageWidth
                 height: content.pageHeight
@@ -195,81 +195,71 @@ Item {
                                         id: tile
                                         width: content.cellSize
                                         height: content.cellSize
-                                        clip: false
 
                                         property int wpIndex: pageItem.pageIndex * content.perPage + index
-                                        property var wp: wpIndex < WallpaperBackend.wallpapers.length
-                                            ? WallpaperBackend.wallpapers[wpIndex] : null
+                                        property var wp: wpIndex < WallpaperBackend.wallpapers.length ? WallpaperBackend.wallpapers[wpIndex] : null
                                         visible: wp !== null
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            color: tileArea.containsMouse ? Bar.Colors.surfaceContainerHigh : Bar.Colors.surfaceContainer
-                                            antialiasing: false
+                                        scale: tileArea.containsMouse ? 1.03 : 1.0
+                                        Behavior on scale {
+                                            NumberAnimation {
+                                                duration: 140
+                                                easing.type: Easing.OutCubic
+                                            }
                                         }
 
-                                        Image {
+                                        Rectangle {
+                                            id: tileFrame
                                             anchors.fill: parent
+                                            radius: 10
+                                            color: Bar.Colors.surfaceContainer
+                                            antialiasing: true
+                                            border.width: tileArea.containsMouse ? 2 : 0
+                                            border.color: Bar.Colors.accent
+                                            Behavior on border.width {
+                                                NumberAnimation {
+                                                    duration: 140
+                                                }
+                                            }
+
+                                            // fixed inset keeps the image's square corners tucked
+                                            // safely behind the frame's rounded curve -- no per-image
+                                            // clip mask needed
+                                            Image {
+                                                anchors.fill: parent
+                                                anchors.margins: 3
+                                                source: tile.wp ? "file://" + tile.wp.path : ""
+                                                fillMode: Image.PreserveAspectCrop
+                                                smooth: true
+                                                asynchronous: true
+                                                sourceSize.width: content.cellSize
+                                                sourceSize.height: content.cellSize
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            anchors.bottom: parent.bottom
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
                                             anchors.margins: 4
-                                            source: tile.wp ? "file://" + tile.wp.path : ""
-                                            fillMode: Image.PreserveAspectCrop
-                                            smooth: false
-                                            asynchronous: true
-                                            clip: true
-                                            sourceSize.width: content.cellSize - 8
-                                            sourceSize.height: content.cellSize - 8
-                                        }
-
-                                        Bar.CornerAccent {
-                                            corner: "topLeft"
-                                            thickness: 2
-                                            sizeScale: 24
-                                            color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
-                                            anchors.top: parent.top
-                                            anchors.left: parent.left
-                                        }
-                                        Bar.CornerAccent {
-                                            corner: "topRight"
-                                            thickness: 2
-                                            sizeScale: 24
-                                            color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
-                                            anchors.top: parent.top
-                                            anchors.right: parent.right
-                                        }
-                                        Bar.CornerAccent {
-                                            corner: "bottomLeft"
-                                            thickness: 2
-                                            sizeScale: 24
-                                            color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
-                                            anchors.bottom: parent.bottom
-                                            anchors.left: parent.left
-                                        }
-                                        Bar.CornerAccent {
-                                            corner: "bottomRight"
-                                            thickness: 2
-                                            sizeScale: 24
-                                            color: tileArea.containsMouse ? Bar.Colors.accent : Bar.Colors.outline
-                                            anchors.bottom: parent.bottom
-                                            anchors.right: parent.right
-                                        }
-
-                                        Rectangle {
-                                            anchors.bottom: parent.bottom
-                                            anchors.left: parent.left
-                                            anchors.right: parent.right
-                                            height: 16
+                                            height: 22
+                                            radius: 6
                                             color: Bar.Colors.shadow
-                                            opacity: 0.8
-                                            visible: tileArea.containsMouse
+                                            opacity: tileArea.containsMouse ? 0.85 : 0
+                                            visible: opacity > 0.01
+                                            Behavior on opacity {
+                                                NumberAnimation {
+                                                    duration: 140
+                                                }
+                                            }
 
                                             Text {
                                                 anchors.centerIn: parent
                                                 text: tile.wp ? tile.wp.name : ""
                                                 color: Bar.Colors.textOnBackground
                                                 font.family: "Cozette"
-                                                font.pixelSize: 8
+                                                font.pixelSize: 9
                                                 elide: Text.ElideRight
-                                                width: parent.width - 4
+                                                width: parent.width - 10
                                                 horizontalAlignment: Text.AlignHCenter
                                             }
                                         }
@@ -280,8 +270,8 @@ Item {
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
-                                                WallpaperBackend.apply(tile.wp.path)
-                                                WallpaperLauncher.hide()
+                                                WallpaperBackend.apply(tile.wp.path);
+                                                WallpaperLauncher.hide();
                                             }
                                         }
                                     }
@@ -297,27 +287,35 @@ Item {
                 z: 5
                 acceptedButtons: Qt.NoButton
                 hoverEnabled: false
-                onWheel: (event) => {
+                onWheel: event => {
                     if (!wheelCooldown.running) {
-                        const delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x
-                        content.pageBy(delta < 0 ? 1 : -1)
-                        wheelCooldown.restart()
+                        const delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
+                        content.pageBy(delta < 0 ? 1 : -1);
+                        wheelCooldown.restart();
                     }
-                    event.accepted = true
+                    event.accepted = true;
                 }
             }
 
             Row {
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottomMargin: 8
-                spacing: 5
+                anchors.bottomMargin: 14
+                spacing: 6
                 Repeater {
                     model: content.pageCount
                     delegate: Rectangle {
-                        width: 4; height: 4
-                        antialiasing: false
+                        width: index === content.currentPage ? 16 : 5
+                        height: 5
+                        radius: 2.5
+                        antialiasing: true
                         color: index === content.currentPage ? Bar.Colors.accent : Bar.Colors.outlineVariant
+                        Behavior on width {
+                            NumberAnimation {
+                                duration: 160
+                                easing.type: Easing.OutCubic
+                            }
+                        }
                     }
                 }
             }
