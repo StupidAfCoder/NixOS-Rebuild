@@ -13,3 +13,4 @@ zathura = { template = 'zathura-colors', target = '~/.config/zathura/colors-wall
 # starship = { template = 'starship.toml', target = '~/.config/starship.toml' }
 rmpc = { template = 'rmpc.ron', target = '~/.config/rmpc/themes/wallust.ron' }
 btop = {template = 'btop.theme' , target = '~/.config/btop/themes/wallust.theme'}
+emacs-theme = {template = 'doom-wallust-theme.el' , target = '~/.config/emacs/themes/doom-wallust-theme.el'}

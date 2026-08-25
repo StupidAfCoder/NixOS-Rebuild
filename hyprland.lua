@@ -489,6 +489,13 @@ hl.window_rule({
 })
 
 hl.window_rule({
+    match = {
+        class = "emacs"
+    },
+    opacity = "0.80 override 0.45 override 1.0 override"
+})
+
+hl.window_rule({
     name = "vscodium opacity",
     match = { class = "codium" },
 

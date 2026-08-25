@@ -18,5 +18,7 @@
       se = "sudoedit";
       search = "nix search nixpkgs";
       ff = "fastfetch";
+      e = "emacsclient -t -a emacs";
+      ge = "emacsclient -c -a emacs";
     };
 }

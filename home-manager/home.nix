@@ -63,6 +63,8 @@ in
 
     go
     gopls
+    aspell
+    aspellDicts.en
 
     grim
     slurp
@@ -515,5 +517,6 @@ in
     ./kitty.nix
     ./font.nix
     ./zsh.nix
+    ./emacs.nix
   ];
 }

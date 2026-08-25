@@ -25,6 +25,11 @@
     elegant-grub2-themes = {
       url = "github:vinceliuice/elegant-grub2-themes";
     };
+    emacs-overlay.url = "github:nix-community/emacs-overlay";
+    nix-doom-emacs-unstraightened = {
+      url = "github:marienz/nix-doom-emacs-unstraightened";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -45,7 +50,13 @@
         modules = [
           ./nixos/hardware-configuration.nix
           ./nixos/configuration.nix
-          { nixpkgs.overlays = [ inputs.nur.overlays.default ]; }
+          {
+            nixpkgs.overlays = [
+              inputs.nur.overlays.default
+              inputs.emacs-overlay.overlays.default
+              inputs.nix-doom-emacs-unstraightened.overlays.default
+            ];
+          }
 
           ##Grub theme
           inputs.elegant-grub2-themes.nixosModules.default
@@ -59,6 +70,10 @@
             home-manager.backupFileExtension = "backup";
 
             home-manager.extraSpecialArgs = { inherit inputs; };
+
+            home-manager.sharedModules = [
+              inputs.nix-doom-emacs-unstraightened.homeModule
+            ];
 
             home-manager.users.swami = import ./home-manager/home.nix;
           }

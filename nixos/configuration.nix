@@ -350,6 +350,7 @@ in
 
   fonts.packages = with pkgs; [
     nerd-fonts.jetbrains-mono
+    nerd-fonts.symbols-only
     cozette
     google-fonts
     nerd-fonts.caskaydia-cove # good icon coverage if you want it — swap for any nerd font you like
