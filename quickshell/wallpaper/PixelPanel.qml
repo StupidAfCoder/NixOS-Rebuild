@@ -8,6 +8,8 @@ Item {
     property int borderThickness: 3   // in "pixels"
     property int pixelSize: 4         // size of one logical pixel
     property int cornerSteps: 3       // stair-steps per corner
+    onFillColorChanged: canvas.requestPaint()
+    onBorderColorChanged: canvas.requestPaint()
 
     Canvas {
         id: canvas
