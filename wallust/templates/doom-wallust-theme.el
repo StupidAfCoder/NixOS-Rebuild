@@ -6,16 +6,13 @@
   :group 'doom-themes)
 
 (def-doom-theme doom-wallust
-  "A theme generated live from wallust."
+    "A theme generated live from wallust."
 
-  ;; name        default value
   ((bg         '("{{background}}" nil nil))
    (fg         '("{{foreground}}" nil nil))
    (bg-alt     (doom-darken bg 0.15))
    (fg-alt     (doom-blend fg bg 0.7))
 
-   ;; smooth grey ramp anchored to YOUR actual bg/fg, not wallust's ANSI
-   ;; greys (which can be near-unusable under saturated colorspaces)
    (base0      (doom-darken bg 0.3))
    (base1      (doom-darken bg 0.15))
    (base2      (doom-darken bg 0.05))
@@ -39,7 +36,6 @@
    (cyan       '("{{color6}}" nil nil))
    (dark-cyan  (doom-darken cyan 0.2))
 
-   ;; --- these drive dashboard/treemacs/mode-line/magit/etc automatically
    (highlight      blue)
    (vertical-bar   base0)
    (selection      dark-blue)
@@ -55,7 +51,7 @@
    (strings        green)
    (variables      violet)
    (numbers        orange)
-   (region         base2)
+   (region         (doom-blend blue bg 0.55))
    (error          red)
    (warning        yellow)
    (success        green)
@@ -68,11 +64,12 @@
    (modeline-bg          base0)
    (modeline-bg-inactive base0))
 
-  ;; --- extra face overrides (catches the "still green on hover" faces
-  ;; that built-in Emacs, not doom-themes, controls)
-  ((link          :foreground blue :underline t)
-   (button        :foreground blue)
-   (highlight     :foreground base8 :background selection)
-   (tooltip       :background base1 :foreground fg)))
+  ;; --- extra face overrides
+  ((link      :foreground blue :underline t)
+   (button    :foreground blue)
+   (highlight :foreground base8 :background selection)
+   (tooltip   :background base1 :foreground fg)
+   (region    :background (doom-blend blue bg 0.55) :distant-foreground fg)
+   (hl-line   :background (doom-blend blue bg 0.15))))
 
 (provide-theme 'doom-wallust)

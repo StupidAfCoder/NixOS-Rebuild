@@ -411,6 +411,23 @@ in
       Restart = "on-failure";
     };
   };
+  systemd.user.services.wallust-cache-prime = {
+    Unit.Description = "Prime wallust color-cache for all wallpapers";
+    Service = {
+      Type = "oneshot";
+      ExecStart = "%h/.nixos_dotfiles/scripts/prime-wallust-cache.sh";
+    };
+  };
+
+  systemd.user.timers.wallust-cache-prime = {
+    Unit.Description = "Run wallust cache priming periodically";
+    Timer = {
+      OnBootSec = "5m"; # first run 5 min after login, not blocking boot
+      OnUnitActiveSec = "1d"; # then once a day from the last run
+      Persistent = true; # if the PC was off at the scheduled time, run on next boot instead of skipping
+    };
+    Install.WantedBy = [ "timers.target" ];
+  };
 
   systemd.user.services.quickshell = {
     Unit = {

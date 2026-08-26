@@ -40,7 +40,7 @@ Item {
             icon: "music.svg"
         },
         {
-            match: ["code", "codium", "jetbrains", "idea", "pycharm", "clion", "sublime", "neovide", "nvim"],
+            match: ["code", "codium", "jetbrains", "idea", "pycharm", "clion", "sublime", "neovide", "nvim" , "emacs"],
             icon: "braces.svg"
         },
         {

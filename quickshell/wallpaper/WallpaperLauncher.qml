@@ -8,13 +8,18 @@ Item {
     property bool shown: false
 
     function toggle() {
-        shown = !shown
-        if (shown) WallpaperBackend.refresh()
+        shown = !shown;
+        if (shown)
+            WallpaperBackend.refresh();
     }
-    function hide() { shown = false }
+    function hide() {
+        shown = false;
+    }
 
     IpcHandler {
         target: "wallpaper"
-        function toggle(): void { root.toggle() }
+        function toggle(): void {
+            root.toggle();
+        }
     }
 }

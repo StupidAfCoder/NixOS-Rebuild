@@ -1,0 +1,421 @@
+
+ swami@nixos  .nixos_dotfiles [main] [!?] _ cd scripts                                                                                                                                                               15:35:00
+
+ swami@nixos  .nixos_dotfiles/scripts [main] [!?] [PY:v3.13.14] _ chmod +x prime-wallust-cache.sh                                                                                                                    15:35:04
+
+ swami@nixos  .nixos_dotfiles/scripts [main] [!?] [PY:v3.13.14] _ ./prime-wallust-cache.sh                                                                                                                           15:35:13
+Priming cache: cosmic_tokyo_night.png
+[I] image: cosmic_tokyo_night.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.000 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/7z71be_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: dark.png
+[I] image: dark.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.679 s Generating color scheme..
+[I] Color scheme palette generated!
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: nice.png
+[I] image: nice.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.378 s Generating color scheme..
+[I] Color scheme palette generated!
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-0161q1_1920x1080.png
+[I] image: wallhaven-0161q1_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.397 s Generating color scheme..
+[I] Color scheme palette generated!
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-0pz2p4_1920x1080.png
+[I] image: wallhaven-0pz2p4_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.002 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/dpfxmf_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-0qpgln_1920x1080.png
+[I] image: wallhaven-0qpgln_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.391 s Generating color scheme..
+[I] Color scheme palette generated!
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-1jvgr3_1920x1080.png
+[I] image: wallhaven-1jvgr3_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-1qg17g_1920x1080.png
+[I] image: wallhaven-1qg17g_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-1qgx8g_1920x1080.png
+[I] image: wallhaven-1qgx8g_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.379 s Generating color scheme..
+[I] Color scheme palette generated!
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-1qp2mw_1920x1080.png
+[I] image: wallhaven-1qp2mw_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.000 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/1fj250g_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-218q39_1920x1080.png
+[I] image: wallhaven-218q39_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.000 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/1pfsjzl_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-21oymx_1920x1080.png
+[I] image: wallhaven-21oymx_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.409 s Generating color scheme..
+[I] Color scheme palette generated!
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-21oyv6_1920x1080.png
+[I] image: wallhaven-21oyv6_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.000 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/wbtbns_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-21ozq6_1920x1080.png
+[I] image: wallhaven-21ozq6_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-21yp59_1920x1080.png
+[I] image: wallhaven-21yp59_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.001 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/1l5ozcg_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-2ee56x_1920x1080.png
+[I] image: wallhaven-2ee56x_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-3q5k8y_1920x1080.png
+[I] image: wallhaven-3q5k8y_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-3q66wd_1920x1080.png
+[I] image: wallhaven-3q66wd_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.729 s Generating color scheme..
+[I] Color scheme palette generated!
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-3q6m6y_1920x1080.png
+[I] image: wallhaven-3q6m6y_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-3qlqwd_1920x1080.png
+[I] image: wallhaven-3qlqwd_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-42w68g_1920x1080.png
+[I] image: wallhaven-42w68g_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.000 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/11mjm5x_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-45g3w8_1920x1080.png
+[I] image: wallhaven-45g3w8_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.002 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/o0lyea_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-45v699_1920x1080.png
+[I] image: wallhaven-45v699_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.000 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/tzsdrn_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-4975xn_1920x1080.png
+[I] image: wallhaven-4975xn_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-498e2w_1920x1080.png
+[I] image: wallhaven-498e2w_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-49px58_1920x1080.png
+[I] image: wallhaven-49px58_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+[    🗸    ]     0.000 s Generating color scheme..
+[I] Color scheme palette generated!
+[I] Using cache at /home/swami/.cache/wallust/1vr5rg5_1.7
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-4d38m0_1920x1080.png
+[I] image: wallhaven-4d38m0_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+
+                                
+                                
+
+[I] cache: Saving scheme to cache.
+
+E N J O Y   T H E   P A L E T T E ! 
+Priming cache: wallhaven-5ym291_1920x1080.png
+[I] image: wallhaven-5ym291_1920x1080.png
+[I] image parser: Using Wal backend parser
+[I] threshold: Not defined, using best default thresholds.
+[I] colorspace: Using Salience colorspace variation
+[I] scheme palette: Using SalienceDarkBalanced palette
+[I] contrast: Doing extra calculations to ensure a good contrast
+▐   ⠂    ▌     0.410 s  Generating color scheme..Error: Not enough colors!
+
+ swami@nixos  .nixos_dotfiles/scripts [main] [!?] [PY:v3.13.14] X                                                                                                                                                    15:45:55

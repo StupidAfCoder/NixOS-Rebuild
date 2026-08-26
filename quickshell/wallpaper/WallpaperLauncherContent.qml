@@ -17,6 +17,10 @@ Item {
     readonly property int pageCount: Math.max(1, Math.ceil(WallpaperBackend.wallpapers.length / perPage))
     readonly property int currentPage: pageWidth > 0 ? Math.round(pager.contentX / pageWidth) : 0
 
+    // keyboard selection + pending delete-confirm state
+    property int selectedIndex: 0
+    property var pendingDelete: null   // {name, path} of a wallpaper awaiting delete confirmation
+
     implicitWidth: WallpaperLauncher.shown ? bezel.width : 0
     implicitHeight: WallpaperLauncher.shown ? bezel.height : 0
     anchors.centerIn: parent
@@ -24,6 +28,7 @@ Item {
     scale: WallpaperLauncher.shown ? 1 : 0.97
     visible: opacity > 0.01
     z: 6
+    focus: true
 
     Behavior on opacity {
         NumberAnimation {
@@ -60,42 +65,162 @@ Item {
         snapAnim.to = content.clampX(target);
         snapAnim.restart();
     }
+    function ensureSelectionVisible() {
+        const page = Math.floor(content.selectedIndex / content.perPage);
+        if (page !== content.currentPage) {
+            snapAnim.stop();
+            snapAnim.to = content.clampX(page * content.pageWidth);
+            snapAnim.restart();
+        }
+    }
+    // moves the keyboard selection by (dx, dy) grid cells, wrapping across pages
+    function moveSelection(dx, dy) {
+        const total = WallpaperBackend.wallpapers.length;
+        if (total === 0)
+            return;
 
-    Timer {
-        id: wheelCooldown
-        interval: 350
+        let col = content.selectedIndex % content.cols;
+        let row = Math.floor(content.selectedIndex / content.cols) % content.rows;
+        let page = Math.floor(content.selectedIndex / content.perPage);
+
+        col += dx;
+        row += dy;
+
+        if (col < 0) {
+            col = content.cols - 1;
+            page -= 1;
+        } else if (col >= content.cols) {
+            col = 0;
+            page += 1;
+        }
+        if (row < 0) {
+            row = content.rows - 1;
+            page -= 1;
+        } else if (row >= content.rows) {
+            row = 0;
+            page += 1;
+        }
+
+        page = Math.max(0, Math.min(content.pageCount - 1, page));
+        let next = page * content.perPage + row * content.cols + col;
+        next = Math.max(0, Math.min(total - 1, next));
+
+        content.selectedIndex = next;
+        content.ensureSelectionVisible();
+    }
+    function applySelection() {
+        const wp = WallpaperBackend.wallpapers[content.selectedIndex];
+        if (!wp)
+            return;
+        if (WallpaperBackend.isFailed(wp.path)) {
+            content.pendingDelete = wp;
+        } else {
+            WallpaperBackend.apply(wp.path);
+            WallpaperLauncher.hide();
+        }
+    }
+    function confirmDelete() {
+        if (content.pendingDelete) {
+            WallpaperBackend.deleteWallpaper(content.pendingDelete.path);
+            content.pendingDelete = null;
+        }
+    }
+    function cancelDelete() {
+        content.pendingDelete = null;
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            content.selectedIndex = 0;
+            content.pendingDelete = null;
+            content.forceActiveFocus();
+        }
+    }
+
+    Keys.onPressed: event => {
+        // while a delete confirmation is up, y/n/enter/esc are scoped to that dialog
+        if (content.pendingDelete !== null) {
+            switch (event.key) {
+            case Qt.Key_Y:
+            case Qt.Key_Return:
+            case Qt.Key_Enter:
+                content.confirmDelete();
+                event.accepted = true;
+                return;
+            case Qt.Key_N:
+            case Qt.Key_Escape:
+                content.cancelDelete();
+                event.accepted = true;
+                return;
+            }
+            return;
+        }
+
+        switch (event.key) {
+        case Qt.Key_Escape:
+            WallpaperLauncher.hide();
+            event.accepted = true;
+            break;
+        case Qt.Key_H:
+        case Qt.Key_Left:
+            content.moveSelection(-1, 0);
+            event.accepted = true;
+            break;
+        case Qt.Key_L:
+        case Qt.Key_Right:
+            content.moveSelection(1, 0);
+            event.accepted = true;
+            break;
+        case Qt.Key_K:
+        case Qt.Key_Up:
+            content.moveSelection(0, -1);
+            event.accepted = true;
+            break;
+        case Qt.Key_J:
+        case Qt.Key_Down:
+            content.moveSelection(0, 1);
+            event.accepted = true;
+            break;
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+            content.applySelection();
+            event.accepted = true;
+            break;
+        }
     }
 
     // soft backdrop stand-in for a drop shadow -- avoids depending on
     // an unverified shadow component, cheap and reliable
     Rectangle {
         anchors.centerIn: parent
-        width: panelBox.width + 24
-        height: panelBox.height + 24
+        width: panelBox.width + 12
+        height: panelBox.height + 12
         radius: 20
         color: Bar.Colors.shadow
-        opacity: 0.55
+        opacity: 0.4
         antialiasing: true
     }
 
-    Rectangle {
+    Item {
         id: bezel
         anchors.centerIn: parent
         width: panelBox.width + 2
         height: panelBox.height + 2
-        radius: 16
-        color: Bar.Colors.outlineVariant
-        antialiasing: true
 
-        Rectangle {
+        Item {
             id: panelBox
             anchors.centerIn: parent
             width: content.pageWidth + 64
             height: content.pageHeight + 48
-            radius: 15
-            color: Bar.Colors.surfaceContainerLow
-            antialiasing: true
             clip: true
+
+            PixelPanel {
+                anchors.fill: parent
+                fillColor: Bar.Colors.surfaceContainerLow
+                borderColor: Bar.Colors.outlineVariant
+                pixelSize: 4
+                cornerSteps: 3
+            }
 
             Text {
                 anchors.centerIn: parent
@@ -198,6 +323,8 @@ Item {
 
                                         property int wpIndex: pageItem.pageIndex * content.perPage + index
                                         property var wp: wpIndex < WallpaperBackend.wallpapers.length ? WallpaperBackend.wallpapers[wpIndex] : null
+                                        property bool colorsFailed: wp !== null && WallpaperBackend.isFailed(wp.path)
+                                        property bool keyboardSelected: tile.wpIndex === content.selectedIndex
                                         visible: wp !== null
                                         scale: tileArea.containsMouse ? 1.03 : 1.0
                                         Behavior on scale {
@@ -213,8 +340,8 @@ Item {
                                             radius: 10
                                             color: Bar.Colors.surfaceContainer
                                             antialiasing: true
-                                            border.width: tileArea.containsMouse ? 2 : 0
-                                            border.color: Bar.Colors.accent
+                                            border.width: (tileArea.containsMouse || tile.keyboardSelected) ? 2 : 0
+                                            border.color: tile.colorsFailed ? Bar.Colors.error : Bar.Colors.accent
                                             Behavior on border.width {
                                                 NumberAnimation {
                                                     duration: 140
@@ -233,6 +360,28 @@ Item {
                                                 asynchronous: true
                                                 sourceSize.width: content.cellSize
                                                 sourceSize.height: content.cellSize
+                                                opacity: tile.colorsFailed ? 0.45 : 1.0
+                                            }
+                                        }
+
+                                        // warning badge for wallpapers wallust couldn't palette
+                                        Rectangle {
+                                            visible: tile.colorsFailed
+                                            anchors.top: parent.top
+                                            anchors.right: parent.right
+                                            anchors.margins: 4
+                                            width: 18
+                                            height: 18
+                                            radius: 9
+                                            color: Bar.Colors.textOnError
+                                            antialiasing: true
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "!"
+                                                font.family: "Cozette"
+                                                font.pixelSize: 11
+                                                font.bold: true
+                                                color: Bar.Colors.onError
                                             }
                                         }
 
@@ -254,7 +403,7 @@ Item {
 
                                             Text {
                                                 anchors.centerIn: parent
-                                                text: tile.wp ? tile.wp.name : ""
+                                                text: tile.wp ? (tile.colorsFailed ? tile.wp.name + " (no colors)" : tile.wp.name) : ""
                                                 color: Bar.Colors.textOnBackground
                                                 font.family: "Cozette"
                                                 font.pixelSize: 9
@@ -270,8 +419,13 @@ Item {
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: {
-                                                WallpaperBackend.apply(tile.wp.path);
-                                                WallpaperLauncher.hide();
+                                                content.selectedIndex = tile.wpIndex;
+                                                if (tile.colorsFailed) {
+                                                    content.pendingDelete = tile.wp;
+                                                } else {
+                                                    WallpaperBackend.apply(tile.wp.path);
+                                                    WallpaperLauncher.hide();
+                                                }
                                             }
                                         }
                                     }
@@ -296,6 +450,10 @@ Item {
                     event.accepted = true;
                 }
             }
+            Timer {
+                id: wheelCooldown
+                interval: 350
+            }
 
             Row {
                 anchors.bottom: parent.bottom
@@ -307,13 +465,103 @@ Item {
                     delegate: Rectangle {
                         width: index === content.currentPage ? 16 : 5
                         height: 5
-                        radius: 2.5
-                        antialiasing: true
+                        radius: 0
+                        antialiasing: false
                         color: index === content.currentPage ? Bar.Colors.accent : Bar.Colors.outlineVariant
                         Behavior on width {
                             NumberAnimation {
                                 duration: 160
                                 easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
+                }
+            }
+
+            // delete-confirmation overlay for wallpapers with no generated palette
+            Rectangle {
+                anchors.fill: parent
+                color: "black"
+                opacity: content.pendingDelete !== null ? 0.6 : 0
+                visible: opacity > 0.01
+                z: 10
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 150
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: content.cancelDelete()
+                }
+            }
+            Rectangle {
+                anchors.centerIn: parent
+                width: 280
+                height: 120
+                radius: 12
+                color: Bar.Colors.surfaceContainerLow
+                border.width: 1
+                border.color: Bar.Colors.outlineVariant
+                visible: content.pendingDelete !== null
+                z: 11
+                antialiasing: true
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 14
+                    width: parent.width - 32
+
+                    Text {
+                        width: parent.width
+                        wrapMode: Text.WordWrap
+                        horizontalAlignment: Text.AlignHCenter
+                        text: content.pendingDelete ? "Couldn't generate colors for \"" + content.pendingDelete.name + "\". Delete it?" : ""
+                        font.family: "Cozette"
+                        font.pixelSize: 11
+                        color: Bar.Colors.textOnBackground
+                    }
+
+                    Row {
+                        spacing: 16
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        Rectangle {
+                            width: 80
+                            height: 28
+                            radius: 6
+                            color: Bar.Colors.error
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Delete (Y)"
+                                font.family: "Cozette"
+                                font.pixelSize: 10
+                                color: Bar.Colors.textOnError
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: content.confirmDelete()
+                            }
+                        }
+                        Rectangle {
+                            width: 80
+                            height: 28
+                            radius: 6
+                            color: Bar.Colors.surfaceContainer
+                            border.width: 1
+                            border.color: Bar.Colors.outlineVariant
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Cancel (N)"
+                                font.family: "Cozette"
+                                font.pixelSize: 10
+                                color: Bar.Colors.textOnBackground
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: content.cancelDelete()
                             }
                         }
                     }

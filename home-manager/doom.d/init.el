@@ -1,9 +1,9 @@
+;;; init.el -*- lexical-binding: t; -*-
 (doom! :input
-
        :completion
        (vertico +icons)
        (corfu +icons)
-
+       
        :ui
        doom
        doom-dashboard
@@ -14,7 +14,7 @@
        vi-tilde-fringe
        workspaces
        treemacs
-
+       
        :editor
        (evil +everywhere +easymotion)
        file-templates
@@ -22,31 +22,35 @@
        (format +onsave)
        multiple-cursors
        snippets
-
+       
        :emacs
        dired
        electric
        undo
        vc
-
+       
        :checkers
        syntax
        (spell +flyspell)
-
+       
        :tools
        (eval +overlay)
-       (lookup +docsets)
+       (lookup +docmets)
        (lsp +eglot)
        magit
        tree-sitter
-
+       
+       :term
+       vterm
+       
        :lang
-       (go +lsp +tree-sitter)
-       (cc +lsp +tree-sitter)
+       (go +tree-sitter)
+       (cc +tree-sitter)
+       (nix +tree-sitter)
        (sh +tree-sitter)
        markdown
        yaml
        (json +tree-sitter)
-
+       
        :config
        (default +bindings +smartparens))
