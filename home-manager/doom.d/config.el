@@ -87,5 +87,8 @@
 (add-hook 'go-mode-local-vars-hook
           (lambda ()
             (add-hook 'before-save-hook #'eglot-code-action-organize-imports nil t)))
-
+;; Maximize GC threshold and chunk size for LSP performance
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-max (* 3 1024 1024))
+(after! envrc (envrc-global-mode))
 ;;; config.el ends here

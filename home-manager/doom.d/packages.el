@@ -2,3 +2,4 @@
 (package! cmake-mode)
 (package! spacious-padding)
 (package! clipetty)
+(package! envrc)

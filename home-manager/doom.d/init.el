@@ -24,7 +24,7 @@
        snippets
        
        :emacs
-       dired
+       (dired +dirvish)
        electric
        undo
        vc
@@ -37,6 +37,7 @@
        (eval +overlay)
        (lookup +docmets)
        (lsp +eglot)
+       (debugger +lsp)
        magit
        tree-sitter
        
