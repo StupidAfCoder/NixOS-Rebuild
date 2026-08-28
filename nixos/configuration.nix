@@ -274,6 +274,10 @@ in
     megumin-cursor
     hyprpolkitagent
 
+    p7zip-rar
+    xarchiver
+    thunar-archive-plugin
+
     brightnessctl # brightness widget
     ddcutil # external monitor brightness control (optional)
     lm_sensors # temp/sensor widgets

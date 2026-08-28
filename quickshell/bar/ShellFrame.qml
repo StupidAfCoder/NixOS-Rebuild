@@ -385,24 +385,19 @@ Scope {
                         topOffset: manager.borderThickness
                     }
 
-                    SysStatsPanelContent {
-                        id: sysStatsPanelContent
-                        topOffset: manager.borderThickness
-                    }
-
                     // also add the content instance, right after WallpaperLauncherContent { ... }
                     AppLauncherContent {
                         id: appLauncherContent
                     }
 
-                    RightEdgePanel {
-                        id: rightEdgePanel
-                        stripWidth: manager.borderThickness
-                    }
-
                     SysStatsPanelContent {
                         id: sysStatsPanel
                         topOffset: manager.borderThickness
+                    }
+
+                    RightEdgePanel {
+                        id: rightEdgePanel
+                        stripWidth: manager.borderThickness
                     }
 
                     CornerAccent {

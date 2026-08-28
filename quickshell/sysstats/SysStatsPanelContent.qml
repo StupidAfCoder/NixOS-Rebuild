@@ -9,9 +9,11 @@ Item {
     property int topOffset: 0
     readonly property int hoverStripWidth: 220
     readonly property int hoverStripHeight: topOffset
+    readonly property int bezelWidth: 320
+    readonly property int bezelHeight: 190
 
     property alias hoverStripItem: hoverStrip
-    property alias panelBezelItem: bezel
+    property alias panelBezelItem: maskArea
 
     Item {
         id: hoverStrip
@@ -25,12 +27,24 @@ Item {
         }
     }
 
+    // ---- mask-only hitbox ----
+    // Deliberately NOT animated. This is the item registered in the window's
+    // `mask`, so it must snap discretely between 0x0 and full size on the
+    // same frame `shown` changes. Never put a Behavior on this item.
+    Item {
+        id: maskArea
+        anchors.top: hoverStrip.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: SysStatsPanel.shown ? root.bezelWidth : 0
+        height: SysStatsPanel.shown ? root.bezelHeight : 0
+    }
+
     Rectangle {
         id: bezel
         anchors.top: hoverStrip.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        width: 320
-        height: 190
+        width: root.bezelWidth
+        height: root.bezelHeight
         color: Colors.shadow
         antialiasing: false
 

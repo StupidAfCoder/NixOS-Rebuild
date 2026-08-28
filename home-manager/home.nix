@@ -334,6 +334,14 @@ in
       "video/x-matroska" = [ "io.github.celluloid_player.Celluloid.desktop" ];
       "video/webm" = [ "io.github.celluloid_player.Celluloid.desktop" ];
       "video/x-msvideo" = [ "io.github.celluloid_player.Celluloid.desktop" ];
+
+      "application/zip" = [ "xarchiver.desktop" ];
+      "application/x-7z-compressed" = [ "xarchiver.desktop" ];
+      "application/x-rar" = [ "xarchiver.desktop" ];
+      "application/x-tar" = [ "xarchiver.desktop" ];
+      "application/x-compressed-tar" = [ "xarchiver.desktop" ];
+      "application/x-bzip-compressed-tar" = [ "xarchiver.desktop" ];
+      "application/x-xz-compressed-tar" = [ "xarchiver.desktop" ];
     };
   };
 

@@ -13,7 +13,7 @@ Item {
     readonly property int hoverBandHeight: panelHeight + 40   // generous target around center
 
     property alias hoverStripItem: hoverStrip
-    property alias panelBezelItem: panelBezel
+    property alias panelBezelItem: maskArea
 
     Connections {
         target: RightPanel
@@ -34,6 +34,20 @@ Item {
         HoverHandler {
             onHoveredChanged: RightPanel.hoverZone = hovered
         }
+    }
+
+    // ---- mask-only hitbox ----
+    // Deliberately NOT animated, unlike `panelBezel` below. This is the item
+    // registered in the window's `mask`, so it must snap discretely between
+    // 0x0 and full size on the same frame `RightPanel.shown` changes.
+    // Never put a Behavior on this item.
+    Item {
+        id: maskArea
+        anchors.right: hoverStrip.left
+        anchors.rightMargin: 6
+        anchors.verticalCenter: parent.verticalCenter
+        width: RightPanel.shown ? root.panelWidth : 0
+        height: root.panelHeight
     }
 
     Rectangle {

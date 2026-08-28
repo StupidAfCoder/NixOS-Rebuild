@@ -6,7 +6,7 @@ QtObject {
     property bool shown: false
 
     property Timer closeTimer: Timer {
-        interval: 2500   // was 220 — 2.5s grace after your cursor leaves
+        interval: 400   // was 220 — 2.5s grace after your cursor leaves
         onTriggered: root.shown = false
     }
 
