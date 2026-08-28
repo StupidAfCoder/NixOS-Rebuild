@@ -259,6 +259,8 @@ in
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
+  programs.gamemode.enable = true;
+
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = with pkgs; [
@@ -269,7 +271,6 @@ in
     firefox
     inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
     pkgs.nicotine-plus
-    lxqt.lxqt-policykit
     megumin-cursor
     hyprpolkitagent
 

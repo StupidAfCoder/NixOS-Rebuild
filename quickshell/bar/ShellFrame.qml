@@ -311,19 +311,6 @@ Scope {
                         }
                     }
 
-                    MouseArea {
-                        id: sysStatsHoverTrigger
-                        anchors.top: parent.top
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 200                              // tune to taste — this is the "hot zone" width
-                        height: manager.borderThickness + 4
-                        hoverEnabled: true
-                        acceptedButtons: Qt.NoButton
-                        z: 10
-                        onEntered: SysStatsPanel.show()
-                        onExited: SysStatsPanel.scheduleHide()
-                    }
-
                     Bar {
                         id: barArea
                         anchors.left: parent.left

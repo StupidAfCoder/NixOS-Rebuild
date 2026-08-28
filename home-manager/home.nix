@@ -56,6 +56,17 @@ in
       ];
     })
 
+    (lutris.override {
+      extraPkgs = pkgs: [
+        pkgs.wineWow64Packages.stagingFull # full wine build, not what Lutris downloads itself
+        pkgs.winetricks
+        pkgs.gamemode
+        pkgs.gamescope
+      ];
+    })
+
+    steam
+
     file-roller
     unzip
     zip

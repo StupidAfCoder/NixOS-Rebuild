@@ -8,7 +8,7 @@ Item {
 
     property int topOffset: 0
     readonly property int hoverStripWidth: 220
-    readonly property int hoverStripHeight: topOffset + 4
+    readonly property int hoverStripHeight: topOffset
 
     property alias hoverStripItem: hoverStrip
     property alias panelBezelItem: bezel
