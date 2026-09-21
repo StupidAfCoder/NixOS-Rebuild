@@ -271,6 +271,7 @@ in
     firefox
     inputs.awww.packages.${pkgs.stdenv.hostPlatform.system}.awww
     pkgs.nicotine-plus
+    qbittorrent
     megumin-cursor
     hyprpolkitagent
 
