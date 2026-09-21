@@ -13,7 +13,8 @@ FocusScope {
     property int preferredHeight: 500
     property bool centered: false
     property Item initialFocusItem: root
-    // Empty = ordinary popup. Right/left = sliding edge drawer, in the same layer window.
+    function resetScroll() { scroller.contentItem.contentY = 0; }
+    // Empty = popup. Four edge directions translate without scaling pixel text.
     property string edge: ""
     property real reveal: shown ? 1 : 0
     default property alias content: body.data
@@ -23,7 +24,9 @@ FocusScope {
     x: edge === "right" ? parent.width - (width + Settings.frameWidth + 12) * reveal
        : edge === "left" ? Settings.barWidth + 12 - (width + Settings.barWidth + 12) * (1 - reveal)
        : centered ? Settings.barWidth + (parent.width - Settings.barWidth - width) / 2 : Settings.barWidth + 12
-    y: Math.round((parent.height - height) / 2)
+    y: edge === "top" ? Settings.frameWidth + 12 - (height + Settings.frameWidth + 12) * (1 - reveal)
+       : edge === "bottom" ? parent.height - (height + Settings.frameWidth + 12) * reveal
+       : Math.round((parent.height - height) / 2)
     z: 20
     visible: shown || reveal > 0
     enabled: shown
@@ -35,8 +38,7 @@ FocusScope {
     }
     Keys.onEscapePressed: event => { root.dismiss(); event.accepted = true; }
     Rectangle { anchors.fill: parent; color: Colors.surfaceContainerLow; border.color: Colors.outlineVariant; antialiasing: false }
-    Rectangle { x: 0; y: 0; width: 5; height: 5; color: Colors.background }
-    Rectangle { anchors.right: parent.right; anchors.bottom: parent.bottom; width: 5; height: 5; color: Colors.background }
+    Rectangle { x: 0; y: 0; width: 18; height: 2; color: Colors.accent }
     MouseArea { anchors.fill: parent; onClicked: {} }
     ColumnLayout {
         anchors.fill: parent; anchors.margins: 20; spacing: 16

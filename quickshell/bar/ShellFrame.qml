@@ -17,8 +17,8 @@ Scope {
     property color frameColor: Colors.background
     property color accentColor: Colors.accent
     property string popupScreen: ""
-    readonly property var panels: [WallpaperLauncher, AppLauncher, PowerMenu, WifiPanel, BatteryPanel, TrayMenu, MediaPanel, BluetoothPanel, SysStatsPanel, SettingsPanel, WellbeingPanel, RightPanel]
-    readonly property bool anyPanelShown: WallpaperLauncher.shown || AppLauncher.shown || PowerMenu.shown || WifiPanel.shown || BatteryPanel.shown || TrayMenu.shown || MediaPanel.shown || BluetoothPanel.shown || SysStatsPanel.shown || SettingsPanel.shown || WellbeingPanel.shown || RightPanel.shown
+    readonly property var panels: [WallpaperLauncher, AppLauncher, PowerMenu, WifiPanel, BatteryPanel, TrayApps, TrayMenu, MediaPanel, BluetoothPanel, SysStatsPanel, SettingsPanel, WellbeingPanel, RightPanel]
+    readonly property bool anyPanelShown: WallpaperLauncher.shown || AppLauncher.shown || PowerMenu.shown || WifiPanel.shown || BatteryPanel.shown || TrayApps.shown || TrayMenu.shown || MediaPanel.shown || BluetoothPanel.shown || SysStatsPanel.shown || SettingsPanel.shown || WellbeingPanel.shown || RightPanel.shown
     function closeAll(except) {
         for (const panel of panels) if (panel !== except && panel.shown) {
             if (typeof panel.hide === "function") panel.hide(); else panel.shown = false;
@@ -34,6 +34,7 @@ Scope {
     Connections { target: PowerMenu; function onShownChanged() { manager.activate(PowerMenu); } }
     Connections { target: WifiPanel; function onShownChanged() { manager.activate(WifiPanel); } }
     Connections { target: BatteryPanel; function onShownChanged() { manager.activate(BatteryPanel); } }
+    Connections { target: TrayApps; function onShownChanged() { manager.activate(TrayApps); } }
     Connections { target: TrayMenu; function onShownChanged() { manager.activate(TrayMenu); } }
     Connections { target: MediaPanel; function onShownChanged() { manager.activate(MediaPanel); } }
     Connections { target: BluetoothPanel; function onShownChanged() { manager.activate(BluetoothPanel); } }
@@ -95,7 +96,7 @@ Scope {
                         width: frame.openHere ? parent.width : 0
                         height: frame.openHere ? parent.height : 0
                         z: 10
-                        Rectangle { anchors.fill: parent; color: "black"; opacity: AppLauncher.shown || WallpaperLauncher.shown || WellbeingPanel.shown ? .25 : 0 }
+                        Rectangle { anchors.fill: parent; color: "black"; opacity: WallpaperLauncher.shown || (AppLauncher.shown && Settings.launcherEdge === "center") ? .15 : 0 }
                         MouseArea { anchors.fill: parent; onClicked: manager.closeAll(null) }
                     }
                     Item {
@@ -114,6 +115,7 @@ Scope {
                         SettingsPanelContent { shown: SettingsPanel.shown && frame.onScreen }
                         WellbeingPanelContent { shown: WellbeingPanel.shown && frame.onScreen }
                         RightEdgePanel { shown: RightPanel.shown && frame.onScreen }
+                        TrayAppsContent { shown: TrayApps.shown && frame.onScreen }
                         TrayMenuContent { visible: TrayMenu.shown && frame.onScreen }
                     }
                     Bar { id: barArea; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; barWidth: manager.barWidth; z: 30 }

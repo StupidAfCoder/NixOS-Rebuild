@@ -14,7 +14,7 @@ ShellRoot {
     FeedbackOsd {}
     // Populate the mascot cache on first launch too, not only after a theme switch.
     Process {
-        command: ["bash", Settings.repo + "quickshell/bar/scripts/generate-theme-assets.sh"]
+        command: ["bash", Settings.repo + "quickshell/bar/scripts/generate-theme-assets.sh", Settings.themeFile]
         running: true
     }
 

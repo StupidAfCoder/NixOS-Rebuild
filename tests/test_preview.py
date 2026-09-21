@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PreviewTests(unittest.TestCase):
-    def run_preview(self, active=True, code=0, manual=False):
+    def run_preview(self, active=True, code=0, manual=False, software=False):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             bin_dir = base / 'bin'
@@ -35,6 +35,7 @@ exit 0
                 'pgrep': '#!/bin/sh\nexit "$TEST_MANUAL_STATUS"\n',
                 'quickshell': '''#!/bin/sh
 printf 'preview=%s config=%s args=%s\n' "$PIXEL_SHELL_PREVIEW" "$XDG_CONFIG_HOME" "$*" >> "$TEST_TRACE"
+printf 'root=%s video=%s texture=%s\n' "$PIXEL_SHELL_ROOT" "${QT_FFMPEG_DECODING_HW_DEVICE_TYPES:-auto}" "${QT_DISABLE_HW_TEXTURES_CONVERSION:-auto}" >> "$TEST_TRACE"
 exit "$TEST_QS_EXIT"
 ''',
             }
@@ -47,7 +48,7 @@ exit "$TEST_QS_EXIT"
                    'XDG_CONFIG_HOME': str(config.parent.parent), 'XDG_STATE_HOME': str(original_state.parent.parent),
                    'TEST_TRACE': str(base / 'trace'), 'TEST_SERVICE_STATUS': '0' if active else '3',
                    'TEST_MANUAL_STATUS': '0' if manual else '1', 'TEST_QS_EXIT': str(code)}
-            result = subprocess.run(['bash', str(ROOT / 'scripts/preview-shell.sh'), '--sample-history'],
+            result = subprocess.run(['bash', str(ROOT / 'scripts/preview-shell.sh'), '--sample-history'] + (['--software-video'] if software else []),
                                     env=env, capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, 1 if manual else code, result.stderr)
             self.assertEqual(config.read_text(), original)
@@ -64,6 +65,14 @@ exit "$TEST_QS_EXIT"
             self.assertEqual('--user stop quickshell.service' in trace, active)
             self.assertEqual('--user start quickshell.service' in trace, active)
             self.assertEqual('preview=1' in trace, not manual)
+            self.assertTrue((preview / 'cache/quickshell/wizard-idle.png').is_file())
+            self.assertTrue((preview / 'cache/quickshell/preview-theme/quickshell/bar/theme/colors.json').is_file())
+            self.assertTrue((preview / 'state/pixel-shell/status.json').is_file())
+            self.assertTrue((preview / 'state/wallpaper/current').is_file())
+            if not manual:
+                self.assertIn('root=' + str(ROOT), trace)
+                if software:
+                    self.assertIn('video=, texture=1', trace)
 
     def test_restores_service_without_changing_real_preferences_or_history(self):
         self.run_preview()
@@ -76,6 +85,9 @@ exit "$TEST_QS_EXIT"
 
     def test_refuses_manual_duplicate_and_restores_original_service(self):
         self.run_preview(manual=True)
+
+    def test_software_video_option(self):
+        self.run_preview(software=True)
 
     def test_fixture_refuses_overwrite(self):
         with tempfile.TemporaryDirectory() as tmp:

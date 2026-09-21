@@ -82,6 +82,14 @@ class ModuleTests(unittest.TestCase):
         self.assertTrue(second['barModules']['clock'])
         self.assertEqual(second['workspaceCount'], 5)
 
+    def test_launcher_edge_validation(self):
+        self.assertEqual(state.validate({})['launcherEdge'], 'top')
+        for edge in ('top', 'bottom', 'center'):
+            self.assertEqual(state.validate({'launcherEdge': edge})['launcherEdge'], edge)
+        for edge in ('left', '', None, 1, True):
+            with self.assertRaises(ValueError):
+                state.validate({'launcherEdge': edge})
+
     def test_module_schema(self):
         for invalid in ([], {'unknown': True}, {'clock': 0}, {'clock': 'false'}, None):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):

@@ -113,9 +113,9 @@ Sheet {
                 PixelText { anchors.centerIn: parent; text: "Aa  /  live palette preview"; color: WallpaperBackend.previewColors.accent || Colors.accent }
             }
             PixelButton {
-                Layout.fillWidth: true; primary: true; enabled: !!root.selectedPath && !WallpaperBackend.applying
-                text: WallpaperBackend.applying ? "Applying…" : "Apply wallpaper & palette"
-                onClicked: WallpaperBackend.apply(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast)
+                Layout.fillWidth: true; primary: true; enabled: !!root.selectedPath && !WallpaperBackend.applying && !WallpaperBackend.tryingColors
+                text: Settings.previewMode ? (WallpaperBackend.tryingColors ? "Trying colors…" : "Try colors on this preview") : WallpaperBackend.applying ? "Applying…" : "Apply wallpaper & palette"
+                onClicked: Settings.previewMode ? WallpaperBackend.tryColors(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast) : WallpaperBackend.apply(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast)
             }
             PixelButton { Layout.fillWidth: true; text: root.confirmTrash ? "Confirm move to Trash" : "Move selected to Trash…"; danger: root.confirmTrash; enabled: !!root.selectedPath && !WallpaperBackend.applying; onClicked: { if (root.confirmTrash) { WallpaperBackend.trash(root.selectedPath); root.selectedPath = ""; } else root.confirmTrash = true; } }
             PixelButton { visible: root.confirmTrash; text: "Cancel"; onClicked: root.confirmTrash = false }

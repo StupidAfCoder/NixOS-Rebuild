@@ -9,30 +9,17 @@ import "../common"
 Sheet {
     id: root
     shown: PowerMenu.shown
-    title: pending ? pending + "?" : "Session"
-    subtitle: pending ? "Save your work before continuing." : Settings.displayName
-    preferredWidth: 380
-    preferredHeight: 560
+    title: "Session"
+    preferredWidth: 390
+    preferredHeight: pending ? 480 : 690
     edge: "right"
     property string pending: ""
     property string actionMessage: ""
+    property string clipError: ""
     function cancel() { if (pending) pending = ""; else PowerMenu.hide(); }
-    onDismiss: cancel()
-    onShownChanged: {
-        pending = "";
-        actionMessage = "";
-        if (shown && !Settings.reducedMotion) video.play(); else video.stop();
-    }
-    Connections {
-        target: Settings
-        function onReducedMotionChanged() { if (Settings.reducedMotion) video.pause(); else if (root.shown) video.play(); }
-    }
-    FileView {
-        path: Settings.videoPath; watchChanges: true
-        onFileChanged: { video.stop(); video.source = ""; video.source = Settings.fileUrl(Settings.videoPath); if (root.shown && !Settings.reducedMotion) video.play(); }
-    }
+    function confirm(action) { pending = action; Qt.callLater(function() { cancelButton.forceActiveFocus(); }); }
     function execute(action) {
-        if (Settings.previewMode) { pending = ""; actionMessage = "Preview only: " + action + " was not executed."; return; }
+        if (Settings.previewMode) { pending = ""; actionMessage = "Preview only · " + action + " was not executed."; return; }
         PowerMenu.hide();
         if (action === "Lock") Quickshell.execDetached(["hyprlock"]);
         else if (action === "Sleep") Quickshell.execDetached(["systemctl", "suspend"]);
@@ -40,40 +27,68 @@ Sheet {
         else if (action === "Restart") Quickshell.execDetached(["systemctl", "reboot"]);
         else if (action === "Shut down") Quickshell.execDetached(["systemctl", "poweroff"]);
     }
-    PixelText { text: root.actionMessage; visible: text.length > 0; Layout.fillWidth: true; wrapMode: Text.Wrap; color: Colors.accent }
-    function confirm(action) { pending = action; Qt.callLater(function() { cancelButton.forceActiveFocus(); }); }
+    onDismiss: cancel()
+    onShownChanged: { pending = ""; actionMessage = ""; clipError = ""; }
     Rectangle {
-        Layout.fillWidth: true; Layout.preferredHeight: 170
-        color: Colors.background; border.color: Colors.outlineVariant
-        PixelText { anchors.centerIn: parent; text: "A moment of quiet."; color: Colors.textOnSurfaceVariant }
-        Video {
-            id: video
-            anchors.fill: parent; anchors.margins: 2
-            source: Settings.fileUrl(Settings.videoPath)
-            fillMode: VideoOutput.PreserveAspectCrop
-            smooth: false; muted: true; loops: MediaPlayer.Infinite
-            onSourceChanged: if (root.shown && !Settings.reducedMotion) play()
+        Layout.fillWidth: true; Layout.preferredHeight: 190
+        color: Colors.background
+        border.color: Colors.outlineVariant
+        PixelText { anchors.centerIn: parent; text: root.clipError ? "Video unavailable" : Settings.reducedMotion ? "Motion paused" : "Session"; color: Colors.textOnSurfaceVariant }
+        Loader {
+            id: sessionClip
+            anchors.fill: parent; anchors.margins: 6
+            // No decoder, GPU surfaces or audio output survive a closed drawer.
+            active: root.shown && !Settings.reducedMotion
+            sourceComponent: Component {
+                Item {
+                    function reloadClip() { player.stop(); player.source = ""; player.source = Settings.fileUrl(Settings.videoPath); player.play(); }
+                    VideoOutput { id: output; anchors.fill: parent; fillMode: VideoOutput.PreserveAspectCrop }
+                    MediaPlayer {
+                        id: player
+                        source: Settings.fileUrl(Settings.videoPath)
+                        videoOutput: output
+                        audioOutput: null
+                        loops: MediaPlayer.Infinite
+                        Component.onCompleted: play()
+                        onSourceChanged: if (source.toString()) play()
+                        onErrorOccurred: (error, errorString) => { root.clipError = errorString; }
+                    }
+                }
+            }
         }
-        Rectangle { anchors.left: parent.left; anchors.top: parent.top; width: 16; height: 2; color: Colors.accent }
-        Rectangle { anchors.right: parent.right; anchors.bottom: parent.bottom; width: 16; height: 2; color: Colors.accent }
+        FileView {
+            path: Settings.videoPath; watchChanges: true; preload: false
+            onFileChanged: if (sessionClip.item) sessionClip.item.reloadClip()
+        }
     }
     RowLayout {
-        visible: !root.pending; Layout.fillWidth: true
-        ProfileAvatar { Layout.preferredWidth: 42; Layout.preferredHeight: 42 }
-        ColumnLayout { Layout.fillWidth: true; PixelText { text: Settings.displayName; Layout.fillWidth: true } PixelText { text: Settings.bio; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant } }
+        Layout.fillWidth: true; spacing: 14
+        ProfileAvatar { Layout.preferredWidth: 36; Layout.preferredHeight: 36 }
+        PixelText { text: Settings.displayName; Layout.fillWidth: true; font.pixelSize: 20; font.family: "Pixel Operator" }
+        Rectangle { implicitWidth: 5; implicitHeight: 5; color: Colors.accent }
     }
-    GridLayout {
-        visible: !root.pending; Layout.fillWidth: true; columns: 2; rowSpacing: 8; columnSpacing: 8
+    ColumnLayout {
+        visible: !root.pending; Layout.fillWidth: true; spacing: 2
         Repeater {
-            model: ["Lock", "Sleep", "Log out", "Restart"]
-            PixelButton { required property string modelData; Layout.fillWidth: true; text: modelData; onClicked: modelData === "Lock" || modelData === "Sleep" ? root.execute(modelData) : root.confirm(modelData) }
+            model: [{name:"Lock",icon:"lock.svg"},{name:"Sleep",icon:"clock.svg"},{name:"Log out",icon:"app-windows.svg"},{name:"Restart",icon:"power.svg"},{name:"Shut down",icon:"power.svg"}]
+            MenuRow {
+                required property var modelData
+                Layout.fillWidth: true
+                label: modelData.name; iconName: modelData.icon
+                danger: modelData.name === "Shut down"
+                onClicked: modelData.name === "Lock" || modelData.name === "Sleep" ? root.execute(modelData.name) : root.confirm(modelData.name)
+            }
         }
     }
-    PixelButton { visible: !root.pending; Layout.fillWidth: true; text: "Shut down…"; danger: true; onClicked: root.confirm("Shut down") }
-    PixelText { visible: !!root.pending; Layout.fillWidth: true; text: "Your session will end. Unsaved work may be lost."; wrapMode: Text.Wrap; elide: Text.ElideNone }
-    RowLayout {
-        visible: !!root.pending; Layout.fillWidth: true
-        PixelButton { id: cancelButton; text: "Cancel"; Layout.fillWidth: true; onClicked: root.pending = "" }
-        PixelButton { text: root.pending; danger: true; Layout.fillWidth: true; onClicked: root.execute(root.pending) }
+    ColumnLayout {
+        visible: !!root.pending; Layout.fillWidth: true; spacing: 18
+        PixelText { text: root.pending + "?"; font.family: "Silkscreen"; font.pixelSize: 14 }
+        PixelText { text: "Save your progress before ending this session."; Layout.fillWidth: true; wrapMode: Text.Wrap }
+        RowLayout {
+            Layout.fillWidth: true
+            PixelButton { id: cancelButton; text: "Keep playing"; Layout.fillWidth: true; onClicked: root.pending = "" }
+            PixelButton { text: root.pending; danger: true; Layout.fillWidth: true; onClicked: root.execute(root.pending) }
+        }
     }
+    PixelText { text: root.actionMessage; visible: !!text; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.accent }
 }

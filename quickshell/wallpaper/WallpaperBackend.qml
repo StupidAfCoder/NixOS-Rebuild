@@ -9,6 +9,7 @@ Item {
     property var wallpapers: []
     property bool applying: false
     property bool scanning: false
+    readonly property bool tryingColors: previewApply.running || mascot.running
     property string lastError: ""
     property string currentPath: ""
     property var previewColors: ({})
@@ -30,6 +31,24 @@ Item {
         previewResult = "";
         previewProc.running = true;
     }
+    function tryColors(path, recipe, tone, saturation, source, contrast) {
+        if (!Settings.previewMode || !path || tryingColors) return;
+        previewApply.settingsPatch = {recipe: recipe, tone: tone, saturation: saturation, source: source, contrast: contrast};
+        previewApply.command = argumentsFor(path, recipe, tone, saturation, source, contrast).concat(["--output-dir", Settings.themeRoot]);
+        previewApply.running = true;
+    }
+    Process {
+        id: previewApply
+        property var settingsPatch: ({})
+        onExited: (code, status) => {
+            if (code === 0) {
+                root.lastError = "";
+                Settings.patch(settingsPatch);
+                mascot.running = true;
+            } else root.lastError = "Could not try this palette. No live wallpaper was changed.";
+        }
+    }
+    Process { id: mascot; command: ["bash", Settings.repo + "quickshell/bar/scripts/generate-theme-assets.sh", Settings.themeFile] }
     function apply(path, recipe, tone, saturation, source, contrast) {
         if (Settings.previewMode) { lastError = "Native preview: wallpaper application is disabled; palette previews still work."; return; }
         if (applying || !path) return;

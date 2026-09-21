@@ -3,13 +3,21 @@
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ "${1:-}" == --help ]]; then
-    echo 'usage: preview-shell.sh [--sample-history]'
+    echo 'usage: preview-shell.sh [--sample-history] [--software-video]'
     echo 'Temporarily stops the quickshell user service; restores it when preview exits.'
     echo 'Uses private temporary settings/history/cache. Power, wallpaper apply and Trash are disabled.'
     echo 'App launches, network, Bluetooth and audio controls still use the real session.'
     exit 0
 fi
-[[ $# -eq 0 || ( $# -eq 1 && "$1" == --sample-history ) ]] || { echo 'Unknown option; use --help' >&2; exit 2; }
+sample=0
+software_video=0
+for option in "$@"; do
+    case "$option" in
+        --sample-history) sample=1 ;;
+        --software-video) software_video=1 ;;
+        *) echo 'Unknown option; use --help' >&2; exit 2 ;;
+    esac
+done
 [[ -n "${WAYLAND_DISPLAY:-}" ]] || { echo 'Run this from a terminal in your Wayland desktop.' >&2; exit 1; }
 QS="$(command -v quickshell || command -v qs || true)"
 [[ -n "$QS" ]] || { echo 'Quickshell must already be installed.' >&2; exit 1; }
@@ -19,13 +27,29 @@ python3 -c 'from PIL import Image; from materialyoucolor.hct import Hct' || {
 }
 preview="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/pixel-shell-preview.XXXXXX")"
 # Preserve your avatar/video/path preferences, but never record or control workspace streams here.
+original_state="${XDG_STATE_HOME:-$HOME/.local/state}"
 original_config="${XDG_CONFIG_HOME:-$HOME/.config}/pixel-shell/settings.json"
 mkdir -p "$preview/config/pixel-shell" "$preview/state/pixel-shell" "$preview/cache"
 [[ ! -f "$original_config" ]] || cp -- "$original_config" "$preview/config/pixel-shell/settings.json"
 export XDG_CONFIG_HOME="$preview/config" XDG_STATE_HOME="$preview/state" XDG_CACHE_HOME="$preview/cache"
-export PIXEL_SHELL_PREVIEW=1
+export PIXEL_SHELL_PREVIEW=1 PIXEL_SHELL_ROOT="$ROOT"
+if [[ "$software_video" == 1 ]]; then
+    export QT_FFMPEG_DECODING_HW_DEVICE_TYPES=,
+    export QT_DISABLE_HW_TEXTURES_CONVERSION=1
+fi
+mkdir -p "$preview/state/wallpaper" "$preview/cache/quickshell/preview-theme/quickshell/bar/theme"
+if [[ -f "$original_state/wallpaper/current" ]]; then
+    cp -- "$original_state/wallpaper/current" "$preview/state/wallpaper/current"
+else
+    : > "$preview/state/wallpaper/current"
+fi
+printf '%s\n' '{"audio":"Workspace audio is not running in this preview."}' > "$preview/state/pixel-shell/status.json"
+printf '%s\n' '{"days":{}}' > "$preview/state/pixel-shell/usage.json"
+cp -- "$ROOT/quickshell/bar/theme/colors.json" "$preview/cache/quickshell/preview-theme/quickshell/bar/theme/colors.json"
+bash "$ROOT/quickshell/bar/scripts/generate-theme-assets.sh" "$preview/cache/quickshell/preview-theme/quickshell/bar/theme/colors.json"
 python3 "$ROOT/scripts/shell-state.py" patch '{"trackingEnabled":false,"workspaceAudioEnabled":false}'
-if [[ "${1:-}" == --sample-history ]]; then
+if [[ "$sample" == 1 ]]; then
+    rm -- "$preview/state/pixel-shell/usage.json"
     python3 "$ROOT/scripts/preview-history.py" "$preview/state/pixel-shell/usage.json"
 fi
 restore=0

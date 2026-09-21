@@ -9,8 +9,11 @@ PixelButton {
     implicitWidth: 32; implicitHeight: 32
     padding: 4
     Accessible.name: hint
-    contentItem: ColoredIcon { iconName: root.iconName; tint: root.primary ? Colors.textOnAccent : Colors.accent; opacity: root.enabled ? 1 : .4 }
-    ToolTip.visible: hovered || activeFocus
-    ToolTip.delay: 500
-    ToolTip.text: hint
+    background: Rectangle {
+        color: root.down ? Colors.surfaceContainerHigh : "transparent"
+        border.width: root.activeFocus ? 1 : 0
+        border.color: Colors.accent
+        Rectangle { width: 2; height: 12; anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; color: Colors.accent; visible: root.checked }
+    }
+    contentItem: ColoredIcon { iconName: root.iconName; tint: root.primary || root.checked ? Colors.accent : Colors.textOnSurfaceVariant; opacity: root.enabled ? 1 : .4 }
 }

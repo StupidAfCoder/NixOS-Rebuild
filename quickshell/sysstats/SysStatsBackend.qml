@@ -2,11 +2,11 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "../common"
 
 QtObject {
     id: root
-    property string homeDir: ""
-    readonly property string scriptPath: homeDir + "/.nixos_dotfiles/scripts/sysstats.sh"
+    readonly property string scriptPath: Settings.repo + "scripts/sysstats.sh"
 
     property int cpuPct: 0
     property int ramPct: 0
@@ -18,30 +18,16 @@ QtObject {
     property int gpuMemTotal: 0
     property int cpuTemp: -1
 
-    Component.onCompleted: {
-        if (root.homeDir === "")
-            homeProc.running = true;
-    }
-
-    property Process homeProc: Process {
-        command: ["sh", "-c", "echo $HOME"]
-        stdout: SplitParser {
-            onRead: line => {
-                root.homeDir = line.trim();
-                pollTimer.start();
-                pollProc.running = true;
-            }
-        }
-    }
-
     property Timer pollTimer: Timer {
         interval: 2000
         repeat: true
+        running: true
+        triggeredOnStart: true
         onTriggered: pollProc.running = true
     }
 
     property Process pollProc: Process {
-        command: root.scriptPath === "" ? [] : [root.scriptPath]
+        command: root.scriptPath === "" ? [] : ["bash", root.scriptPath]
         stdout: SplitParser {
             onRead: line => {
                 const p = line.trim().split(",");

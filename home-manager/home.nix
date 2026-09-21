@@ -496,6 +496,7 @@ in
           pkgs.kdePackages.qtmultimedia
         ]
       }/bin/quickshell";
+      Environment = "PIXEL_SHELL_ROOT=%h/.nixos_dotfiles";
       Restart = "on-failure";
       RestartSec = 2;
     };

@@ -11,7 +11,7 @@ set -euo pipefail
 BAR_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 SCRIPTS="$BAR_DIR/scripts"
 ASSETS="$BAR_DIR/assets"
-THEME="$BAR_DIR/theme/colors.json"
+THEME="${1:-$BAR_DIR/theme/colors.json}"
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/quickshell"
 
 mkdir -p "$CACHE"

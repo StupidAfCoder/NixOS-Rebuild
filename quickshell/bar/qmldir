@@ -28,3 +28,5 @@ TrayMenuLevel 1.0 TrayMenuLevel.qml
 WifiNetworkRow 1.0 WifiNetworkRow.qml
 singleton WifiPanel 1.0 WifiPanel.qml
 WifiPanelContent 1.0 WifiPanelContent.qml
+singleton TrayApps 1.0 TrayApps.qml
+TrayAppsContent 1.0 TrayAppsContent.qml

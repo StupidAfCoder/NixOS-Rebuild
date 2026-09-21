@@ -65,6 +65,7 @@ Item {
     function scan(rescan) {
         if (wifiListProc.running) return;
         scanning = true
+        if (rescan) lastError = ""
         wifiListProc.command = rescan
             ? ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,IN-USE", "dev", "wifi", "list", "--rescan", "yes"]
             : ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,IN-USE", "dev", "wifi", "list"]
@@ -89,19 +90,24 @@ Item {
     }
 
     function forgetNetwork(ssid) {
+        if (busy) return;
+        lastError = "";
         busy = true
         forgetProc.command = ["nmcli", "connection", "delete", ssid]
         forgetProc.running = true
     }
 
     function disconnectWifi() {
-        if (wifiIface === "") return
+        if (busy || wifiIface === "") return
+        lastError = "";
         busy = true
         disconnectProc.command = ["nmcli", "device", "disconnect", wifiIface]
         disconnectProc.running = true
     }
 
     function setRadio(enabled) {
+        if (busy) return;
+        lastError = "";
         busy = true
         radioProc.command = ["nmcli", "--wait", "0", "radio", "wifi", enabled ? "on" : "off"]
         radioProc.running = true
@@ -197,7 +203,7 @@ Item {
         command: ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,IN-USE", "dev", "wifi", "list"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const seen = {}
+                const seen = Object.create(null)
                 const list = []
                 for (const line of this.text.split("\n")) {
                     if (!line) continue
@@ -227,7 +233,7 @@ Item {
         id: connectProc
         stdinEnabled: true
         onStarted: { if (root.pendingPassword) write(root.pendingPassword + "\n"); root.pendingPassword = ""; stdinEnabled = false; }
-        onExited: (code, status) => { root.pendingPassword = ""; root.busy = false; if (code !== 0 && !root.lastError) root.lastError = "Connection failed"; root.refreshStatus(); }
+        onExited: (code, status) => { root.pendingPassword = ""; root.busy = false; if (code !== 0 && !root.lastError) root.lastError = "Connection failed"; root.refreshStatus(); if (code === 0) root.scan(false); }
         stderr: StdioCollector { onStreamFinished: { if (text.trim()) root.lastError = text.trim(); } }
     }
     Process {

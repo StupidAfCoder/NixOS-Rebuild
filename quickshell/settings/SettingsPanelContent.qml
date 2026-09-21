@@ -12,7 +12,7 @@ Sheet {
     id: root
     shown: SettingsPanel.shown
     title: "Your corner"
-    subtitle: Settings.previewMode ? "Native preview / temporary preferences" : "Small details. Your desktop."
+    subtitle: Settings.error ? "Changes could not be saved" : Settings.saving ? "Saving…" : Settings.previewMode ? "Preview settings" : ""
     edge: "right"
     preferredWidth: 500
     preferredHeight: parent.height
@@ -22,11 +22,12 @@ Sheet {
     property bool resetConfirm: false
     onShownChanged: if (!shown) { clearConfirm = false; resetConfirm = false; }
 
+    PixelText { text: Settings.error; visible: text.length > 0; color: Colors.error; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone }
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: identity.implicitHeight + 32
         color: Colors.surfaceContainer
-        border.color: Colors.outlineVariant
+        border.width: 0
         Rectangle { width: 3; height: parent.height; color: Colors.accent }
         RowLayout {
             id: identity
@@ -36,7 +37,7 @@ Sheet {
                 Layout.fillWidth: true; spacing: 5
                 PixelText { text: Settings.displayName; Layout.fillWidth: true; font.family: "Pixel Operator"; font.pixelSize: 24 }
                 PixelText { text: Settings.bio; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant; wrapMode: Text.Wrap; elide: Text.ElideNone }
-                PixelText { text: Settings.saving ? "[ SAVING ]" : "[ LOCAL / AUTO-SAVED ]"; color: Colors.accent; font.pixelSize: 12 }
+                PixelText { text: Settings.saving ? "Saving…" : ""; color: Colors.accent; font.pixelSize: 12 }
             }
         }
     }
@@ -44,10 +45,10 @@ Sheet {
         Layout.fillWidth: true; spacing: 6
         Repeater {
             model: [{id:"Profile",label:"Profile"},{id:"Bar",label:"Bar"},{id:"Appearance",label:"Look"},{id:"Audio",label:"Audio"},{id:"Privacy",label:"Data"}]
-            PixelButton {
+            TabButton {
                 required property var modelData
                 text: modelData.label
-                primary: root.tab === modelData.id
+                selected: root.tab === modelData.id
                 font.family: "Silkscreen"; font.pixelSize: 10
                 onClicked: root.tab = modelData.id
             }
@@ -117,6 +118,21 @@ Sheet {
     ColumnLayout {
         visible: root.tab === "Appearance"; Layout.fillWidth: true; spacing: 16
         PixelGroup {
+            title: "App library"; iconName: "app-windows.svg"; Layout.fillWidth: true
+            PixelText { text: "Open from"; color: Colors.textOnSurfaceVariant }
+            RowLayout {
+                Repeater {
+                    model: [{key:"top",label:"Top"},{key:"bottom",label:"Bottom"},{key:"center",label:"Center"}]
+                    TabButton {
+                        required property var modelData
+                        text: modelData.label
+                        selected: Settings.launcherEdge === modelData.key
+                        onClicked: Settings.patch({launcherEdge: modelData.key})
+                    }
+                }
+            }
+        }
+        PixelGroup {
             title: "Edges & type"; iconName: "brush.svg"; Layout.fillWidth: true
             PixelText { text: "Frame / " + Settings.frameWidth + "px" }
             PixelSlider { Layout.fillWidth: true; from: 4; to: 10; stepSize: 1; value: Settings.frameWidth; onMoved: Settings.patch({frameWidth: value}) }
@@ -166,6 +182,5 @@ Sheet {
         PixelButton { Layout.fillWidth: true; text: root.clearConfirm ? "Confirm delete local history" : "Clear local history…"; danger: root.clearConfirm; enabled: !stateAction.running; onClicked: { if (root.clearConfirm) { stateAction.command = ["python3", Settings.repo + "scripts/shell-state.py", "clear-history"]; stateAction.running = true; root.clearConfirm = false; } else root.clearConfirm = true; } }
         PixelButton { visible: root.clearConfirm; text: "Cancel"; onClicked: root.clearConfirm = false }
     }
-    PixelText { text: Settings.error; visible: text.length > 0; color: Colors.error; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone }
     Process { id: stateAction; stderr: StdioCollector { onStreamFinished: { if (text.trim()) Settings.error = text.trim(); } } }
 }

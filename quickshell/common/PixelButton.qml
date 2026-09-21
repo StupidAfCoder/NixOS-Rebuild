@@ -17,12 +17,12 @@ Button {
         font: root.font
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        color: root.primary ? Colors.textOnAccent : root.danger ? Colors.error : Colors.textOnBackground
+        color: (root.primary || root.checked) ? Colors.textOnAccent : root.danger ? Colors.error : Colors.textOnBackground
         opacity: root.enabled ? 1 : 0.45
     }
     background: Rectangle {
-        color: root.primary ? Colors.accent : root.down || root.hovered ? Colors.surfaceContainerHigh : Colors.surfaceContainerLow
-        border.width: root.activeFocus ? 2 : 1
+        color: (root.primary || root.checked) ? Colors.accent : root.down || root.hovered ? Colors.surfaceContainerHigh : "transparent"
+        border.width: root.activeFocus ? 1 : 0
         border.color: root.activeFocus || root.hovered || root.checked ? Colors.accent : Colors.outlineVariant
         antialiasing: false
     }

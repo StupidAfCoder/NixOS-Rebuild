@@ -1,4 +1,4 @@
-# Pixel shell — second-pass review
+# Pixel shell — console revision
 
 **Review branch: `arena/01a0c316-nixos-rebuild`. Submitted for review only; do not merge or activate until native QA is complete.**
 
@@ -6,11 +6,16 @@ This is the revised implementation for review, **not a claim of completed native
 
 ## What changed in this pass
 
-- **Your day:** selectable 7/14/30-day daily graph, total and recorded-day average, day/range app rankings with most/least-used sorting, and a five-level calendar heatmap. No invented hourly timeline.
-- **Your corner:** profile hero, pixel section cards, Profile / Bar / Look / Audio / Data tabs, and twelve optional bar modules. Settings access stays pinned.
-- **Settings and Power:** right-edge sliding drawers, not centered cards. Open with `Super+Ctrl+S` and `Super+Ctrl+P` after the keybinds are activated.
-- **Fidelity repairs:** bundled SVGs and fallback icons, first-launch wizard generation plus original-template fallback, corrected accent binding, scrollable short-screen rail, and reliable initial search focus.
-- **Review only:** committed to the separate review branch at your request so you can download it; no merge or native activation. Emacs, NixOS configuration, flake inputs and unrelated configuration are unchanged. Terminal/prompt changes are intentional rice scope.
+- **Less framing:** slim rail without hover labels or permanent button boxes; open sections, underline navigation and quiet selection marks. Caelestia/Serpantinum inform the grouping and restraint, not rounded styling.
+- **Native settings fix:** filesystem paths now use `Quickshell.shellPath` / `PIXEL_SHELL_ROOT`, never virtual `Qt.resolvedUrl` paths. Python helpers run from the actual checkout. The installed service also gets an explicit repository root.
+- **Icons:** asynchronous SVG loading no longer performs I/O or changes dependencies inside the image-source binding. The media timer now explicitly guards a missing player. System metrics use this checkout, not a hard-coded dotfiles directory.
+- **Library:** searchable flat rows, keyboard navigation and saved **top / bottom / center** placement. Top/bottom slide; center fades.
+- **Wireless / Link cable:** one console-like inset with focused link, nearby and connection views. Bluetooth discovery started here stops when this panel closes; externally initiated discovery is left alone.
+- **Background apps:** third-party tray entries grouped behind one button. Bundled identity-based symbols avoid magenta missing-provider textures. This deliberately uses symbolic icons, not pixel/color-based detection of bad icons.
+- **Your day:** separate Day / History / Apps pages, keeping graphs, recorded-day averages, retained totals, calendar and relative app shares.
+- **Session:** a flat console action list below your existing video; destructive actions still require confirmation. The decoder is created only while the drawer is open and motion is enabled.
+- **Preview:** settings, palette and wizard recoloring can be tested in private state without applying a wallpaper. Optional software-video diagnostics for the reported VAAPI texture-export issue.
+- **Review only:** separate branch and draft PR; no merge or native activation. Emacs, NixOS configuration, flake inputs and unrelated configuration remain unchanged.
 
 ## Safest native preview first — no rebuild
 
@@ -21,8 +26,10 @@ Download the [review branch ZIP](https://github.com/StupidAfCoder/NixOS-Rebuild/
 2. In a terminal in your existing Hyprland/Wayland desktop, with your installed Quickshell and configured Python (Pillow + materialyoucolor):
 
    ```sh
-   bash scripts/preview-shell.sh --sample-history
+   bash scripts/preview-shell.sh --sample-history --software-video
    ```
+
+   `--software-video` opts into Qt FFmpeg software decoding and disables hardware texture conversion, targeting the VAAPI texture-export errors in your log. Omit it to compare normal hardware decoding. These diagnostic Qt environment variables are private APIs and are inherited by apps launched from this preview; they are **not** installed globally.
 
    Omit `--sample-history` to inspect honest empty states. The helper copies your display/path preferences into a private temporary directory, disables history/audio automation there, and uses separate XDG configuration/state/cache. It does **not** launch the collector or change your Nix generation. Demo history is explicitly labeled and never written to real history.
 
@@ -42,7 +49,9 @@ Download the [review branch ZIP](https://github.com/StupidAfCoder/NixOS-Rebuild/
 
 6. The helper prints a temporary directory containing `shell.log` and preview preferences. It leaves them available for debugging until you remove that directory or your runtime directory is cleared. This temporary directory is never in Git.
 
-To verify **actual recoloring/apply, real collection, new services and terminal integration**, use the later build/activation workflow only after reviewing the source. Those side effects are deliberately not exercised by the preview helper. In the browser, open `docs/tour/index.html` (or the live Arena preview); it is an illustration, not native Quickshell output.
+In Wallpapers, select an image and use **Try colors on this preview** to recolor the real preview shell and wizard. Its palette is generated under the private cache; it does not change the live wallpaper, Firefox, terminals or compositor files.
+
+To verify **live wallpaper apply, real collection, new services and terminal integration**, use the later build/activation workflow only after reviewing the source. Those side effects are deliberately not exercised by the preview helper. In the browser, open `docs/tour/index.html` (or the live Arena preview); it is an illustration, not native Quickshell output.
 
 ## Start here: a five-minute tour
 
@@ -51,7 +60,7 @@ To verify **actual recoloring/apply, real collection, new services and terminal 
 - Frame defaults to **6px**, down from 10px. Corner brackets remain; they now use the theme accent.
 - Rail defaults to 44px and can be adjusted from 36–64px. Frame can be adjusted from 4–10px.
 - **Your original wizard template and recoloring code are retained**, not redrawn. Its robe still takes the wallpaper accent, and generated sprites still reload from cache.
-- Wizard click opens Wallpapers. Clock click opens **Your day**. The NixOS launcher now uses the theme accent rather than fixed blue. Bundled pixel icons open Settings, Sound & light and System; tooltips name each action.
+- Wizard click opens Wallpapers. Clock click opens **Your day**. The NixOS launcher now uses the theme accent rather than fixed blue. Bundled pixel icons open Settings, Sound & light and System; accessible names identify actions without hover labels.
 - Existing launcher/workspace/tray interactions remain. On shorter screens, the date/marquee are reduced and the rail scrolls instead of overlapping. Settings remains pinned outside that scroll area.
 
 ### 2. Wallpapers: try black, then turn the tone dial
@@ -76,9 +85,9 @@ Firefox **still uses Wallust + Pywalfox**, not the shell's palette. GTK/Qt remai
 
 ### 3. Launcher and connections
 
-- **Launcher:** search-first, readable two-line results, arrow navigation and Enter launch. Removed duplicate launcher construction, heavy scanlines and the focus-stealing timer.
-- **Wi-Fi:** active status first, nearby SSIDs below, inline credential entry with reveal control. Passwords are supplied through stdin rather than command-line arguments. `Advanced…` opens NetworkManager's editor for enterprise/hidden-network configuration.
-- **Bluetooth:** connected/saved devices separate from discovery, larger labels, trust and forget actions. Pairing opens **Blueman** for proper PIN/passkey/agent handling rather than pretending an unsupported pairing dialog exists.
+- **Launcher:** search-first, single-line library rows, arrow navigation and Enter launch. Select Top, Bottom or Center under Your corner / Look. No heavy scanlines or focus-stealing timer.
+- **Wi-Fi:** connected properties first, a separate scan list, then focused credential entry with reveal control. Passwords are supplied through stdin rather than command-line arguments. `Advanced…` opens NetworkManager's editor for enterprise/hidden-network configuration.
+- **Bluetooth:** connected/saved devices separate from discovery, a separate nearby view, trust and confirmed forget actions. Pairing opens **Blueman** for proper PIN/passkey/agent handling rather than pretending an unsupported pairing dialog exists.
 - Popups share bounds, keyboard focus, Escape and outside-click behavior. One primary popup is active at a time, on the focused monitor. Utility panels live beside the rail; large task sheets are centered. Settings and Power instead slide from the right edge, without dimming the whole screen.
 
 ### 4. Power and notifications: deliberately familiar
@@ -87,9 +96,9 @@ Firefox **still uses Wallust + Pywalfox**, not the shell's palette. GTK/Qt remai
 
 - Your local avatar/name sit beneath the video.
 - Lock and sleep are immediate actions.
-- Logout, restart and shutdown show a confirmation, with **Cancel focused**.
+- Logout, restart and shutdown show a confirmation, with **Keep playing focused**.
 - Escape cancels confirmation before closing the menu.
-- Video stops while hidden; reduced-motion mode pauses it. Missing/unplayable video leaves a quiet fallback rather than removing the controls.
+- The video decoder is unloaded while hidden or in reduced-motion mode. Missing/unplayable video leaves a quiet fallback rather than removing the controls.
 
 **Notifications retain the existing stepped silhouette and full-height colored left block.** Changes are intentionally modest:
 
@@ -111,7 +120,7 @@ qs ipc call settings toggle
 
 **Bar:** individually toggle launcher, workspaces, clock, wizard, media, sound/brightness, system, battery/energy, network, Bluetooth, tray and power. All default on; unavailable Bluetooth hardware still hides its control. Workspace indicators: 1–10; rail width: 36–64px. Restore module defaults requires confirmation. Hiding a module does not disable its keyboard shortcut or prevent an already open panel from working.
 
-**Look (appearance):** frame width, body font size, animation duration, reduced motion, high contrast, link to wallpaper tone controls. Drawers translate horizontally; ordinary popups fade. Neither scales pixel text. Reduced motion makes transitions instant and pauses decorative animation/video.
+**Look (appearance):** frame width, body font size, animation duration, reduced motion, high contrast, launcher position, link to wallpaper tone controls. Settings/Power drawers translate horizontally and the launcher can translate vertically; ordinary popups fade. Neither scales pixel text. Reduced motion makes transitions instant and pauses decorative animation/video.
 
 **Audio:** enable the optional workspace-audio controller, then select workspaces to mute. It mutes identifiable **application playback streams**, not the microphone or the entire output device.
 
@@ -137,8 +146,9 @@ Click the clock, press `Super+Ctrl+C`, or:
 qs ipc call wellbeing toggle
 ```
 
-- **Graph:** 7/14/30 daily bars, total and average per recorded day. Selecting a bar shows that day's app breakdown and calendar month. Calendar selections outside the plotted range move its ending date.
-- **App comparison:** selected day or plotted range, most/least-used order, duration and percentage, bars relative to the most-used app.
+- **Day:** selected date, focused time, reference goal and top three apps.
+- **History:** 7/14/30 daily bars, period total, recorded-day average, retained-history total and calendar. Selecting a bar or date opens the Day page and aligns the calendar month. Selections outside the plotted range move its ending date.
+- **Apps:** selected day or plotted range, most/least-used order, duration and percentage, bars relative to the most-used app.
 - **Calendar:** Monday-first, complete week rows, selected outline and today marker. Five intensity levels: zero, up to ¼ goal, ½ goal, goal, and above goal. Thresholds stay consistent between months; labels use contrast-safe colors.
 - Missing days differ from explicitly observed zero-use days. Missing dates are excluded from averages. Future calendar dates are disabled.
 - No data is fabricated or backfilled; a new installation shows an honest empty state. The optional preview fixture is labeled **Sample history**.
@@ -232,15 +242,15 @@ To stop collection/audio automation without discarding data, disable both contro
 
 ## Validation performed here
 
-- **26 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, duplicate refusal, and service restoration after successful and failed shell exits.
+- **34 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime and launcher schema.
 - Four source-guard tests prevent assigning `implicitHeight`/`implicitWidth` on Qt positioners (`Flow`, `Row`, `Column`, `Grid`). This catches the native startup failure reported during the first review; grammar parsing alone did not catch it.
 - **7 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers and module catalog. Repeated in Asia/Kolkata and America/New_York timezones.
-- **64 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
+- **70 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
 - `qmllint` inspected; corrected a SystemTray type-name collision and a Button `action` name collision. Full type validation is limited by missing native Quickshell modules.
 - **11 Nix files** parse with the Nix tree-sitter grammar. **No full Nix module evaluation or build** in this sandbox.
-- **5 shell scripts** pass ShellCheck and Bash syntax checks.
+- Bash syntax checks cover all ten shell scripts. The five core rice scripts (apply, preview, brightness, system stats and asset generation) also pass ShellCheck. The unrelated recording helper has a pre-existing `ls | grep` warning and is untouched.
 - Quickshell API declarations inspected for MPRIS controls, notification timeout units/actions, Process stdin, focused-monitor routing, IconImage status/asynchronous aliases and IPC path selection. All statically named bundled icons exist.
-- Browser DOM checks pass across all **14 tour tabs**, graph/calendar/ranking controls, all **12 module toggles**, pinned recovery access and power confirmation focus. These are not screenshot or frame-pacing tests.
+- The revised HTML tour has **9 illustrative scenes**, with library search/placement, wireless flow, Day/History/Apps navigation and safe session confirmations. Three DOM regression tests cover these transitions. It is not an exhaustive replica of native Settings or a hardware test.
 - The HTML tour is a safe mockup. An attempted offscreen native Qt render was blocked by unavailable system graphics libraries; **no native screenshots or native animation claims** are presented.
 
 Run Python tests locally with Pillow and materialyoucolor installed:
@@ -248,6 +258,8 @@ Run Python tests locally with Pillow and materialyoucolor installed:
 ```sh
 python3 -m unittest discover -s tests -v
 node --test tests/test_usage_math.cjs
+# Optional HTML illustration tests, with jsdom available on NODE_PATH:
+node --test tests/test_tour.cjs
 ```
 
 ## First native review: startup fix
@@ -261,16 +273,26 @@ The fix removes eleven manual `implicitHeight: childrenRect.height` assignments 
 wrapped action buttons. A source regression guard covers the other Qt positioner types too.
 This fix does not establish that the remaining native startup or hardware checks pass.
 
+## Native log issues addressed in the console revision
+
+The failed settings writes were **not** intentional preview isolation. Quickshell's virtual QML URLs had been treated as filesystem paths, so helper commands could not reach the checkout. `shellPath` / the helper's explicit root now supply real paths. Icon loading had a separate binding-loop hazard; it now stores SVG text on load and keeps the image-source binding pure. Preview initialization also supplies private status/history/current-wallpaper and mascot files before startup.
+
+The VAAPI texture-export warnings are a separate video/driver path. The `--software-video` option is an explicit workaround to test, not a claim that your driver has been repaired. Power releases its player while closed. We have not established the cause or impact of all PipeWire warnings: test actual playback, volume and device switching rather than assuming every warning is harmless.
+
 ## Native QA still required before merge or activation
 
 - [ ] Shell starts without QML binding/type errors on your pinned Quickshell revision.
 - [ ] Your corner and Power enter/exit from the right; Escape cancels a pending power action before closing.
+- [ ] In the preview, change frame/bar width, font and module switches: the visible shell must update, and private `config/pixel-shell/settings.json` must change without helper errors. Restart against that same private state to check persistence.
+- [ ] Try a wallpaper palette in the preview: real rail/wizard recolor; live wallpaper/Firefox/terminal files remain untouched.
+- [ ] Library top/bottom/center, empty search, arrows/Enter and launch are correct.
+- [ ] Third-party tray entries expand, activate and open their nested menus without magenta textures.
 - [ ] Rapid module toggles/sliders persist after restart; hiding all modules leaves Settings reachable.
 - [ ] Graph period/day/range/sort controls agree with calendar and displayed totals; missing days and recorded zero look distinct.
 - [ ] All panels fit your screen, 125%/150% scaling and portrait; large collections scroll.
 - [ ] Escape, outside click, search focus, Tab/arrow navigation; popup only on invoking/focused monitor.
 - [ ] Wizard recolors; notification silhouette/actions/timeouts match expectations.
-- [ ] Your actual video decodes/loops and pauses while hidden; avatar reloads.
+- [ ] Your actual video decodes/loops, unloads while hidden and works with/without software-video; avatar reloads.
 - [ ] Light/dark/tone combinations look good on **your** problematic wallpapers.
 - [ ] Wi-Fi saved/password/failed/offline and enterprise manager flows.
 - [ ] Bluetooth discovery, connect/disconnect and Blueman passkey flow.

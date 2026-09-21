@@ -1,3 +1,4 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -8,28 +9,29 @@ import "../common"
 Sheet {
     id: root
     shown: AppLauncher.shown
-    title: "Launch"
-    subtitle: "A name is all you need."
+    title: "Library"
     centered: true
+    edge: Settings.launcherEdge === "center" ? "" : Settings.launcherEdge
     initialFocusItem: search
-    preferredWidth: 540
-    preferredHeight: 530
+    preferredWidth: 560
+    preferredHeight: 560
     onDismiss: AppLauncher.hide()
     property var applications: {
         const q = search.text.trim().toLowerCase();
         return [...DesktopEntries.applications.values].filter(e => e && !e.noDisplay && e.name &&
             (!q || (e.name + " " + (e.genericName || "") + " " + (e.comment || "")).toLowerCase().includes(q)))
-            .sort((a,b) => {
-                const rank = Number(!a.name.toLowerCase().startsWith(q)) - Number(!b.name.toLowerCase().startsWith(q));
-                return rank || a.name.localeCompare(b.name);
-            });
+            .sort((a,b) => Number(!a.name.toLowerCase().startsWith(q)) - Number(!b.name.toLowerCase().startsWith(q)) || a.name.localeCompare(b.name));
     }
     function launch(index) { const app = applications[index]; if (app) { app.execute(); AppLauncher.hide(); } }
-    function move(delta) { results.currentIndex = Math.max(0, Math.min(applications.length - 1, results.currentIndex + delta)); results.positionViewAtIndex(results.currentIndex, ListView.Contain); }
-    onShownChanged: if (shown) { search.text = ""; results.currentIndex = 0;  }
+    function move(delta) {
+        results.currentIndex = Math.max(0, Math.min(applications.length - 1, results.currentIndex + delta));
+        results.positionViewAtIndex(results.currentIndex, ListView.Contain);
+    }
+    onShownChanged: if (shown) { search.text = ""; results.currentIndex = 0; }
     PixelField {
         id: search
-        Layout.fillWidth: true; placeholderText: "Type to launch…"
+        Layout.fillWidth: true
+        placeholderText: "Find an app"
         onTextChanged: results.currentIndex = 0
         onAccepted: root.launch(results.currentIndex)
         Keys.onDownPressed: root.move(1)
@@ -38,31 +40,39 @@ Sheet {
     ListView {
         id: results
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.min(330, Math.max(100, root.height - 210))
-        clip: true; spacing: 4
+        Layout.preferredHeight: Math.max(100, root.height - 200)
         model: root.applications
         currentIndex: 0
-        ScrollBar.vertical: ScrollBar {}
-        delegate: Rectangle {
+        spacing: 4; clip: true
+        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+        delegate: Button {
             id: row
             required property var modelData
             required property int index
-            width: results.width; height: 58
-            color: results.currentIndex === index ? Colors.surfaceContainerHigh : "transparent"
-            Rectangle { width: 3; height: parent.height; color: Colors.accent; visible: results.currentIndex === row.index }
-            RowLayout {
-                anchors.fill: parent; anchors.margins: 10; spacing: 12
-                PixelAppIcon { Layout.preferredWidth: 30; Layout.preferredHeight: 30; iconSource: Quickshell.iconPath(row.modelData.icon, "application-x-executable") }
-                ColumnLayout {
-                    Layout.fillWidth: true; spacing: 3
-                    PixelText { Layout.fillWidth: true; text: row.modelData.name }
-                    PixelText { Layout.fillWidth: true; text: row.modelData.genericName || row.modelData.comment || "Application"; color: Colors.textOnSurfaceVariant }
-                }
-                PixelText { text: "↵"; visible: results.currentIndex === row.index; color: Colors.accent }
+            width: results.width; height: 56; padding: 10
+            hoverEnabled: true
+            Accessible.name: modelData.name
+            onClicked: root.launch(index)
+            onHoveredChanged: if (hovered) results.currentIndex = index
+            Keys.onDownPressed: root.move(1)
+            Keys.onUpPressed: root.move(-1)
+            background: Rectangle {
+                color: results.currentIndex === row.index ? Colors.surfaceContainerHigh : "transparent"
+                Rectangle { width: 2; height: 16; anchors.verticalCenter: parent.verticalCenter; color: Colors.accent; visible: results.currentIndex === row.index }
+                border.width: row.activeFocus ? 1 : 0; border.color: Colors.accent
             }
-            MouseArea { anchors.fill: parent; hoverEnabled: true; onEntered: results.currentIndex = row.index; onClicked: root.launch(row.index) }
+            contentItem: RowLayout {
+                spacing: 16
+                PixelAppIcon { Layout.preferredWidth: 28; Layout.preferredHeight: 28; iconSource: Quickshell.iconPath(row.modelData.icon, true) }
+                PixelText { text: row.modelData.name; Layout.fillWidth: true; font.pixelSize: Settings.bodySize + 2 }
+                PixelText { visible: results.currentIndex === row.index; text: "Enter"; color: Colors.textOnSurfaceVariant }
+            }
         }
-        PixelText { anchors.centerIn: parent; visible: root.applications.length === 0; text: "No matches. Try another name." }
+        PixelText { anchors.centerIn: parent; visible: root.applications.length === 0; text: "No matching apps."; color: Colors.textOnSurfaceVariant }
     }
-    PixelText { text: "↑ ↓ navigate   /   Enter launch   /   Esc close"; color: Colors.textOnSurfaceVariant; Layout.fillWidth: true; wrapMode: Text.Wrap }
+    RowLayout {
+        Layout.fillWidth: true
+        PixelText { text: root.applications.length + " apps"; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant }
+        PixelText { text: "Esc to close"; color: Colors.textOnSurfaceVariant }
+    }
 }

@@ -8,7 +8,7 @@ has_backlight() {
 }
 
 ddc_get() {
-    for attempt in 1 2 3; do
+    for _ in 1 2 3; do
         out="$(ddcutil getvcp 10 --brief --display "$DDCUTIL_DISPLAY" 2>/dev/null)"
         if [ -n "$out" ]; then
             echo "$out" | awk '{ printf "%d\n", ($4/$5)*100 }'
@@ -21,7 +21,7 @@ ddc_get() {
 
 ddc_set() {
     local pct="$1"
-    for attempt in 1 2 3; do
+    for _ in 1 2 3; do
         if ddcutil setvcp 10 --display "$DDCUTIL_DISPLAY" "$pct" >/dev/null 2>&1; then
             return 0
         fi

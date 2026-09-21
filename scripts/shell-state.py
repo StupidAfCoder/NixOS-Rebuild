@@ -24,7 +24,7 @@ DEFAULTS = dict(displayName=os.environ.get("USER", "User"), avatarPath="", bio="
                 recipe="black", tone=0, saturation=1., source="representative", contrast=0.,
                 trackingEnabled=False, retentionDays=30, workspaceAudioEnabled=False,
                 mutedWorkspaces=[], dailyGoalMinutes=240,
-                barModules={key: True for key in BAR_MODULES}, workspaceCount=5)
+                barModules={key: True for key in BAR_MODULES}, workspaceCount=5, launcherEdge="top")
 
 
 def load(path, fallback):
@@ -55,7 +55,8 @@ def validate(values):
     if not isinstance(values, dict):
         raise ValueError("Settings must be an object")
     enums = {"recipe": ("black", "neutral", "tonal", "expressive", "paper", "mono"),
-             "source": ("representative", "dominant", "colorful")}
+             "source": ("representative", "dominant", "colorful"),
+             "launcherEdge": ("top", "bottom", "center")}
     limits = {"frameWidth": (4, 10), "barWidth": (36, 64), "motionMs": (80, 350), "bodySize": (12, 18),
               "tone": (-15, 15), "saturation": (0, 1.6), "contrast": (0, 1),
               "retentionDays": (1, 90), "dailyGoalMinutes": (15, 1440), "workspaceCount": (1, 10)}

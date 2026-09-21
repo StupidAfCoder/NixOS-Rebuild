@@ -11,7 +11,9 @@ Item {
     readonly property string configDir: (Quickshell.env("XDG_CONFIG_HOME") || home + "/.config") + "/pixel-shell"
     readonly property string cacheDir: (Quickshell.env("XDG_CACHE_HOME") || home + "/.cache") + "/quickshell"
     readonly property string stateDir: (Quickshell.env("XDG_STATE_HOME") || home + "/.local/state") + "/pixel-shell"
-    readonly property string repo: decodeURIComponent(Qt.resolvedUrl("../../").toString().replace("file://", ""))
+    readonly property string repo: (Quickshell.env("PIXEL_SHELL_ROOT") || Quickshell.shellPath("..")).replace(/\/+$/, "") + "/"
+    readonly property string themeRoot: previewMode ? cacheDir + "/preview-theme/" : repo
+    readonly property string themeFile: themeRoot + "quickshell/bar/theme/colors.json"
     property var persisted: ({})
     readonly property var values: merge(merge(persisted, inFlight), pending)
     property string error: ""
@@ -37,6 +39,7 @@ Item {
     readonly property int bodySize: bounded("bodySize", 13, 12, 18)
     readonly property bool reducedMotion: values.reducedMotion === true
     readonly property int motionMs: reducedMotion ? 0 : bounded("motionMs", 180, 80, 350)
+    readonly property string launcherEdge: ["top", "bottom", "center"].indexOf(values.launcherEdge) >= 0 ? values.launcherEdge : "top"
     readonly property string recipe: ["black", "neutral", "tonal", "expressive", "paper", "mono"].indexOf(values.recipe) >= 0 ? values.recipe : "black"
     readonly property real tone: bounded("tone", 0, -15, 15)
     readonly property real saturation: bounded("saturation", 1, 0, 1.6)

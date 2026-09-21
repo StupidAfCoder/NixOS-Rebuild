@@ -8,3 +8,7 @@ PreferenceRow 1.0 PreferenceRow.qml
 ProfileAvatar 1.0 ProfileAvatar.qml
 singleton Settings 1.0 Settings.qml
 Sheet 1.0 Sheet.qml
+MenuRow 1.0 MenuRow.qml
+TabButton 1.0 TabButton.qml
+SignalMeter 1.0 SignalMeter.qml
+ConnectionScreen 1.0 ConnectionScreen.qml

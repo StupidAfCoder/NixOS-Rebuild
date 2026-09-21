@@ -118,18 +118,19 @@ Item {
                         readonly property bool occupied: !!dataForWorkspace && dataForWorkspace.toplevels.values.length > 0
                         readonly property var topWindow: occupied ? (dataForWorkspace.toplevels.values.find(w => w.activated) || dataForWorkspace.toplevels.values[0]) : null
                         implicitWidth: 30; implicitHeight: 28; padding: 4
-                        primary: isActive
+                        background: Item {
+                            Rectangle { width: 2; height: ws.isActive ? 18 : 0; anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter; color: Colors.accent; Behavior on height { NumberAnimation { duration: Settings.motionMs } } }
+                            Rectangle { anchors.fill: parent; color: "transparent"; border.color: Colors.accent; visible: ws.activeFocus }
+                        }
                         Accessible.name: "Workspace " + wsId
                         contentItem: Item {
-                            ColoredIcon { anchors.fill: parent; visible: ws.occupied || ws.isActive; iconName: root.iconForClass(ws.topWindow?.lastIpcObject?.class || ""); tint: ws.isActive ? Colors.textOnAccent : Colors.textOnBackground }
-                            Repeater {
-                                model: !ws.occupied && !ws.isActive ? [{x:2,y:2},{x:16,y:1},{x:6,y:14},{x:18,y:15},{x:10,y:7}] : []
-                                Rectangle { required property var modelData; x: modelData.x; y: modelData.y; width: 2; height: 2; color: Colors.accent; opacity: .65 }
-                            }
+                            ColoredIcon { anchors.fill: parent; visible: ws.occupied || ws.isActive; iconName: root.iconForClass(ws.topWindow?.lastIpcObject?.class || ""); tint: ws.isActive ? Colors.accent : Colors.textOnSurfaceVariant }
+                            Rectangle { width: 4; height: 4; anchors.centerIn: parent; visible: !ws.occupied && !ws.isActive; color: Colors.outline }
+
                         }
                         onClicked: Hyprland.dispatch('hl.dsp.focus({ workspace = "' + ws.wsId + '" })')
-                        ToolTip.visible: hovered || activeFocus
-                        ToolTip.text: Accessible.name
+
+
                     }
                 }
             }
@@ -138,6 +139,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 implicitWidth: 34; implicitHeight: root.height > 740 ? 82 : 52
                 padding: 3
+                background: Rectangle { color: "transparent"; border.width: parent.activeFocus ? 1 : 0; border.color: Colors.accent }
                 Accessible.name: "Clock and Your day"
                 contentItem: Column {
                     spacing: 4
@@ -151,19 +153,20 @@ Item {
                 visible: Settings.moduleEnabled("wizard")
                 Layout.alignment: Qt.AlignHCenter
                 implicitWidth: 36; implicitHeight: 36; padding: 6
+                background: Rectangle { color: "transparent"; border.width: parent.activeFocus ? 1 : 0; border.color: Colors.accent }
                 Accessible.name: "Wallpaper wizard"
-                contentItem: ReactiveImage { path: Settings.cacheDir + "/wizard-idle.png"; fallbackSource: Qt.resolvedUrl("assets/wizard-template.png") }
+                contentItem: ReactiveImage { path: Settings.cacheDir + "/wizard-idle.png"; fallbackSource: Settings.fileUrl(Quickshell.shellPath("bar/assets/wizard-template.png")) }
                 onClicked: WallpaperLauncher.toggle()
-                ToolTip.visible: hovered || activeFocus
-                ToolTip.text: "Choose wallpaper and palette"
+
+
             }
             MediaBarWidget {
-                visible: Settings.moduleEnabled("media") && root.height > 920
+                visible: Settings.moduleEnabled("media") && root.height > 920 && MprisActive.hasPlayer
                 Layout.alignment: Qt.AlignHCenter
                 Layout.preferredWidth: 24; Layout.preferredHeight: 150
             }
             IconButton {
-                visible: Settings.moduleEnabled("media") && root.height <= 920
+                visible: Settings.moduleEnabled("media") && (root.height <= 920 || !MprisActive.hasPlayer)
                 Layout.alignment: Qt.AlignHCenter
                 iconName: "music.svg"; hint: "Now playing"
                 onClicked: MediaPanel.toggle()

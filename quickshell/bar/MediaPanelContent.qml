@@ -13,7 +13,7 @@ Sheet {
     onDismiss: MediaPanel.hide()
     readonly property var player: MprisActive.player
     function formatTime(seconds) { return Math.floor(Math.max(0, seconds) / 60) + ":" + String(Math.floor(Math.max(0, seconds) % 60)).padStart(2, "0"); }
-    Timer { interval: 1000; running: root.shown && root.player && root.player.playbackState === MprisPlaybackState.Playing; repeat: true; onTriggered: root.player.positionChanged() }
+    Timer { interval: 1000; running: root.shown && !!root.player && root.player.playbackState === MprisPlaybackState.Playing; repeat: true; onTriggered: root.player.positionChanged() }
     GridLayout {
         Layout.fillWidth: true; columns: root.width > 440 ? 2 : 1; columnSpacing: 20
         Rectangle {
