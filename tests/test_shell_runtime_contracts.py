@@ -32,7 +32,7 @@ class RuntimeContracts(unittest.TestCase):
         tray = (ROOT / 'quickshell/bar/BarModule.qml').read_text()
         self.assertEqual(tray.count('tray: TrayApps'), 1)
         self.assertNotIn('IconImage', tray)
-        self.assertIn('TrayAppsContent', (ROOT / 'quickshell/bar/ShellFrame.qml').read_text())
+        self.assertIn('TrayAppsContent', (ROOT / 'quickshell/bar/FrameWindow.qml').read_text())
 
     def test_decoder_lifetime_and_no_player_guard(self):
         power = (ROOT / 'quickshell/bar/PowerMenuContent.qml').read_text()
@@ -61,7 +61,7 @@ class RuntimeContracts(unittest.TestCase):
         launcher = (ROOT / 'quickshell/launcher/AppLauncherContent.qml').read_text()
         self.assertIn('fitContent: false', launcher)  # avoids a ListView height cycle
         self.assertIn('shellAction: "settings"', launcher)
-        frame = (ROOT / 'quickshell/bar/ShellFrame.qml').read_text()
+        frame = (ROOT / 'quickshell/bar/FrameWindow.qml').read_text()
         self.assertIn('Region { item: settingsEdge }', frame)
         self.assertIn('text: "↓ Settings"', frame)
         self.assertIn('visible: settingsEdge.revealed', frame)
@@ -72,7 +72,7 @@ class RuntimeContracts(unittest.TestCase):
     def test_workspace_selection_and_console_geometry(self):
         module = (ROOT / 'quickshell/bar/BarModule.qml').read_text()
         self.assertIn('checked: isActive', module)
-        self.assertIn('Hyprland.focusedWorkspace?.id === wsId', module)
+        self.assertIn('Hyprland.focusedWorkspace?.id === modelData', module)
         self.assertIn('focusPolicy: Qt.NoFocus', module)
         self.assertNotIn('ws.activeFocus', module)
         self.assertIn('"HH:mm"', module)
@@ -119,15 +119,87 @@ class RuntimeContracts(unittest.TestCase):
     def test_nested_tray_supplies_its_parent_monitor(self):
         tray = (ROOT / 'quickshell/bar/TrayAppsContent.qml').read_text()
         self.assertIn('TrayMenu.openFor(modelData, pos.x, pos.y, root.invokingScreen)', tray)
-        frame = (ROOT / 'quickshell/bar/ShellFrame.qml').read_text()
-        self.assertIn('TrayAppsContent { invokingScreen: screenRoot.modelData.name;', frame)
+        frame = (ROOT / 'quickshell/bar/FrameWindow.qml').read_text()
+        self.assertIn('TrayAppsContent { invokingScreen: frame.shellScreen.name;', frame)
 
     def test_file_picker_and_quick_wallpaper_registration(self):
         picker = (ROOT / 'quickshell/common/PathPicker.qml').read_text()
         self.assertIn('FolderListModel', picker)
         self.assertIn('signal chosen(string path)', picker)
-        frame = (ROOT / 'quickshell/bar/ShellFrame.qml').read_text()
+        frame = (ROOT / 'quickshell/bar/FrameWindow.qml').read_text()
         self.assertIn('Region { item: wallpaperEdge }', frame)
         self.assertIn('QuickWallpapersContent', frame)
-        self.assertIn('wallpaperEdge.latched', frame)
+        self.assertNotIn('wallpaperEdge.latched', frame)
+        self.assertIn('onClicked: controller.toggleFrom(QuickWallpapers, wallpaperEdge, frame.shellScreen.name)', frame)
         self.assertIn('call quickwallpaper toggle', (ROOT / 'hyprland.lua').read_text())
+
+    def test_blur_switch_recreates_surface_without_mutating_namespace(self):
+        manager = (ROOT / 'quickshell/bar/ShellFrame.qml').read_text()
+        frame = (ROOT / 'quickshell/bar/FrameWindow.qml').read_text()
+        self.assertIn('sourceComponent: Settings.barBlur ? blurredFrame : plainFrame', manager)
+        self.assertIn('blurred: false', manager)
+        self.assertIn('blurred: true', manager)
+        self.assertNotIn('Settings.barBlur', frame)
+        self.assertIn('blurred ? "quickshell:frame-blur" : "quickshell:frame"', frame)
+        rules = (ROOT / 'hyprland.lua').read_text()
+        self.assertIn('namespace = "^quickshell:frame-blur$"', rules)
+        self.assertIn('ignore_alpha = 0.2', rules)
+        self.assertIn('? .15 : 0', frame)  # scrim below blur threshold
+        settings = (ROOT / 'quickshell/common/Settings.qml').read_text()
+        self.assertIn('bounded("barOpacity", 1, .35, 1)', settings)
+        self.assertIn('SettingsPanel.currentTab', (ROOT / 'quickshell/settings/SettingsPanelContent.qml').read_text())
+
+    def test_four_edge_struts_and_popup_origins_share_geometry(self):
+        manager = (ROOT / 'quickshell/bar/ShellFrame.qml').read_text()
+        for edge in ('left', 'right', 'top', 'bottom'):
+            self.assertIn('exclusiveZone: Settings.desktopInsets.' + edge, manager)
+        frame = (ROOT / 'quickshell/bar/FrameWindow.qml').read_text()
+        self.assertIn('Geometry.barRect(width, height, Settings.barEdge, Settings.barWidth)', frame)
+        for line in frame.splitlines():
+            if 'anchorY: controller.popupAnchorY' in line:
+                self.assertIn('anchorX: controller.popupAnchorX', line)
+        for name in ('left', 'right', 'top', 'bottom'):
+            self.assertIn('anchors.' + name + 'Margin: Settings.desktopInsets.' + name, frame)
+        sheet = (ROOT / 'quickshell/common/Sheet.qml').read_text()
+        self.assertIn('Placement.panelPosition(area, width, height, Settings.barEdge, centered, anchorX, anchorY)', sheet)
+
+    def test_mouse_collection_navigation_and_click_only_edge(self):
+        frame = (ROOT / 'quickshell/bar/FrameWindow.qml').read_text()
+        edge = frame.split('id: wallpaperEdge', 1)[1].split('id: settingsEdge', 1)[0]
+        self.assertNotIn('Timer', edge)
+        self.assertNotIn('onEntered', edge)
+        self.assertIn('onClicked: controller.toggleFrom(QuickWallpapers', edge)
+        quick = (ROOT / 'quickshell/wallpaper/QuickWallpapersContent.qml').read_text()
+        self.assertIn('onMoved: root.scrubTo(Math.round(value))', quick)
+        self.assertIn('!carousel.dragging && !carousel.flicking', quick)
+        studio = (ROOT / 'quickshell/wallpaper/WallpaperLauncherContent.qml').read_text()
+        self.assertIn('ScrollBar.vertical: CollectionScrollBar', studio)
+        scroll = (ROOT / 'quickshell/common/CollectionScrollBar.qml').read_text()
+        self.assertIn('policy: ScrollBar.AlwaysOn', scroll)
+        self.assertIn('interactive: true', scroll)
+
+    def test_minimal_copy_keeps_safety_and_real_option_descriptions(self):
+        settings = (ROOT / 'quickshell/settings/SettingsPanelContent.qml').read_text()
+        self.assertIn('description: modelData.description', settings)
+        self.assertIn('No titles, URLs or keystrokes.', settings)
+        self.assertIn('Shared browser processes', settings)
+        studio = (ROOT / 'quickshell/wallpaper/WallpaperLauncherContent.qml').read_text()
+        self.assertIn('Writes LIVE Wallust templates', studio)
+        self.assertNotIn('Seed ', studio)
+        self.assertNotIn('Choose a cartridge to launch.', (ROOT / 'quickshell/launcher/AppLauncherContent.qml').read_text())
+        day = (ROOT / 'quickshell/wellbeing/WellbeingPanelContent.qml').read_text()
+        self.assertNotIn('Blank = no data', day)
+        self.assertIn('Usage.sampleData ? "Demo"', day)
+
+    def test_workspaces_have_recovery_access_and_moves_are_preview_guarded(self):
+        launcher = (ROOT / 'quickshell/launcher/AppLauncherContent.qml').read_text()
+        self.assertIn('shellAction: "workspaces"', launcher)
+        self.assertIn('call workspaces toggle', (ROOT / 'hyprland.lua').read_text())
+        panel = (ROOT / 'quickshell/workspaces/WorkspacePanelContent.qml').read_text()
+        self.assertIn('Hyprland.toplevels.values.some', panel)
+        self.assertIn('alive && !Settings.previewMode', panel)
+        self.assertIn('enabled: !Settings.previewMode', panel)
+        bar = (ROOT / 'quickshell/bar/BarModule.qml').read_text()
+        self.assertIn('WorkspaceMark', bar)
+        self.assertNotIn('text: String(ws.', bar)
+        self.assertIn('font.pixelSize: 11; color: Colors.accent', bar)

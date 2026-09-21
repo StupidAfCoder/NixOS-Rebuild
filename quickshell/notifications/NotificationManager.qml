@@ -29,11 +29,11 @@ Scope {
                 WlrLayershell.namespace: "quickshell:notifications"
 
                 anchors { top: true; right: true }
-                implicitWidth: Math.min(400, screen.width - Settings.barWidth - 32)
-                implicitHeight: Math.max(1, screen.height - 32)
+                implicitWidth: Math.min(400, screen.width - Settings.desktopInsets.left - Settings.desktopInsets.right - 32)
+                implicitHeight: Math.max(1, screen.height - Settings.desktopInsets.top - Settings.desktopInsets.bottom - 32)
                 color: "transparent"
 
-                margins { top: 16; right: 16 }
+                margins { top: Settings.desktopInsets.top + 10; right: Settings.desktopInsets.right + 10 }
 
                 // Mask sized to actual content, not the full window,
                 // so empty space below the stack passes clicks through

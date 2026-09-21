@@ -18,3 +18,7 @@ PathPicker 1.0 PathPicker.qml
 singleton AppIdentity 1.0 AppIdentity.qml
 
 ConsoleSurface 1.0 ConsoleSurface.qml
+
+WorkspaceMark 1.0 WorkspaceMark.qml
+
+CollectionScrollBar 1.0 CollectionScrollBar.qml

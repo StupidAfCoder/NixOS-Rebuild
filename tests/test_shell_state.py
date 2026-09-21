@@ -19,6 +19,30 @@ class StateTests(unittest.TestCase):
         self.assertEqual(c["recipe"], "balanced")
         self.assertEqual(c["frameWidth"], 6)
 
+    def test_rail_defaults_preserve_existing_installations(self):
+        values = state.validate({"barWidth": 48, "clockShowDate": True})
+        self.assertEqual(values["barEdge"], "left")
+        self.assertEqual(values["barOpacity"], 1)
+        self.assertFalse(values["barBlur"])
+        self.assertEqual(values["barWidth"], 48)
+        self.assertTrue(values["clockShowDate"])
+
+    def test_all_rail_edges_and_fractional_opacity_round_trip(self):
+        for edge in ("left", "right", "top", "bottom"):
+            values = state.validate({"barEdge": edge, "barOpacity": .67, "barBlur": True})
+            self.assertEqual(values["barEdge"], edge)
+            self.assertEqual(values["barOpacity"], .67)
+            self.assertTrue(values["barBlur"])
+            self.assertEqual(state.validate(values), values)
+
+    def test_rail_rejects_invalid_types_and_out_of_range_opacity(self):
+        for bad in ({"barEdge": "center"}, {"barEdge": []}, {"barBlur": 1},
+                    {"barBlur": "false"}, {"barOpacity": True}, {"barOpacity": ".5"},
+                    {"barOpacity": float("nan")}, {"barOpacity": float("inf")},
+                    {"barOpacity": .34}, {"barOpacity": 1.01}):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                state.validate(bad)
+
     def test_reject_invalid_settings(self):
         for bad in ({"tone": float("nan")}, {"frameWidth": 1}, {"mutedWorkspaces": [-1]}, {"trackingEnabled": "yes"}, {"recipe": "invalid"}, {"saturation": True}):
             with self.assertRaises(ValueError):

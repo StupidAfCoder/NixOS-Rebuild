@@ -21,7 +21,8 @@ Sheet {
     property bool picking: false
     property string pickKey: ""
     function pick(key, value, directory, filters) { pickKey = key; picking = true; pathPicker.start(value, directory, filters); resetScroll(); }
-    property string tab: "Profile"
+    property string tab: SettingsPanel.currentTab
+    onTabChanged: if (shown) SettingsPanel.currentTab = tab
     property bool editingLayout: false
     property bool clearConfirm: false
     property bool resetConfirm: false
@@ -48,7 +49,6 @@ Sheet {
                 Layout.fillWidth: true; spacing: 5
                 PixelText { text: Settings.displayName; Layout.fillWidth: true; font.family: "Pixel Operator"; font.pixelSize: 24 }
                 PixelText { text: Settings.bio; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant; wrapMode: Text.Wrap; elide: Text.ElideNone }
-                PixelText { text: Settings.saving ? "Saving…" : ""; color: Colors.accent; font.pixelSize: 12 }
             }
         }
     }
@@ -74,10 +74,9 @@ Sheet {
             PixelField { Layout.fillWidth: true; text: Settings.displayName; onEditingFinished: Settings.patch({displayName: text}) }
             PixelText { text: "A short note" }
             PixelField { Layout.fillWidth: true; text: Settings.bio; onEditingFinished: Settings.patch({bio: text}) }
-            PixelText { text: "Avatar / local file" }
+            PixelText { text: "Avatar / stays local" }
             MenuRow { Layout.fillWidth: true; label: Settings.avatarPath || "Choose a portrait…"; iconName: "folder.svg"; onClicked: root.pick("avatarPath", Settings.avatarPath, false, ["*.png", "*.jpg", "*.jpeg", "*.webp"]) }
             PixelButton { text: "Use initials"; visible: !!Settings.avatarPath; onClicked: Settings.patch({avatarPath: ""}) }
-            PixelText { text: "The square portrait is shared with your power drawer. Nothing is uploaded."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
         }
         PixelGroup {
             title: "Your collection"; detail: "02"; iconName: "folder.svg"; Layout.fillWidth: true
@@ -85,14 +84,29 @@ Sheet {
             MenuRow { Layout.fillWidth: true; label: Settings.videoPath; iconName: "folder.svg"; onClicked: root.pick("videoPath", Settings.videoPath, false, ["*.mp4", "*.mkv", "*.webm", "*.mov"]) }
             PixelText { text: "Wallpaper directory" }
             MenuRow { Layout.fillWidth: true; label: Settings.wallpaperDir; iconName: "folder.svg"; onClicked: root.pick("wallpaperDir", Settings.wallpaperDir, true, ["*"]) }
-            PixelText { text: "Click a path to browse. Nothing changes until you select a file or folder."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
         }
     }
     ColumnLayout {
         visible: !root.picking && root.tab === "Bar"; Layout.fillWidth: true; spacing: 16
         PixelGroup {
-            title: "Build your rail"; iconName: "settings-2.svg"; Layout.fillWidth: true
-            PixelText { text: "Keep what you reach for. Hide what you don't. Changes are live, including open panels."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+            title: "Rail"; iconName: "app-windows.svg"; Layout.fillWidth: true
+            RowLayout {
+                Repeater {
+                    model: ["left", "right", "top", "bottom"]
+                    TabButton {
+                        required property string modelData
+                        text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                        selected: Settings.barEdge === modelData
+                        onClicked: Settings.patch({barEdge: modelData})
+                    }
+                }
+            }
+            PixelText { text: "Opacity / " + Math.round(Settings.barOpacity * 100) + "%" }
+            PixelSlider { Layout.fillWidth: true; from: .35; to: 1; stepSize: .01; value: Settings.barOpacity; onMoved: Settings.patch({barOpacity: value}) }
+            PreferenceRow { Layout.fillWidth: true; label: "Background blur"; description: "Softens the desktop behind the translucent rail. Requires the Hyprland blur rule."; selected: Settings.barBlur; onToggled: Settings.patch({barBlur: !Settings.barBlur}) }
+        }
+        PixelGroup {
+            title: "Modules"; iconName: "settings-2.svg"; Layout.fillWidth: true
             RowLayout {
                 TabButton { text: "Modules"; selected: !root.editingLayout; onClicked: root.editingLayout = false }
                 TabButton { text: "Placement"; selected: root.editingLayout; onClicked: root.editingLayout = true }
@@ -117,7 +131,7 @@ Sheet {
                     id: zoneGroup
                     required property string modelData
                     Layout.fillWidth: true; spacing: 6
-                    PixelText { text: zoneGroup.modelData === "middle" ? "Center" : zoneGroup.modelData === "top" ? "Top" : "Bottom"; color: Colors.accent; font.family: "Silkscreen"; font.pixelSize: 10 }
+                    PixelText { text: zoneGroup.modelData === "middle" ? "Center" : zoneGroup.modelData === "top" ? (Settings.horizontalBar ? "Start" : "Top") : (Settings.horizontalBar ? "End" : "Bottom"); color: Colors.accent; font.family: "Silkscreen"; font.pixelSize: 10 }
                     Repeater {
                         model: Settings.barLayout[zoneGroup.modelData]
                         RowLayout {
@@ -126,19 +140,18 @@ Sheet {
                             required property int index
                             Layout.fillWidth: true; spacing: 4
                             PixelText { Layout.fillWidth: true; text: Settings.moduleCatalog.find(m => m.key === moduleRow.modelData)?.label || moduleRow.modelData; opacity: Settings.moduleEnabled(moduleRow.modelData) ? 1 : .5 }
-                            IconButton { iconName: "chevron-up.svg"; hint: "Move " + moduleRow.modelData + " up"; enabled: moduleRow.index > 0; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData, -1) }
-                            IconButton { iconName: "chevron-down.svg"; hint: "Move " + moduleRow.modelData + " down"; enabled: moduleRow.index < Settings.barLayout[zoneGroup.modelData].length - 1; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData, 1) }
-                            PixelButton { text: zoneGroup.modelData === "top" ? "To center" : zoneGroup.modelData === "middle" ? "To bottom" : "To top"; implicitWidth: 88; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData === "top" ? "middle" : zoneGroup.modelData === "middle" ? "bottom" : "top", 0) }
+                            IconButton { iconName: Settings.horizontalBar ? "chevron-left.svg" : "chevron-up.svg"; hint: "Move " + moduleRow.modelData + " up"; enabled: moduleRow.index > 0; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData, -1) }
+                            IconButton { iconName: Settings.horizontalBar ? "chevron-right.svg" : "chevron-down.svg"; hint: "Move " + moduleRow.modelData + " down"; enabled: moduleRow.index < Settings.barLayout[zoneGroup.modelData].length - 1; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData, 1) }
+                            PixelButton { text: zoneGroup.modelData === "top" ? "To center" : zoneGroup.modelData === "middle" ? (Settings.horizontalBar ? "To end" : "To bottom") : (Settings.horizontalBar ? "To start" : "To top"); implicitWidth: 88; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData === "top" ? "middle" : zoneGroup.modelData === "middle" ? "bottom" : "top", 0) }
                         }
                     }
                 }
             }
             PixelButton { visible: root.editingLayout; text: "Reset placement"; onClicked: Settings.resetLayout() }
-            PreferenceRow { Layout.fillWidth: true; label: "Date below the time"; description: "One horizontal time line; an optional short date."; selected: Settings.clockShowDate; onToggled: Settings.patch({clockShowDate: !Settings.clockShowDate}) }
-            PixelText { text: "Hover the top-center screen edge for Settings, search Library, or press Super+Ctrl+S. Hidden modules take no rail space. Hidden modules keep their keyboard shortcuts. The rail scrolls on short screens rather than overlapping."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+            PreferenceRow { Layout.fillWidth: true; label: "Show date"; description: "Wallpaper-colored day and month beside the clock."; selected: Settings.clockShowDate; onToggled: Settings.patch({clockShowDate: !Settings.clockShowDate}) }
         }
         PixelGroup {
-            title: "Room to breathe"; iconName: "app-windows.svg"; Layout.fillWidth: true
+            title: "Size"; iconName: "app-windows.svg"; Layout.fillWidth: true
             PixelText { text: "Workspace indicators / " + Settings.workspaceCount }
             PixelSlider { Layout.fillWidth: true; from: 1; to: 10; stepSize: 1; value: Settings.workspaceCount; onMoved: Settings.patch({workspaceCount: value}) }
             PixelText { text: "Rail width / " + Settings.barWidth + "px" }
@@ -175,7 +188,7 @@ Sheet {
         }
         PixelGroup {
             title: "Edges & type"; iconName: "brush.svg"; Layout.fillWidth: true
-            PreferenceRow { Layout.fillWidth: true; label: "Quick wallpaper edge"; description: "Hover the middle of the right frame, or use Super+Ctrl+W."; selected: Settings.quickWallpaperEdgeEnabled; onToggled: Settings.patch({quickWallpaperEdgeEnabled: !Settings.quickWallpaperEdgeEnabled}) }
+            PreferenceRow { Layout.fillWidth: true; label: "Quick wallpaper edge"; description: "Click the middle of the right edge to browse wallpapers."; selected: Settings.quickWallpaperEdgeEnabled; onToggled: Settings.patch({quickWallpaperEdgeEnabled: !Settings.quickWallpaperEdgeEnabled}) }
             PixelText { text: "Frame / " + Settings.frameWidth + "px" }
             PixelSlider { Layout.fillWidth: true; from: 4; to: 10; stepSize: 1; value: Settings.frameWidth; onMoved: Settings.patch({frameWidth: value}) }
             PixelText { text: "Body text / " + Settings.bodySize + "px" }
@@ -188,7 +201,6 @@ Sheet {
             PixelText { text: "Transition time / " + (Settings.values.motionMs || 180) + "ms" }
             PixelSlider { Layout.fillWidth: true; from: 80; to: 350; stepSize: 10; value: Settings.values.motionMs || 180; enabled: !Settings.reducedMotion; onMoved: Settings.patch({motionMs: value}) }
             PreferenceRow { Layout.fillWidth: true; label: "Reduced motion"; description: "Instant drawers; pauses decorative motion and video."; iconName: "clock.svg"; selected: Settings.reducedMotion; onToggled: Settings.patch({reducedMotion: !Settings.reducedMotion}) }
-            PixelText { text: "Settings and Session slide from the screen edge without scaling your pixel text. Compositor animations are configured separately."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
         }
     }
     PixelGroup {

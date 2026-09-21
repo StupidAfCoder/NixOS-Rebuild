@@ -21,7 +21,7 @@ STATE = Path(os.environ.get("XDG_STATE_HOME", HOME / ".local/state")) / "pixel-s
 BAR_MODULES = ("launcher", "workspaces", "clock", "wizard", "media", "audio", "system", "battery", "network", "bluetooth", "tray", "settings", "power")
 DEFAULTS = dict(displayName=os.environ.get("USER", "User"), avatarPath="", bio="A little magic, every day.",
                 videoPath=str(HOME / "Videos/pixel-traffic.mp4"), wallpaperDir=str(HOME / "Pictures/Wallpapers"),
-                frameWidth=6, barWidth=44, motionMs=180, reducedMotion=False, bodySize=13,
+                frameWidth=6, barWidth=44, barEdge="left", barOpacity=1., barBlur=False, motionMs=180, reducedMotion=False, bodySize=13,
                 recipe="balanced", tone=0, saturation=1., source="representative", contrast=0.,
                 trackingEnabled=False, retentionDays=30, workspaceAudioEnabled=False,
                 mutedWorkspaces=[], dailyGoalMinutes=240,
@@ -59,9 +59,10 @@ def validate(values):
         raise ValueError("Settings must be an object")
     enums = {"recipe": ("balanced", "wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"),
              "source": ("representative", "dominant", "colorful"),
-             "launcherEdge": ("top", "bottom", "center")}
+             "launcherEdge": ("top", "bottom", "center"),
+             "barEdge": ("left", "right", "top", "bottom")}
     limits = {"frameWidth": (4, 10), "barWidth": (36, 64), "motionMs": (80, 350), "bodySize": (12, 18),
-              "tone": (-15, 15), "saturation": (0, 1.6), "contrast": (0, 1),
+              "tone": (-15, 15), "saturation": (0, 1.6), "contrast": (0, 1), "barOpacity": (.35, 1),
               "retentionDays": (1, 90), "dailyGoalMinutes": (15, 1440), "workspaceCount": (1, 10)}
     for key, value in values.items():
         if key not in DEFAULTS:
@@ -84,7 +85,7 @@ def validate(values):
             lo, hi = limits[key]
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not lo <= value <= hi:
                 raise ValueError(f"{key} must be between {lo} and {hi}")
-            if key not in ("tone", "saturation", "contrast"):
+            if key not in ("tone", "saturation", "contrast", "barOpacity"):
                 value = int(value)
         elif key == "mutedWorkspaces":
             if not isinstance(value, list) or len(value) > 100 or not all(type(v) is int and v > 0 for v in value):

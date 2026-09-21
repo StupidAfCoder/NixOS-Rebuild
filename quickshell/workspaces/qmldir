@@ -1,0 +1,2 @@
+singleton WorkspacePanel 1.0 WorkspacePanel.qml
+WorkspacePanelContent 1.0 WorkspacePanelContent.qml

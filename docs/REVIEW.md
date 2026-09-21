@@ -8,16 +8,25 @@ This is the revised implementation for review, **not a claim of completed native
 
 - **Shared console controls:** cut-corner keycaps with a small raised lip, depressed click/selected states, and keyboard-only focus indication. Buttons, tabs, fields, sliders and menu rows share the geometry. Rail glyphs stay unboxed at rest. Notification silhouette, original mascot/recoloring and original Power video are retained.
 - **Rail and origins:** hidden modules occupy no space. Hover the **top-center screen edge**, then click **↓ Settings**; Library search and Super+Ctrl+S also work. The optional Settings module remains available. Ordinary bar popups align to the invoking control and clamp inside the screen. Keyboard/IPC opens fall back to the focused monitor. The launcher keeps top/bottom/center placement; Settings and Power remain right-edge drawers, and the full editor stays centered.
-- **Personal placement:** Settings → Bar → Placement moves any of the thirteen modules between top/center/bottom and reorders within each group. Visibility is independent of position. The horizontal `HH:mm` clock moves with other modules, with an optional short date. Workspaces use numbered empty slots and occupied-app glyphs; only Hyprland's active workspace receives the selected cap. Mouse clicks no longer retain a competing focus rectangle.
+- **Personal placement:** Settings → Bar → Placement moves any of the thirteen modules between top/center/bottom and reorders within each group. Visibility is independent of position. The clock stacks hours/minutes on a side rail and uses `HH:mm` on a horizontal rail, with an optional wallpaper-tinted date. Workspaces use small pixel save gems (outline/core/full for empty/occupied/active), without rail numbers; only Hyprland's active workspace receives the selected cap. Mouse clicks no longer retain a competing focus rectangle.
 - **Library:** category pages, a scrollable cartridge grid, selected-app icon/readout and a separate Launch button. Single-click selects; double-click or Enter launches. Down from search enters the shelf; arrows browse; typing from the grid returns to search. Settings remains searchable even if every rail module is hidden.
 - **Visual path picker:** image thumbnails in the local folder grid, a larger selected-image preview, and explicit Select/Cancel. Folder-only mode also shows image contents, but still confirms only the current directory. Files are not saved just by browsing. Image decode sizes are bounded; video files have a generic icon, not a video thumbnail decoder.
-- **Wallpaper studio:** a full-width two-row contact sheet, then a compact preview/palette workbench. Balanced/Tinted/True black/Paper are primary choices; the other recipes and seed selector are under More palette options. Live app sync and Trash confirmations remain here, not in the quick view. Opening the editor starts with the applied/privately tried image (or an explicitly requested image).
-- **Quick wallpaper selector:** no Sheet background, header, dimming layer or editing controls. Only floating photos, selected filename/status and a keyboard hint. Arrows/wheel browse, click/Enter applies (private colors only in preview), Escape/outside click closes. Right-edge dwell and Super+Ctrl+W remain. A scan restores selection by path; image clicks return keyboard control to the carousel.
+- **Wallpaper studio:** a full-width two-row contact sheet, then a compact preview/palette workbench. Balanced/Tinted/True black/Paper are primary choices; the other recipes and seed selector are under Advanced. Live app sync and Trash confirmations remain here, not in the quick view. Opening the editor starts with the applied/privately tried image (or an explicitly requested image).
+- **Quick wallpaper selector:** no Sheet background, header, dimming layer or editing controls. Only floating photos, selected filename/status and a mouse scrubber. Arrows/wheel browse, click/Enter applies (private colors only in preview), Escape/outside click closes. The right-edge target opens **only on click**, never hover; Super+Ctrl+W remains. A scan restores selection by path; image clicks return keyboard control to the carousel.
 - **Balanced colors:** wallpaper-derived highlights over low-chroma, lightly tinted charcoal surfaces. Surface chroma is capped at 6 rather than the vivid recipe's 36. This intentionally keeps one primary accent, not competing neon accents. **Balanced is the new-preference default only.** Explicit saved `wallpaper`/black/other recipes are preserved. `wallpaper` is labeled **Tinted**; black remains exact `#000000`.
 - **Power:** video and actions only; the profile row is removed. Destructive actions still require confirmation.
 - **Preserved safety/reliability:** opt-in history/workspace audio; queued directory scans and separate error channels; palette staging before wallpaper-daemon apply; per-file atomic publication and explicit partial-success reporting; preferences saved only on success/partial success. Wallust remains separate from the shell palette. Unconfirmed preview operations do not write live app themes; explicitly confirmed live sync intentionally does.
 
-See [the design notes](CONSOLE-DESIGN.md) for references, state rules and keyboard behavior. `docs/tour/index.html` has twelve **illustrative** scenes; it is not a native desktop recording.
+See [the design notes](CONSOLE-DESIGN.md) for references, state rules and keyboard behavior. `docs/tour/index.html` has thirteen **illustrative** scenes; it is not a native desktop recording.
+
+## Final refinements
+
+- **Four-edge rail:** Settings → Bar changes Left/Right/Top/Bottom. One inset calculation drives the frame, corners, four exclusive struts, popup bounds, nested tray menus, notifications and OSD clearance. Popups capture both window-local X and Y; horizontal rails use X and vertical rails use Y. The media module uses its compact glyph horizontally.
+- **Opacity / blur:** Background opacity leaves text/icons opaque. Blur defaults off. A static plain or blurred `FrameWindow` is loaded; toggling recreates that surface instead of illegally mutating a connected layer namespace. Backends/jobs, struts and the selected Settings tab survive; ephemeral widget state may reset when the surface is recreated. The Hyprland rule excludes alpha ≤0.2, including the transparent desktop and 0.15 editor scrim; rail alpha is at least 0.35.
+- **Workspaces:** the final rail slot follows the active workspace when it lies outside the configured slot range. The overview button, Library's **Workspaces** entry, `qs ipc … call workspaces toggle`, and (after activation) **Super+Ctrl+E** open the manager. It includes every compositor workspace across monitors, including named/special workspaces, plus configured empty slots. Select a tile then **Open**/Enter; open individual windows, move a chosen window to a tile, or create a workspace with **+ New**. Exact validated addresses prevent a missing window from becoming an operation on the active window. Moves are disabled in preview; workspace/window focusing is real, as with existing rail navigation.
+- **Collections / copy:** always-visible draggable studio scrollbar, quick-strip scrubber, three-image wheel steps, Page Up/Down and Home/End. Browsing never auto-applies. Removed redundant instructional copy and seed readouts; kept option descriptions, errors, live-write/Trash confirmations and privacy warnings. **Demo** appears only when sample history was explicitly requested, never for live history.
+
+**Preview limitation:** the preview helper does not load `hyprland.lua` or install the new keybinding/layer rule. Edge, opacity and layout can be reviewed immediately; blur requires the `pixel-frame-blur` rule already present in the running compositor. Without it, transparency works but blur does not. Do not copy/reload the entire compositor configuration just to inspect this preview. Compositor blur/input/struts still require native QA.
 
 ## Follow-up: selection and asynchronous jobs
 
@@ -51,6 +60,7 @@ Download the [review branch ZIP](https://github.com/StupidAfCoder/NixOS-Rebuild/
 4. Open panels using the rail, or a second terminal from the same extracted directory:
 
    ```sh
+   qs ipc --path "$PWD/quickshell/shell.qml" call workspaces toggle
    qs ipc --path "$PWD/quickshell/shell.qml" call settings toggle
    qs ipc --path "$PWD/quickshell/shell.qml" call wellbeing toggle
    qs ipc --path "$PWD/quickshell/shell.qml" call power toggle
@@ -100,7 +110,7 @@ To verify **live wallpaper apply, real collection, new services and terminal int
 - Rail defaults to 44px and can be adjusted from 36–64px. Frame can be adjusted from 4–10px.
 - **Your original wizard template and recoloring code are retained**, not redrawn. Its robe still takes the wallpaper accent, and generated sprites still reload from cache.
 - Wizard click opens Wallpapers. Clock click opens **Your day**. The NixOS launcher now uses the theme accent rather than fixed blue. Bundled pixel icons open Settings, Sound & light and System; accessible names identify actions without hover labels.
-- The rail scrolls on short screens; the media marquee becomes a small glyph. The clock/date is now horizontal. Top-center Settings access stays outside the rail, even with every module hidden.
+- The rail scrolls on short screens; the media marquee becomes a small glyph. Clock/date layout follows the rail orientation. Top-center Settings access stays outside the rail, even with every module hidden.
 
 ### 2. Wallpapers: balanced color, vivid tint, or true black
 
@@ -112,8 +122,8 @@ qs ipc call wallpaper toggle
 
 1. Search for a wallpaper. Click a landscape thumbnail; selection **does not apply it**.
 2. The contact sheet spans the width; the preview and controls stack on narrow screens.
-3. Select **Balanced**, **Tinted**, **True black**, or **Paper**. More palette options exposes neutral, tonal, expressive and mono.
-4. Adjust **Tone** and **Intensity**. More palette options also exposes representative, dominant or colorful source selection.
+3. Select **Balanced**, **Tinted**, **True black**, or **Paper**. Advanced exposes neutral, tonal, expressive and mono.
+4. Adjust **Tone** and **Intensity**. Advanced also exposes representative, dominant or colorful source selection.
 5. The swatch strip is generated by the **actual Python generator**. Preview generation does not overwrite your live colors.
 6. Click **Apply wallpaper + palette**. Recipe, tone, intensity and source preference are remembered globally for subsequent selections. Per-wallpaper remembered profiles are not implemented in this pass.
 7. Wallpaper removal now goes to **Trash**, with an explicit confirmation; generation failure is never a reason to delete an image automatically.
@@ -157,7 +167,7 @@ qs ipc call settings toggle
 
 **Profile:** display name, short note, and a pixel file/folder picker for avatar, power video and wallpaper directory. Paths are local absolute paths; nothing is uploaded. This does not change your Linux account name or user account photo.
 
-**Bar → Placement:** reorder and move each module between top/center/bottom; clock date is optional. **Bar → Modules:** individually toggle launcher, workspaces, clock, wizard, media, sound/brightness, system, battery/energy, network, Bluetooth, tray, power and settings. Settings and System default off; all others default on; unavailable Bluetooth hardware still hides its control. Workspace indicators: 1–10; rail width: 36–64px. Restore module defaults requires confirmation. Hiding a module does not disable its keyboard shortcut or prevent an already open panel from working.
+**Bar:** Left/Right/Top/Bottom position, 35–100% background opacity, and optional blur. **Bar → Placement:** reorder and move each module between top/center/bottom (start/center/end horizontally); clock date is optional. **Bar → Modules:** individually toggle launcher, workspaces, clock, wizard, media, sound/brightness, system, battery/energy, network, Bluetooth, tray, power and settings. Settings and System default off; all others default on; unavailable Bluetooth hardware still hides its control. Workspace indicators: 1–10; rail width: 36–64px. Restore module defaults requires confirmation. Hiding a module does not disable its keyboard shortcut or prevent an already open panel from working.
 
 **Look (appearance):** frame width, body font size, animation duration, reduced motion, high contrast, launcher position, link to wallpaper tone controls. Settings/Power drawers translate horizontally and the launcher can translate vertically; ordinary popups fade. Neither scales pixel text. Reduced motion makes transitions instant and pauses decorative animation/video.
 
@@ -281,15 +291,15 @@ To stop collection/audio automation without discarding data, disable both contro
 
 ## Validation performed here
 
-- **54 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Apply integration tests run the real apply script and generator in a copied fixture, with all desktop commands stubbed, covering pre-apply failure preservation and partial-success reporting. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
+- **62 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Apply integration tests run the real apply script and generator in a copied fixture, with all desktop commands stubbed, covering pre-apply failure preservation and partial-success reporting. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
 - Four source-guard tests prevent assigning `implicitHeight`/`implicitWidth` on Qt positioners (`Flow`, `Row`, `Column`, `Grid`). This catches the native startup failure reported during the first review; grammar parsing alone did not catch it.
-- **29 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers, selection/scan/apply logic, rail placement, library filtering and actual popup-manager routing. Popup geometry is tested at both edges and on short screens. Repeated in Asia/Kolkata and America/New_York timezones.
-- **75 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
+- **37 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers, selection/scan/apply logic, rail placement, library filtering and actual popup-manager routing. Popup geometry is tested on all four edges, landscape/portrait/small screens and varied frame/rail widths. Additional checks cover 1,000-image scrubbing, overflow/named/special workspaces, escaped Lua selectors, preview move guards and vanished windows. Repeated in Asia/Kolkata and America/New_York timezones.
+- **80 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
 - `qmllint` inspected; corrected a SystemTray type-name collision and a Button `action` name collision. Full type validation is limited by missing native Quickshell modules.
 - **11 Nix files** parse with the Nix tree-sitter grammar. **No full Nix module evaluation or build** in this sandbox.
 - Bash syntax checks cover all eleven shell scripts. The seven core rice scripts (apply, preview, Wallust sync, theme toggle, brightness, system stats and asset generation) also pass ShellCheck. The unrelated recording helper has a pre-existing `ls | grep` warning and is untouched.
 - Quickshell API declarations inspected for MPRIS controls, notification timeout units/actions, Process stdin, focused-monitor routing, IconImage status/asynchronous aliases and IPC path selection. All statically named bundled icons exist.
-- The revised HTML tour has **12 illustrative scenes**, with cartridge selection/search, thumbnail picker, compact editor, background-free ribbon, rail placement, wireless flow, Day/History/Apps and safe session confirmations. Five DOM regression tests cover these transitions. It is not an exhaustive replica of native Settings or a hardware test.
+- The revised HTML tour has **13 illustrative scenes**, with cartridge selection/search, thumbnail picker, compact editor, background-free ribbon, rail placement, wireless flow, Day/History/Apps and safe session confirmations. Six DOM regression tests cover these transitions. It is not an exhaustive replica of native Settings or a hardware test.
 - The HTML tour is a safe mockup. An attempted offscreen native Qt render was blocked by unavailable system graphics libraries; **no native screenshots or native animation claims** are presented.
 
 Run Python tests locally with Pillow and materialyoucolor installed:
@@ -320,13 +330,16 @@ The VAAPI texture-export warnings are a separate video/driver path. The `--softw
 
 ## Native QA still required before merge or activation
 
+- [ ] Test all four rail edges with short/portrait screens and multiple monitors: no overlapping modules, correct reserved work area, corner joins, popup origins, notifications, nested tray menus and bottom OSD.
+- [ ] With the new Hyprland rule installed, toggle blur/opacity: only translucent visible surfaces blur, not the transparent desktop or scrim; Settings stays on its current tab and pending backend jobs complete.
+- [ ] Open 12+ workspaces; check active overflow gem, manager keyboard navigation, named/special spaces, window focus and exact-target moves (moves refused in preview).
 - [ ] Top-center Settings reveal has no reserved rail gap and remains reachable with all modules hidden.
 - [ ] Move/reorder every module; switch workspaces by mouse then keyboard: only the compositor-active slot remains selected.
 - [ ] Open network/audio/Bluetooth/energy beside their bar origins, including bottom-edge clamping and second-monitor transfer.
 - [ ] Close/clear/reopen palette preview during generation: no stale swatches/errors; refused/failed Trash keeps selection; successful Trash clears only its captured selection.
 - [ ] Refresh installed apps while browsing the shelf: selection stays with the same entry. Open nested tray menus on a monitor other than the focused fallback monitor.
 - [ ] File picker thumbnails and selected-image preview render; it navigates nested/spaced paths, selects images/videos/folders, cancels without writes and restores Settings focus.
-- [ ] Right-edge ribbon opens only after dwell, stays closed until pointer re-entry, scrolls/selects, and routes to the invoking monitor.
+- [ ] Right-edge ribbon never opens from hovering; a click opens it on the invoking monitor. Drag the studio scrollbar and quick scrubber through 100+ images; drag release must not apply a wallpaper.
 - [ ] Balanced is restrained on varied wallpapers; Tinted still colors all surfaces; black remains exact black. Existing saved choices survive.
 - [ ] Quick selector has no panel background and arrow navigation survives clicks/refreshes; full editor opens the applied image.
 - [ ] Confirmed live app sync changes Firefox with its extension connected; unconfirmed preview operations leave live targets untouched.

@@ -13,11 +13,14 @@ import "../settings"
 import "../wellbeing"
 import "../osd"
 import "../sysstats"
+import "../workspaces"
+import "../workspaces/WorkspaceState.js" as WorkspaceState
 
 Loader {
     id: root
     required property string moduleKey
     property real railHeight: 0
+    property bool horizontal: false
     signal openPanel(var panel, var origin)
     readonly property bool available: Settings.moduleEnabled(moduleKey)
         && (moduleKey !== "bluetooth" || Bluetooth.defaultAdapter !== null)
@@ -25,7 +28,7 @@ Loader {
     active: available
     visible: available
     sourceComponent: moduleKey === "workspaces" ? workspaces : moduleKey === "clock" ? clock
-        : moduleKey === "wizard" ? wizard : moduleKey === "media" && railHeight > 920 && MprisActive.hasPlayer ? media : glyph
+        : moduleKey === "wizard" ? wizard : moduleKey === "media" && !horizontal && railHeight > 920 && MprisActive.hasPlayer ? media : glyph
     function request(panel) { openPanel(panel, root); }
     readonly property var panel: ({launcher: AppLauncher, media: MediaPanel, audio: RightPanel,
         system: SysStatsPanel, battery: BatteryPanel, network: WifiPanel, bluetooth: BluetoothPanel,
@@ -34,60 +37,6 @@ Loader {
         system: "cpu.svg", battery: UPower.displayDevice.ready && UPower.displayDevice.percentage < .2 ? "battery-low.svg" : "battery-full.svg",
         network: NetworkBackend.ethernetOnline ? "globe.svg" : "wifi.svg", bluetooth: !Bluetooth.defaultAdapter?.enabled ? "bluetooth-off.svg" : BluetoothPanel.connectedCount ? "bluetooth-connected.svg" : "bluetooth.svg",
         tray: "database.svg", settings: "settings-2.svg", power: "power.svg"})[moduleKey] || "app-windows.svg"
-    readonly property string defaultWsIcon: "app-windows.svg"
-    readonly property var classIconRules: [
-        {
-            match: ["firefox", "librewolf", "zen", "chromium", "chrome", "brave"],
-            icon: "globe.svg"
-        },
-        {
-            match: ["kitty", "alacritty", "foot", "wezterm", "konsole", "xterm", "gnome-terminal"],
-            icon: "terminal.svg"
-        },
-        {
-            match: ["discord", "telegram", "slack", "whatsapp", "element", "signal"],
-            icon: "message.svg"
-        },
-        {
-            match: ["spotify", "mpv", "vlc", "rhythmbox"],
-            icon: "music.svg"
-        },
-        {
-            match: ["code", "codium", "jetbrains", "idea", "pycharm", "clion", "sublime", "neovide", "nvim" , "emacs"],
-            icon: "braces.svg"
-        },
-        {
-            match: ["thunar", "nautilus", "dolphin", "pcmanfm", "files"],
-            icon: "folder.svg"
-        },
-        {
-            match: ["steam"],
-            icon: "gamepad.svg"
-        },
-        {
-            match: ["obsidian", "notion"],
-            icon: "notebook.svg"
-        },
-        {
-            match: ["gimp", "inkscape", "krita", "aseprite"],
-            icon: "brush.svg"
-        }
-    ]
-
-    function iconForClass(cls) {
-        if (!cls)
-            return root.defaultWsIcon;
-        const c = cls.toLowerCase();
-        for (let i = 0; i < root.classIconRules.length; i++) {
-            const rule = root.classIconRules[i];
-            for (let j = 0; j < rule.match.length; j++) {
-                if (c.indexOf(rule.match[j]) !== -1)
-                    return rule.icon;
-            }
-        }
-        return root.defaultWsIcon;
-    }
-
     Component {
         id: glyph
         IconButton {
@@ -99,48 +48,56 @@ Loader {
     }
     Component {
         id: workspaces
-        Column {
+        Grid {
             spacing: 4
-            width: 32
-            Timer { interval: 2000; running: root.available; repeat: true; onTriggered: Hyprland.refreshToplevels() }
+            columns: root.horizontal ? Settings.workspaceCount + 1 : 1
             Repeater {
-                model: Settings.workspaceCount
+                model: WorkspaceState.slots(Settings.workspaceCount, Hyprland.focusedWorkspace?.id || 0)
                 PixelButton {
                     id: ws
-                    required property int index
-                    readonly property int wsId: index + 1
-                    readonly property var dataForWorkspace: Hyprland.workspaces.values.find(w => w.id === wsId)
-                    readonly property bool isActive: Hyprland.focusedWorkspace?.id === wsId
-                    readonly property bool occupied: !!dataForWorkspace && dataForWorkspace.toplevels.values.length > 0
-                    readonly property var topWindow: occupied ? (dataForWorkspace.toplevels.values.find(w => w.activated) || dataForWorkspace.toplevels.values[0]) : null
+                    required property int modelData
+                    readonly property var workspace: Hyprland.workspaces.values.find(w => w.id === modelData)
+                    readonly property bool isActive: Hyprland.focusedWorkspace?.id === modelData
+                    readonly property bool occupied: !!workspace && workspace.toplevels.values.length > 0
                     width: 32; height: 28; padding: 4
                     quiet: true; checked: isActive
-                    // The compositor owns selection. A click must not leave a second
-                    // keyboard-focus outline when Hyprland changes workspace externally.
+                    // Compositor selection never leaves a stale mouse-focus rectangle.
                     focusPolicy: Qt.NoFocus
-                    Accessible.name: "Workspace " + wsId + (occupied ? ", occupied" : ", empty")
-                    contentItem: Item {
-                        ColoredIcon { anchors.centerIn: parent; width: 16; height: 16; visible: ws.occupied; iconName: root.iconForClass(ws.topWindow?.lastIpcObject?.class || ""); tint: ws.isActive ? Colors.accent : Colors.textOnSurfaceVariant }
-                        PixelText { anchors.centerIn: parent; visible: !ws.occupied; text: String(ws.wsId).padStart(2, "0"); font.pixelSize: 12; color: ws.isActive ? Colors.accent : Colors.textOnSurfaceVariant }
-                        Rectangle { x: -2; y: parent.height / 2 - 2; width: 2; height: 4; visible: ws.occupied; color: ws.isActive ? Colors.accent : Colors.outline }
-                    }
-                    onClicked: Hyprland.dispatch('hl.dsp.focus({ workspace = "' + ws.wsId + '" })')
+                    Accessible.name: "Workspace " + (workspace?.name || modelData) + (occupied ? ", occupied" : ", empty")
+                    contentItem: Item { WorkspaceMark { anchors.centerIn: parent; active: ws.isActive; occupied: ws.occupied } }
+                    onClicked: WorkspacePanel.focusWorkspace(modelData)
                 }
             }
+            IconButton { iconName: "app-windows.svg"; hint: "Manage all workspaces"; checked: WorkspacePanel.shown; onClicked: root.request(WorkspacePanel) }
         }
     }
     Component {
         id: clock
         PixelButton {
-            implicitWidth: 36; implicitHeight: Settings.clockShowDate ? 46 : 32
+            implicitWidth: root.horizontal ? (Settings.clockShowDate ? 112 : 54) : 36
+            implicitHeight: root.horizontal ? 32 : Settings.clockShowDate ? 70 : 44
             padding: 1; quiet: true; checked: WellbeingPanel.shown
-            Accessible.name: "Clock and Your day"
+            Accessible.name: Qt.formatDateTime(clockTimer.now, "dddd, d MMMM, HH:mm") + ", Your day"
             Timer { id: clockTimer; property date now: new Date(); interval: 1000; running: true; repeat: true; onTriggered: now = new Date() }
             contentItem: Item {
-                Column {
-                    anchors.centerIn: parent; width: parent.width; spacing: 4
-                    PixelText { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: Qt.formatTime(clockTimer.now, "HH:mm"); font.pixelSize: 12 }
-                    PixelText { visible: Settings.clockShowDate; width: parent.width; horizontalAlignment: Text.AlignHCenter; text: Qt.formatDate(clockTimer.now, "dd/MM"); font.pixelSize: 12; color: Colors.textOnSurfaceVariant }
+                Grid {
+                    anchors.centerIn: parent
+                    columns: root.horizontal ? 2 : 1
+                    rowSpacing: 5; columnSpacing: 9
+                    PixelText {
+                        width: root.horizontal ? 44 : 32
+                        horizontalAlignment: Text.AlignHCenter
+                        text: Qt.formatTime(clockTimer.now, root.horizontal ? "HH:mm" : "HH\nmm")
+                        font.family: "Silkscreen"; font.pixelSize: root.horizontal ? 12 : 14
+                        lineHeight: .95
+                    }
+                    PixelText {
+                        visible: Settings.clockShowDate
+                        width: root.horizontal ? 46 : 32
+                        horizontalAlignment: Text.AlignHCenter
+                        text: Qt.formatDate(clockTimer.now, root.horizontal ? "dd MMM" : "dd\nMMM").toUpperCase()
+                        font.pixelSize: 11; color: Colors.accent
+                    }
                 }
             }
             onClicked: root.request(WellbeingPanel)

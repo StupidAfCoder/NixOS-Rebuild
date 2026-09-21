@@ -38,16 +38,16 @@ test('popup follows origin and clamps to frame at both ends, including short scr
 });
 test('actual popup manager captures click screen, clears origin for IPC and transfers between monitors',()=>{
  const source=fs.readFileSync(path.join(__dirname,'../quickshell/bar/ShellFrame.qml'),'utf8');
- const ctx=vm.createContext({popupScreen:'',popupAnchorY:-1,pendingAnchorY:-1,pendingScreen:'',TrayMenu:{requestedScreen:''},Hyprland:{focusedMonitor:{name:'DP-1'}},closeAll(){}});
+ const ctx=vm.createContext({popupScreen:'',popupAnchorY:-1,popupAnchorX:-1,pendingAnchorX:-1,pendingAnchorY:-1,pendingScreen:'',TrayMenu:{requestedScreen:''},Hyprland:{focusedMonitor:{name:'DP-1'}},closeAll(){}});
  for(const name of ['toggleFrom','activate']) {
   const match=source.match(new RegExp('    function '+name+'\\([^]*?\\n    \\}'));assert.ok(match,name);vm.runInContext(match[0],ctx);
  }
  const panel={shown:false,open(){this.shown=true;ctx.activate(this)},hide(){this.shown=false}};
- const origin={height:32,mapToItem(item,x,y){assert.equal(y,16);return {y:712}}};
- ctx.toggleFrom(panel,origin,'DP-2');assert.equal(ctx.popupScreen,'DP-2');assert.equal(ctx.popupAnchorY,712);assert.equal(ctx.pendingAnchorY,-1);
+ const origin={width:36,height:32,mapToItem(item,x,y){assert.equal(x,18);assert.equal(y,16);return {x:188,y:712}}};
+ ctx.toggleFrom(panel,origin,'DP-2');assert.equal(ctx.popupScreen,'DP-2');assert.equal(ctx.popupAnchorY,712);assert.equal(ctx.popupAnchorX,188);assert.equal(ctx.pendingAnchorY,-1);
  ctx.toggleFrom(panel,origin,'DP-1');assert.ok(panel.shown);assert.equal(ctx.popupScreen,'DP-1');
  ctx.toggleFrom(panel,origin,'DP-1');assert.equal(panel.shown,false);
- panel.open();assert.equal(ctx.popupAnchorY,-1);assert.equal(ctx.popupScreen,'DP-1');
+ panel.open();assert.equal(ctx.popupAnchorY,-1);assert.equal(ctx.popupAnchorX,-1);assert.equal(ctx.popupScreen,'DP-1');
 });
 test('library selection uses desktop-entry identity across reorder, duplicates and removal',()=>{
  const a={id:'org.a.App',name:'Editor'},b={id:'org.b.App',name:'Editor'},shell={name:'Settings',shellAction:'settings'};
@@ -74,10 +74,87 @@ test('nested tray routing keeps the parent monitor and clears its captured origi
   const match=traySource.match(new RegExp('    function '+name+'\\([^]*?\\n    \\}'));assert.ok(match,name);vm.runInContext(match[0],tray);
  }
  tray.openFor({menu:'handle'},320,500,'DP-2');assert.equal(tray.requestedScreen,'DP-2');
- const ctx=vm.createContext({TrayMenu:tray,popupScreen:'',popupAnchorY:-1,pendingScreen:'',pendingAnchorY:-1,Hyprland:{focusedMonitor:{name:'DP-1'}},closeAll(){}});
+ const ctx=vm.createContext({TrayMenu:tray,popupScreen:'',popupAnchorY:-1,popupAnchorX:-1,pendingAnchorX:-1,pendingScreen:'',pendingAnchorY:-1,Hyprland:{focusedMonitor:{name:'DP-1'}},closeAll(){}});
  vm.runInContext(frameSource.match(/    function activate\([^]*?\n    \}/)[0],ctx);ctx.activate(tray);
  assert.equal(ctx.popupScreen,'DP-2');assert.equal(tray.stack[0].y,500);
  tray.openSubmenu('child',580,510,1);assert.equal(tray.requestedScreen,'DP-2');assert.equal(tray.stack.length,2);
  tray.hide();assert.equal(tray.requestedScreen,'');assert.equal(tray.stack.length,0);
  tray.openFor({menu:'fallback'},0,0);ctx.activate(tray);assert.equal(ctx.popupScreen,'DP-1');
+});
+
+test('four-edge rail and content bounds agree across landscape, portrait and small screens',()=>{
+ for(const [vw,vh] of [[1920,1080],[1080,1920],[640,480],[320,240],[3440,1440]])
+ for(const edge of ['left','right','top','bottom']) for(const rail of [36,44,64]) for(const frame of [4,6,10]) {
+  const inset=placement.insets(edge,rail,frame),bar=placement.barRect(vw,vh,edge,rail),area=placement.bounds(vw,vh,inset,12);
+  assert.equal(inset[edge],rail);
+  assert.equal(Object.values(inset).filter(v=>v===rail).length,1);
+  assert.ok(bar.x>=0&&bar.y>=0&&bar.x+bar.width<=vw&&bar.y+bar.height<=vh);
+  assert.equal(edge==='top'||edge==='bottom'?bar.height:bar.width,rail);
+  const w=Math.min(820,area.width),h=Math.min(790,area.height);
+  for(const [x,y] of [[-1,-1],[0,0],[vw,vh],[vw/2,vh/2]]) for(const centered of [false,true]) {
+   const p=placement.panelPosition(area,w,h,edge,centered,x,y);
+   assert.ok(p.x>=area.x&&p.y>=area.y,JSON.stringify({edge,p,area}));
+   assert.ok(p.x+w<=vw-inset.right-12&&p.y+h<=vh-inset.bottom-12);
+  }
+ }
+});
+test('module panels attach to rail edge and follow the relevant origin axis',()=>{
+ for(const edge of ['left','right','top','bottom']) {
+  const a=placement.bounds(1920,1080,placement.insets(edge,44,6),12);
+  const p=placement.panelPosition(a,300,200,edge,false,900,500);
+  if(edge==='left'||edge==='right') {assert.equal(p.y,400);assert.equal(p.x,edge==='left'?a.x:a.x+a.width-300)}
+  else {assert.equal(p.x,750);assert.equal(p.y,edge==='top'?a.y:a.y+a.height-200)}
+  const centered=placement.panelPosition(a,300,200,edge,true,0,0);
+  assert.equal(centered.x,Math.round(a.x+(a.width-300)/2));assert.equal(centered.y,Math.round(a.y+(a.height-200)/2));
+ }
+});
+const workspace=load('quickshell/workspaces/WorkspaceState.js');
+test('workspace overview includes twelve open spaces, named/special spaces and configured empty slots',()=>{
+ const open=Array.from({length:12},(_,i)=>({id:i+1}));
+ assert.deepEqual(Array.from(workspace.ids(open,5)),Array.from({length:12},(_,i)=>i+1));
+ assert.deepEqual(Array.from(workspace.ids([{id:12},{id:12},{id:-1337,name:'Code'},{id:-99,name:'special:scratch'},{id:0},{id:NaN},{id:'8'}],3)),[1,2,3,12,-1337,-99]);
+ assert.equal(workspace.nextId([1,2,4,12,-99]),3);
+});
+test('rail preserves its slot count while exposing focused workspaces outside the configured range',()=>{
+ assert.deepEqual(Array.from(workspace.slots(5,12)),[1,2,3,4,12]);
+ assert.deepEqual(Array.from(workspace.slots(5,3)),[1,2,3,4,5]);
+ assert.deepEqual(Array.from(workspace.slots(1,12)),[12]);
+ assert.deepEqual(Array.from(workspace.slots(5,-1337)),[1,2,3,4,-1337]);
+ assert.deepEqual(Array.from(workspace.slots(5,0)),[1,2,3,4,5]);
+});
+test('workspace dispatch validates IDs and exact window addresses, never falling back to activewindow',()=>{
+ assert.equal(workspace.focusWorkspace(12),'hl.dsp.focus({ workspace = 12 })');
+ assert.equal(workspace.focusWindow('ABC123'),'hl.dsp.focus({ window = "address:0xabc123" })');
+ assert.equal(workspace.moveWindow('0xABC123',12),'hl.dsp.window.move({ window = "address:0xabc123", workspace = 12, follow = false })');
+ for(const bad of [0,-1,NaN,Infinity,1.5,2147483648,'12','1 }); os.execute("bad")']) {
+  assert.equal(workspace.focusWorkspace(bad),'');assert.equal(workspace.moveWindow('abc',bad),'');
+ }
+ for(const bad of ['',null,'0','0x000','activewindow','class:firefox','abc" }); bad()', 'a'.repeat(17)]) {
+  assert.equal(workspace.focusWindow(bad),'');assert.equal(workspace.moveWindow(bad,3),'');
+ }
+});
+test('named and special workspace selectors are escaped Lua literals, including control characters',()=>{
+ const list=[{id:-1337,name:'Code "two"\\desk\n9'},{id:-99,name:'special:scratch'},{id:-98,name:'special'}];
+ assert.equal(workspace.focusWorkspace(-1337,list),'hl.dsp.focus({ workspace = "name:Code \\"two\\"\\\\desk\\0109" })');
+ assert.equal(workspace.focusWorkspace(-99,list),'hl.dsp.workspace.toggle_special("scratch")');
+ assert.equal(workspace.focusWorkspace(-98,list),'hl.dsp.workspace.toggle_special("")');
+ assert.equal(workspace.moveWindow('abc',-99,list),'hl.dsp.window.move({ window = "address:0xabc", workspace = "special:scratch", follow = false })');
+ assert.equal(workspace.luaString('日本語\u00001'),'"日本語\\0001"');
+});
+test('actual quick-strip scrubber jumps through 1000 images without applying, and handles empty collections',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../quickshell/wallpaper/QuickWallpapersContent.qml'),'utf8');
+ const collections=load('quickshell/common/CollectionState.js');const positioned=[];
+ const ctx=vm.createContext({CollectionState:collections,ListView:{Center:1},selectedPath:'',WallpaperBackend:{wallpapers:Array.from({length:1000},(_,i)=>({path:`/${i}.png`}))},carousel:{count:1000,currentIndex:0,userScrolling:true,cancelFlick(){},positionViewAtIndex(i){positioned.push(i)}}});
+ vm.runInContext(source.match(/    function scrubTo\([^]*?\n    \}/)[0],ctx);
+ ctx.scrubTo(950);assert.equal(ctx.selectedPath,'/950.png');assert.equal(ctx.carousel.userScrolling,false);assert.equal(positioned.at(-1),950);
+ ctx.scrubTo(2000);assert.equal(ctx.selectedPath,'/999.png');ctx.scrubTo(-10);assert.equal(ctx.selectedPath,'/0.png');
+ ctx.carousel.count=0;ctx.WallpaperBackend.wallpapers=[];ctx.scrubTo(0);assert.equal(ctx.carousel.currentIndex,-1);
+});
+test('actual workspace move rejects vanished windows and preview mode',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../quickshell/workspaces/WorkspacePanelContent.qml'),'utf8');const dispatched=[];
+ const ctx=vm.createContext({State:workspace,Settings:{previewMode:false},selectedId:1,movingAddress:'abc',Hyprland:{workspaces:{values:[{id:12}]},toplevels:{values:[{address:'abc'}]},dispatch(c){dispatched.push(c)},refreshToplevels(){}}});
+ vm.runInContext(source.match(/    function select\([^]*?\n    \}/)[0],ctx);
+ ctx.select(12);assert.equal(dispatched.length,1);assert.equal(ctx.selectedId,12);assert.equal(ctx.movingAddress,'');
+ ctx.movingAddress='abc';ctx.Settings.previewMode=true;ctx.select(3);assert.equal(dispatched.length,1);
+ ctx.movingAddress='abc';ctx.Settings.previewMode=false;ctx.Hyprland.toplevels.values=[];ctx.select(4);assert.equal(dispatched.length,1);assert.equal(ctx.movingAddress,'');
 });

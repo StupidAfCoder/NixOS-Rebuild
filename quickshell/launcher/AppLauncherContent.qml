@@ -6,6 +6,7 @@ import Quickshell
 import "../bar"
 import "../common"
 import "../settings"
+import "../workspaces"
 import "../sysstats"
 import "../wallpaper"
 import "AppLibrary.js" as Library
@@ -23,7 +24,8 @@ Sheet {
     property string category: "All"
     property string selectedId: ""
     readonly property var shortcuts: [
-        {name: "Settings", genericName: "Your corner · profile, rail and appearance", icon: "preferences-system", shellAction: "settings"},
+        {name: "Workspaces", genericName: "Switch spaces and move windows", icon: "preferences-desktop", shellAction: "workspaces"},
+        {name: "Settings", genericName: "Profile, rail and appearance", icon: "preferences-system", shellAction: "settings"},
         {name: "System readings", genericName: "CPU, memory and sensors", icon: "utilities-system-monitor", shellAction: "system"},
         {name: "Quick wallpapers", genericName: "Browse your wallpaper collection", icon: "preferences-desktop-wallpaper", shellAction: "wallpapers"}
     ]
@@ -33,7 +35,8 @@ Sheet {
         const app = applications[index];
         if (!app) return;
         AppLauncher.hide();
-        if (app.shellAction === "settings") SettingsPanel.toggle();
+        if (app.shellAction === "workspaces") WorkspacePanel.toggle();
+        else if (app.shellAction === "settings") SettingsPanel.toggle();
         else if (app.shellAction === "system") SysStatsPanel.toggle();
         else if (app.shellAction === "wallpapers") QuickWallpapers.toggle();
         else app.execute();
@@ -90,7 +93,7 @@ Sheet {
                 Rectangle { anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 8; width: 4; height: 4; color: Colors.accent; visible: !!root.currentApp }
             }
             PixelText { Layout.fillWidth: true; text: root.currentApp?.name || "Nothing here"; font.family: "Pixel Operator"; font.pixelSize: 23; wrapMode: Text.Wrap; maximumLineCount: 2 }
-            PixelText { Layout.fillWidth: true; text: root.currentApp?.genericName || root.currentApp?.comment || "Choose a cartridge to launch."; color: Colors.textOnSurfaceVariant; wrapMode: Text.Wrap; maximumLineCount: 3 }
+            PixelText { Layout.fillWidth: true; visible: text.length > 0; text: root.currentApp?.genericName || root.currentApp?.comment || ""; color: Colors.textOnSurfaceVariant; wrapMode: Text.Wrap; maximumLineCount: 3 }
             PixelButton { text: "Launch  ↵"; primary: true; Layout.fillWidth: true; enabled: !!root.currentApp; onClicked: root.launch(results.currentIndex) }
         }
         GridView {
@@ -141,7 +144,6 @@ Sheet {
         Layout.fillWidth: true
         PixelText { text: Math.max(0, results.currentIndex + 1) + " / " + root.applications.length; color: Colors.accent }
         Item { Layout.fillWidth: true }
-        PixelText { text: "Arrows select · Enter launches · Esc closes"; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; color: Colors.textOnSurfaceVariant; font.pixelSize: 12 }
     }
     PixelButton { visible: root.width < 570; text: "Launch  ↵"; Layout.fillWidth: true; primary: true; enabled: !!root.currentApp; onClicked: root.launch(results.currentIndex) }
 }

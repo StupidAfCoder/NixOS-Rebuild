@@ -15,6 +15,9 @@ FocusScope {
     property bool centered: false
     // Window-local origin captured at the bar click; IPC opens use -1.
     property real anchorY: -1
+    property real anchorX: -1
+    readonly property var area: Placement.bounds(parent.width, parent.height, Settings.desktopInsets, 12)
+    readonly property var placement: Placement.panelPosition(area, width, height, Settings.barEdge, centered, anchorX, anchorY)
     property bool fitContent: true
     property int contentPadding: 16
     property Item initialFocusItem: root
@@ -24,14 +27,12 @@ FocusScope {
     property real reveal: shown ? 1 : 0
     default property alias content: body.data
     signal dismiss()
-    width: Math.max(1, Math.min(preferredWidth, parent.width - Settings.barWidth - 36))
-    height: Math.max(1, Math.min(preferredHeight, fitContent ? body.implicitHeight + heading.implicitHeight + 1 + 24 + contentPadding * 2 : preferredHeight, parent.height - Settings.frameWidth * 2 - 24))
-    x: edge === "right" ? parent.width - (width + Settings.frameWidth + 12) * reveal
-       : edge === "left" ? Settings.barWidth + 12 - (width + Settings.barWidth + 12) * (1 - reveal)
-       : centered ? Settings.barWidth + (parent.width - Settings.barWidth - width) / 2 : Settings.barWidth + 12
-    y: edge === "top" ? Settings.frameWidth + 12 - (height + Settings.frameWidth + 12) * (1 - reveal)
-       : edge === "bottom" ? parent.height - (height + Settings.frameWidth + 12) * reveal
-       : Placement.popupY(parent.height, height, Settings.frameWidth + 12, centered ? -1 : anchorY)
+    width: Math.max(1, Math.min(preferredWidth, area.width))
+    height: Math.max(1, Math.min(preferredHeight, fitContent ? body.implicitHeight + heading.implicitHeight + 1 + 24 + contentPadding * 2 : preferredHeight, area.height))
+    x: edge === "right" ? area.x + area.width - width + (width + Settings.desktopInsets.right + 12) * (1 - reveal)
+       : edge === "left" ? area.x - (width + area.x) * (1 - reveal) : placement.x
+    y: edge === "top" ? area.y - (height + area.y) * (1 - reveal)
+       : edge === "bottom" ? area.y + area.height - height + (height + Settings.desktopInsets.bottom + 12) * (1 - reveal) : placement.y
     z: 20
     visible: shown || reveal > 0
     enabled: shown

@@ -12,9 +12,9 @@ function setup(){
  const click=selector=>{const el=doc.querySelector(selector);assert.ok(el,selector);el.click()};
  return {dom,doc,errors,click};
 }
-test('all twelve illustrated scenes open, close and have no JS errors',()=>{
+test('all thirteen illustrated scenes open, close and have no JS errors',()=>{
  const {dom,doc,errors,click}=setup();
- const buttons=[...doc.querySelectorAll('#tabs button')];assert.equal(buttons.length,12);
+ const buttons=[...doc.querySelectorAll('#tabs button')];assert.equal(buttons.length,13);
  for(const b of buttons){b.click();assert.ok(doc.querySelector('.panel,.sheetempty'));}
  click('[data-close]');assert.ok(doc.querySelector('.sheetempty'));assert.deepEqual(errors,[]);dom.window.close();
 });
@@ -58,5 +58,15 @@ test('cartridge navigation, background-free ribbon keys, thumbnail preview and r
  assert.equal(doc.querySelector('#rail [aria-label="Settings"]'),null);
  click('[data-relocate="clock"]');assert.ok(doc.querySelector('#rail [data-zone="bottom"] .clock'));
  click('#tabs [data-scene="Session"]');assert.equal(doc.querySelector('.session .profile'),null);
+ assert.deepEqual(errors,[]);dom.window.close();
+});
+
+test('four rail edges, click-only wallpaper target, scrubber and overflow workspace illustration',()=>{
+ const {dom,doc,errors,click}=setup();
+ for(const edge of ['left','right','top','bottom']){const el=doc.getElementById('rail-edge');el.value=edge;el.dispatchEvent(new dom.window.Event('change'));assert.equal(doc.getElementById('desktop').dataset.rail,edge)}
+ assert.equal(doc.getElementById('edge-trigger').onmouseenter,null);
+ click('#edge-trigger');const scrub=doc.getElementById('poster-scrub');scrub.value='4';scrub.dispatchEvent(new dom.window.Event('input'));assert.equal(doc.getElementById('poster-name').textContent,'Stone');
+ click('#tabs [data-scene="Workspaces"]');assert.equal(doc.querySelectorAll('[data-space]').length,12);click('[data-space="12"]');click('[data-open-space="12"]');
+ assert.ok(doc.querySelector('#rail [data-workspace="12"] .gem.lit'));assert.equal(doc.querySelectorAll('#rail [data-workspace]').length,5);
  assert.deepEqual(errors,[]);dom.window.close();
 });

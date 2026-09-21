@@ -344,6 +344,7 @@ hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(wallpaper_change))
 hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("qs ipc call quickwallpaper toggle"))
 -- Live shell preferences and local calendar / focused-app history.
+hl.bind(mainMod .. " + CTRL + E", hl.dsp.exec_cmd("qs ipc call workspaces toggle"))
 hl.bind(mainMod .. " + CTRL + S", hl.dsp.exec_cmd("qs ipc call settings toggle"))
 hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("qs ipc call wellbeing toggle"))
 hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("qs ipc call power toggle"))
@@ -423,11 +424,22 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 
 -- Example window rules that are useful
 hl.layer_rule({
-    name = "no-blur-frame",
+    name = "pixel-frame",
     match = { namespace = "^quickshell:frame$" },
     no_anim = true,
+    blur = false,
 })
 
+-- The optional blur surface is recreated when toggled; namespaces are immutable.
+-- Ignore the transparent desktop and the studio's 0.15 scrim. The rail's
+-- minimum background alpha is 0.35; opaque popup faces remain opaque.
+hl.layer_rule({
+    name = "pixel-frame-blur",
+    match = { namespace = "^quickshell:frame-blur$" },
+    no_anim = true,
+    blur = true,
+    ignore_alpha = 0.2,
+})
 
 hl.window_rule({
     match = { 

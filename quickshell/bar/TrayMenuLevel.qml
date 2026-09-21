@@ -7,10 +7,10 @@ FocusScope {
     id: level
     required property var levelData
     required property int levelIndex
-    width: Math.min(270, parent.width - Settings.barWidth - 20)
-    height: Math.min(list.contentHeight + 16, parent.height - 32)
-    x: Math.max(Settings.barWidth + 8, Math.min(levelData.x, parent.width - width - 12))
-    y: Math.max(12, Math.min(levelData.y, parent.height - height - 12))
+    width: Math.min(270, parent.width - Settings.desktopInsets.left - Settings.desktopInsets.right - 24)
+    height: Math.min(list.contentHeight + 16, parent.height - Settings.desktopInsets.top - Settings.desktopInsets.bottom - 24)
+    x: Math.max(Settings.desktopInsets.left + 12, Math.min(levelData.x, parent.width - Settings.desktopInsets.right - width - 12))
+    y: Math.max(Settings.desktopInsets.top + 12, Math.min(levelData.y, parent.height - Settings.desktopInsets.bottom - height - 12))
     z: 30 + levelIndex
     Component.onCompleted: forceActiveFocus()
     Connections { target: TrayMenu; function onStackChanged() { if (level.levelIndex === TrayMenu.stack.length - 1) level.forceActiveFocus(); } }
@@ -19,7 +19,7 @@ FocusScope {
         const entry = opener.children.values[index];
         if (!entry || entry.isSeparator || !entry.enabled) return;
         if (entry.hasChildren) {
-            const nextX = level.x + width + 4 + width <= parent.width ? level.x + width + 4 : level.x - width - 4;
+            const nextX = level.x + width + 4 + width <= parent.width - Settings.desktopInsets.right - 12 ? level.x + width + 4 : level.x - width - 4;
             TrayMenu.openSubmenu(entry, nextX, level.y + index * 36 - list.contentY, levelIndex + 1);
         } else { entry.triggered(); TrayMenu.hide(); }
     }

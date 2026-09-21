@@ -23,7 +23,7 @@ Scope {
         screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) || Quickshell.screens[0]
         visible: timeout.running
         anchors.bottom: true
-        margins.bottom: Settings.frameWidth + 30
+        margins.bottom: Settings.desktopInsets.bottom + 24
         implicitWidth: 280; implicitHeight: 62
         color: "transparent"
         exclusionMode: ExclusionMode.Ignore

@@ -3,7 +3,7 @@
 function entries() {
     return [
         {key: "launcher", label: "App launcher", icon: "app-windows.svg", description: "Your searchable library, opening from the top or bottom."},
-        {key: "workspaces", label: "Workspaces", icon: "app-windows.svg", description: "Pixel indicators and representative app icons."},
+        {key: "workspaces", label: "Workspaces", icon: "app-windows.svg", description: "Pixel save gems and an overview of every workspace."},
         {key: "clock", label: "Clock & calendar", icon: "clock.svg", description: "Time, date and a shortcut to Your day."},
         {key: "wizard", label: "Wallpaper wizard", icon: "brush.svg", description: "Your original mascot, recolored with each wallpaper."},
         {key: "media", label: "Now playing", icon: "music.svg", description: "Music controls; a vertical title when there is room."},

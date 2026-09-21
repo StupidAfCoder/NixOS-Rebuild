@@ -10,7 +10,7 @@ Sheet {
     id: root
     shown: WellbeingPanel.shown
     title: "Your day"
-    subtitle: Usage.sampleData ? "Sample history" : Settings.trackingEnabled ? "" : "Recording paused"
+    subtitle: Usage.sampleData ? "Demo" : Settings.trackingEnabled ? "" : "Recording paused"
     centered: true
     preferredWidth: 490
     preferredHeight: page === 1 ? 670 : 600
@@ -187,7 +187,6 @@ Sheet {
             Repeater { model: 5; Rectangle { required property int index; implicitWidth: 14; implicitHeight: 10; color: Usage.heatColor(index) } }
             PixelText { text: "More"; color: Colors.textOnSurfaceVariant }
             Item { Layout.fillWidth: true }
-            PixelText { text: "Blank = no data"; color: Colors.textOnSurfaceVariant }
         }
     }
     ColumnLayout {

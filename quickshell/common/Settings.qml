@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "ModuleCatalog.js" as Modules
+import "PopupGeometry.js" as Geometry
 
 Item {
     id: root
@@ -40,6 +41,11 @@ Item {
     readonly property string wallpaperDir: values.wallpaperDir || home + "/Pictures/Wallpapers"
     readonly property int frameWidth: bounded("frameWidth", 6, 4, 10)
     readonly property int barWidth: bounded("barWidth", 44, 36, 64)
+    readonly property string barEdge: ["left", "right", "top", "bottom"].indexOf(values.barEdge) >= 0 ? values.barEdge : "left"
+    readonly property bool horizontalBar: barEdge === "top" || barEdge === "bottom"
+    readonly property real barOpacity: bounded("barOpacity", 1, .35, 1)
+    readonly property bool barBlur: values.barBlur === true
+    readonly property var desktopInsets: Geometry.insets(barEdge, barWidth, frameWidth)
     readonly property int bodySize: bounded("bodySize", 13, 12, 18)
     readonly property bool reducedMotion: values.reducedMotion === true
     readonly property int motionMs: reducedMotion ? 0 : bounded("motionMs", 180, 80, 350)
