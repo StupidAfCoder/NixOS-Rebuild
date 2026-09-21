@@ -21,7 +21,6 @@ PowerMenuRow 1.0 PowerMenuRow.qml
 singleton PowerProfileBackend 1.0 PowerProfileBackend.qml
 ReactiveImage 1.0 ReactiveImage.qml
 ShellFrame 1.0 ShellFrame.qml
-SystemTray 1.0 SystemTray.qml
 singleton TrayMenu 1.0 TrayMenu.qml
 TrayMenuContent 1.0 TrayMenuContent.qml
 TrayMenuLevel 1.0 TrayMenuLevel.qml
@@ -30,3 +29,5 @@ singleton WifiPanel 1.0 WifiPanel.qml
 WifiPanelContent 1.0 WifiPanelContent.qml
 singleton TrayApps 1.0 TrayApps.qml
 TrayAppsContent 1.0 TrayAppsContent.qml
+
+BarModule 1.0 BarModule.qml

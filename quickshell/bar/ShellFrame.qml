@@ -17,6 +17,25 @@ Scope {
     property color frameColor: Colors.background
     property color accentColor: Colors.accent
     property string popupScreen: ""
+    property real popupAnchorY: -1
+    property real pendingAnchorY: -1
+    property string pendingScreen: ""
+    function toggleFrom(panel, origin, screenName) {
+        if (panel.shown) {
+            if (popupScreen !== screenName) {
+                popupScreen = screenName;
+                popupAnchorY = origin.mapToItem(null, 0, origin.height / 2).y;
+            } else if (typeof panel.hide === "function") panel.hide(); else panel.shown = false;
+            return;
+        }
+        pendingAnchorY = origin.mapToItem(null, 0, origin.height / 2).y;
+        pendingScreen = screenName;
+        // Some panels do work on open (device refresh, draft reset).
+        if (typeof panel.open === "function") panel.open();
+        else if (typeof panel.toggle === "function") panel.toggle();
+        else panel.shown = true;
+        pendingAnchorY = -1; pendingScreen = "";
+    }
     readonly property var panels: [QuickWallpapers, WallpaperLauncher, AppLauncher, PowerMenu, WifiPanel, BatteryPanel, TrayApps, TrayMenu, MediaPanel, BluetoothPanel, SysStatsPanel, SettingsPanel, WellbeingPanel, RightPanel]
     readonly property bool anyPanelShown: QuickWallpapers.shown || WallpaperLauncher.shown || AppLauncher.shown || PowerMenu.shown || WifiPanel.shown || BatteryPanel.shown || TrayApps.shown || TrayMenu.shown || MediaPanel.shown || BluetoothPanel.shown || SysStatsPanel.shown || SettingsPanel.shown || WellbeingPanel.shown || RightPanel.shown
     function closeAll(except) {
@@ -26,7 +45,8 @@ Scope {
     }
     function activate(panel) {
         if (!panel.shown) return;
-        popupScreen = Hyprland.focusedMonitor?.name || Quickshell.screens[0]?.name || "";
+        popupScreen = pendingScreen || Hyprland.focusedMonitor?.name || Quickshell.screens[0]?.name || "";
+        popupAnchorY = pendingAnchorY;
         closeAll(panel);
     }
     Connections { target: QuickWallpapers; function onShownChanged() { manager.activate(QuickWallpapers); } }
@@ -88,6 +108,7 @@ Scope {
                     mask: Region {
                         Region { item: barArea }
                         Region { item: wallpaperEdge }
+                        Region { item: settingsEdge }
                         Region { item: catchArea }
                     }
                     Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; height: manager.borderThickness; color: manager.frameColor }
@@ -116,26 +137,44 @@ Scope {
                         }
                     }
                     Item {
+                        id: settingsEdge
+                        anchors.top: parent.top; anchors.horizontalCenter: parent.horizontalCenter
+                        z: 31; width: 140
+                        readonly property bool available: !manager.anyPanelShown && !(Hyprland.focusedWorkspace?.lastIpcObject?.hasfullscreen ?? false)
+                        readonly property bool revealed: available && settingsHover.hovered
+                        height: !available ? 0 : revealed ? 42 : Math.max(4, manager.borderThickness)
+                        // The edge target itself costs no rail slot and does not open a
+                        // drawer accidentally: first reveal the label, then click it.
+                        HoverHandler { id: settingsHover }
+                        PixelButton {
+                            id: settingsHandle
+                            anchors.horizontalCenter: parent.horizontalCenter; y: 6
+                            width: 132; height: 32; text: "↓ Settings"
+                            visible: settingsEdge.revealed
+                            onClicked: manager.toggleFrom(SettingsPanel, settingsHandle, screenRoot.modelData.name)
+                        }
+                    }
+                    Item {
                         id: popups
                         anchors.fill: parent; z: 20
                         visible: frame.onScreen
                         Keys.onEscapePressed: manager.closeAll(null)
-                        BluetoothPanelContent { shown: BluetoothPanel.shown && frame.onScreen }
-                        PowerMenuContent { shown: PowerMenu.shown && frame.onScreen }
-                        WifiPanelContent { shown: WifiPanel.shown && frame.onScreen }
-                        BatteryPanelContent { shown: BatteryPanel.shown && frame.onScreen }
-                        MediaPanelContent { shown: MediaPanel.shown && frame.onScreen }
+                        BluetoothPanelContent { anchorY: manager.popupAnchorY; shown: BluetoothPanel.shown && frame.onScreen }
+                        PowerMenuContent { anchorY: manager.popupAnchorY; shown: PowerMenu.shown && frame.onScreen }
+                        WifiPanelContent { anchorY: manager.popupAnchorY; shown: WifiPanel.shown && frame.onScreen }
+                        BatteryPanelContent { anchorY: manager.popupAnchorY; shown: BatteryPanel.shown && frame.onScreen }
+                        MediaPanelContent { anchorY: manager.popupAnchorY; shown: MediaPanel.shown && frame.onScreen }
                         QuickWallpapersContent { shown: QuickWallpapers.shown && frame.onScreen }
                         WallpaperLauncherContent { shown: WallpaperLauncher.shown && frame.onScreen }
                         AppLauncherContent { shown: AppLauncher.shown && frame.onScreen }
-                        SysStatsPanelContent { shown: SysStatsPanel.shown && frame.onScreen }
-                        SettingsPanelContent { shown: SettingsPanel.shown && frame.onScreen }
-                        WellbeingPanelContent { shown: WellbeingPanel.shown && frame.onScreen }
-                        RightEdgePanel { shown: RightPanel.shown && frame.onScreen }
-                        TrayAppsContent { shown: TrayApps.shown && frame.onScreen }
+                        SysStatsPanelContent { anchorY: manager.popupAnchorY; shown: SysStatsPanel.shown && frame.onScreen }
+                        SettingsPanelContent { anchorY: manager.popupAnchorY; shown: SettingsPanel.shown && frame.onScreen }
+                        WellbeingPanelContent { anchorY: manager.popupAnchorY; shown: WellbeingPanel.shown && frame.onScreen }
+                        RightEdgePanel { anchorY: manager.popupAnchorY; shown: RightPanel.shown && frame.onScreen }
+                        TrayAppsContent { anchorY: manager.popupAnchorY; shown: TrayApps.shown && frame.onScreen }
                         TrayMenuContent { visible: TrayMenu.shown && frame.onScreen }
                     }
-                    Bar { id: barArea; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; barWidth: manager.barWidth; z: 30 }
+                    Bar { id: barArea; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; barWidth: manager.barWidth; z: 30; onOpenPanel: (panel, origin) => manager.toggleFrom(panel, origin, screenRoot.modelData.name) }
                     CornerAccent { corner: "topLeft"; thickness: manager.borderThickness; color: manager.accentColor; anchors.left: parent.left; anchors.top: parent.top; anchors.leftMargin: manager.barWidth; anchors.topMargin: manager.borderThickness }
                     CornerAccent { corner: "bottomLeft"; thickness: manager.borderThickness; color: manager.accentColor; anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.leftMargin: manager.barWidth; anchors.bottomMargin: manager.borderThickness }
                     CornerAccent { corner: "topRight"; thickness: manager.borderThickness; color: manager.accentColor; anchors.right: parent.right; anchors.top: parent.top; anchors.rightMargin: manager.borderThickness; anchors.topMargin: manager.borderThickness }

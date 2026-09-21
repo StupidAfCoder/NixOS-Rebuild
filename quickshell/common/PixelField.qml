@@ -12,9 +12,9 @@ TextField {
     font.family: "Cozette"
     font.pixelSize: Settings.bodySize
     selectByMouse: true
-    background: Rectangle {
-        color: Colors.background
-        border.color: root.activeFocus ? Colors.accent : Colors.outlineVariant
-        border.width: root.activeFocus ? 2 : 1
+    background: ConsoleSurface {
+        raised: false
+        fillColor: Colors.background
+        edgeColor: root.activeFocus ? Colors.accent : Colors.outlineVariant
     }
 }

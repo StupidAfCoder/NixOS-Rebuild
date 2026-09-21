@@ -8,6 +8,7 @@ import "../common"
 import "../settings"
 import "../sysstats"
 import "../wallpaper"
+import "AppLibrary.js" as Library
 
 Sheet {
     id: root
@@ -17,75 +18,114 @@ Sheet {
     edge: Settings.launcherEdge === "center" ? "" : Settings.launcherEdge
     initialFocusItem: search
     fitContent: false
-    preferredWidth: 480
-    preferredHeight: 480
+    preferredWidth: 672; preferredHeight: 512
     onDismiss: AppLauncher.hide()
-    property var applications: {
-        const q = search.text.trim().toLowerCase();
-        const shortcuts = [
-            {name: "Settings", genericName: "Your corner preferences", icon: "preferences-system", shellAction: "settings"},
-            {name: "System readings", genericName: "CPU memory sensors", icon: "utilities-system-monitor", shellAction: "system"},
-            {name: "Quick wallpapers", genericName: "Browse wallpaper carousel", icon: "preferences-desktop-wallpaper", shellAction: "wallpapers"}
-        ];
-        return shortcuts.concat([...DesktopEntries.applications.values]).filter(e => e && !e.noDisplay && e.name &&
-            (!q || (e.name + " " + (e.genericName || "") + " " + (e.comment || "")).toLowerCase().includes(q)))
-            .sort((a,b) => Number(!a.name.toLowerCase().startsWith(q)) - Number(!b.name.toLowerCase().startsWith(q)) || a.name.localeCompare(b.name));
-    }
-    function launch(index) { const app = applications[index]; if (app) { AppLauncher.hide();
+    property string category: "All"
+    readonly property var shortcuts: [
+        {name: "Settings", genericName: "Your corner · profile, rail and appearance", icon: "preferences-system", shellAction: "settings"},
+        {name: "System readings", genericName: "CPU, memory and sensors", icon: "utilities-system-monitor", shellAction: "system"},
+        {name: "Quick wallpapers", genericName: "Browse your wallpaper collection", icon: "preferences-desktop-wallpaper", shellAction: "wallpapers"}
+    ]
+    readonly property var applications: Library.filter(shortcuts.concat([...DesktopEntries.applications.values]), search.text, category)
+    readonly property var currentApp: applications[results.currentIndex] || null
+    function launch(index) {
+        const app = applications[index];
+        if (!app) return;
+        AppLauncher.hide();
         if (app.shellAction === "settings") SettingsPanel.toggle();
         else if (app.shellAction === "system") SysStatsPanel.toggle();
         else if (app.shellAction === "wallpapers") QuickWallpapers.toggle();
-        else app.execute(); } }
-    function move(delta) {
-        results.currentIndex = Math.max(0, Math.min(applications.length - 1, results.currentIndex + delta));
-        results.positionViewAtIndex(results.currentIndex, ListView.Contain);
+        else app.execute();
     }
-    onShownChanged: if (shown) { search.text = ""; results.currentIndex = 0; }
+    function move(delta) {
+        results.currentIndex = Library.move(results.currentIndex, delta, applications.length);
+        if (results.currentIndex >= 0) results.positionViewAtIndex(results.currentIndex, GridView.Contain);
+    }
+    onApplicationsChanged: results.currentIndex = applications.length ? 0 : -1
+    onShownChanged: if (shown) { search.text = ""; category = "All"; results.currentIndex = applications.length ? 0 : -1; }
     PixelField {
         id: search
         Layout.fillWidth: true
-        placeholderText: "Find an app"
-        onTextChanged: results.currentIndex = 0
+        placeholderText: "Search apps or Settings…"
+        onTextChanged: if (text) root.category = "All"
         onAccepted: root.launch(results.currentIndex)
-        Keys.onDownPressed: root.move(1)
-        Keys.onUpPressed: root.move(-1)
+        Keys.onDownPressed: { results.forceActiveFocus(); root.move(0); }
     }
-    ListView {
-        id: results
-        Layout.fillWidth: true
-        Layout.preferredHeight: Math.max(100, root.height - 200)
-        model: root.applications
-        currentIndex: 0
-        spacing: 4; clip: true
-        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-        delegate: Button {
-            id: row
-            required property var modelData
-            required property int index
-            width: results.width; height: 56; padding: 10
-            hoverEnabled: true
-            Accessible.name: modelData.name
-            onClicked: root.launch(index)
-            onHoveredChanged: if (hovered) results.currentIndex = index
-            Keys.onDownPressed: root.move(1)
-            Keys.onUpPressed: root.move(-1)
-            background: Rectangle {
-                color: results.currentIndex === row.index ? Colors.surfaceContainerHigh : "transparent"
-                Rectangle { width: 2; height: 16; anchors.verticalCenter: parent.verticalCenter; color: Colors.accent; visible: results.currentIndex === row.index }
-                border.width: row.activeFocus ? 1 : 0; border.color: Colors.accent
-            }
-            contentItem: RowLayout {
-                spacing: 16
-                PixelAppIcon { Layout.preferredWidth: 28; Layout.preferredHeight: 28; iconSource: Quickshell.iconPath(row.modelData.icon, true) }
-                PixelText { text: row.modelData.name; Layout.fillWidth: true; font.pixelSize: Settings.bodySize + 2 }
-                PixelText { visible: results.currentIndex === row.index; text: "Enter"; color: Colors.textOnSurfaceVariant }
-            }
+    Flow {
+        Layout.fillWidth: true; spacing: 6
+        Repeater {
+            model: ["All", "Games", "Create", "Tools"]
+            TabButton { required property string modelData; text: modelData; selected: root.category === modelData; onClicked: { search.text = ""; root.category = modelData; } }
         }
-        PixelText { anchors.centerIn: parent; visible: root.applications.length === 0; text: "No matching apps."; color: Colors.textOnSurfaceVariant }
+    }
+    RowLayout {
+        Layout.fillWidth: true; spacing: 16
+        // The selected cartridge has a dedicated readout instead of a second
+        // text list. The grid scrolls independently, leaving Launch reachable.
+        ColumnLayout {
+            visible: root.width >= 570
+            Layout.preferredWidth: 190; Layout.maximumWidth: 190
+            Layout.alignment: Qt.AlignTop; spacing: 12
+            ConsoleSurface {
+                Layout.fillWidth: true; Layout.preferredHeight: 124
+                fillColor: Colors.background; raised: false
+                PixelAppIcon { anchors.centerIn: parent; width: 64; height: 64; visible: !!root.currentApp; iconSource: root.currentApp ? Quickshell.iconPath(root.currentApp.icon, true) : "" }
+                PixelText { x: 10; y: 8; text: String(Math.max(0, results.currentIndex + 1)).padStart(2, "0"); font.pixelSize: 11; color: Colors.textOnSurfaceVariant }
+                Rectangle { anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 8; width: 4; height: 4; color: Colors.accent; visible: !!root.currentApp }
+            }
+            PixelText { Layout.fillWidth: true; text: root.currentApp?.name || "Nothing here"; font.family: "Pixel Operator"; font.pixelSize: 23; wrapMode: Text.Wrap; maximumLineCount: 2 }
+            PixelText { Layout.fillWidth: true; text: root.currentApp?.genericName || root.currentApp?.comment || "Choose a cartridge to launch."; color: Colors.textOnSurfaceVariant; wrapMode: Text.Wrap; maximumLineCount: 3 }
+            PixelButton { text: "Launch  ↵"; primary: true; Layout.fillWidth: true; enabled: !!root.currentApp; onClicked: root.launch(results.currentIndex) }
+        }
+        GridView {
+            id: results
+            Layout.fillWidth: true; Layout.preferredHeight: Math.max(130, root.height - 232)
+            readonly property int columns: Math.max(2, Math.floor(width / 112))
+            cellWidth: Math.floor(width / columns); cellHeight: 122
+            model: root.applications; currentIndex: 0; clip: true
+            keyNavigationEnabled: false; activeFocusOnTab: true
+            Keys.onLeftPressed: root.move(-1)
+            Keys.onRightPressed: root.move(1)
+            Keys.onUpPressed: if (currentIndex < columns) search.forceActiveFocus(); else root.move(-columns)
+            Keys.onDownPressed: root.move(columns)
+            Keys.onReturnPressed: root.launch(currentIndex)
+            Keys.onEnterPressed: root.launch(currentIndex)
+            Keys.onPressed: event => {
+                // Typing while browsing returns to search; Ctrl/Alt shortcuts stay intact.
+                if (event.text && !(event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier)) && event.text.charCodeAt(0) >= 32) {
+                    search.forceActiveFocus(); search.insert(search.cursorPosition, event.text); event.accepted = true;
+                }
+            }
+            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+            delegate: Item {
+                id: tile
+                required property var modelData
+                required property int index
+                width: results.cellWidth; height: results.cellHeight
+                PixelButton {
+                    anchors.fill: parent; anchors.margins: 4
+                    padding: 8; checked: results.currentIndex === tile.index
+                    focusPolicy: Qt.NoFocus
+                    Accessible.name: tile.modelData.name
+                    onClicked: { results.currentIndex = tile.index; results.forceActiveFocus(); }
+                    onDoubleClicked: root.launch(tile.index)
+                    contentItem: Item {
+                        Row { anchors.top: parent.top; anchors.horizontalCenter: parent.horizontalCenter; spacing: 3
+                            Repeater { model: 3; Rectangle { width: 8; height: 2; color: Colors.outlineVariant } }
+                        }
+                        PixelAppIcon { anchors.horizontalCenter: parent.horizontalCenter; y: 12; width: 36; height: 36; iconSource: Quickshell.iconPath(tile.modelData.icon, true) }
+                        PixelText { anchors.left: parent.left; anchors.right: parent.right; y: 55; text: tile.modelData.name; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; maximumLineCount: 2; font.pixelSize: Settings.bodySize }
+                    }
+                }
+            }
+            PixelText { anchors.centerIn: parent; width: parent.width - 12; horizontalAlignment: Text.AlignHCenter; visible: !results.count; text: "No matching apps.\nTry All or another search."; wrapMode: Text.Wrap; color: Colors.textOnSurfaceVariant }
+        }
     }
     RowLayout {
         Layout.fillWidth: true
-        PixelText { text: root.applications.length + " apps"; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant }
-        PixelText { text: "Esc to close"; color: Colors.textOnSurfaceVariant }
+        PixelText { text: Math.max(0, results.currentIndex + 1) + " / " + root.applications.length; color: Colors.accent }
+        Item { Layout.fillWidth: true }
+        PixelText { text: "Arrows select · Enter launches · Esc closes"; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight; color: Colors.textOnSurfaceVariant; font.pixelSize: 12 }
     }
+    PixelButton { visible: root.width < 570; text: "Launch  ↵"; Layout.fillWidth: true; primary: true; enabled: !!root.currentApp; onClicked: root.launch(results.currentIndex) }
 }

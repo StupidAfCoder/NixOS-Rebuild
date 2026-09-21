@@ -16,7 +16,7 @@ class StateTests(unittest.TestCase):
         c = state.validate({})
         self.assertFalse(c["trackingEnabled"])
         self.assertFalse(c["workspaceAudioEnabled"])
-        self.assertEqual(c["recipe"], "wallpaper")
+        self.assertEqual(c["recipe"], "balanced")
         self.assertEqual(c["frameWidth"], 6)
 
     def test_reject_invalid_settings(self):
@@ -83,6 +83,20 @@ class ModuleTests(unittest.TestCase):
         first['barModules']['clock'] = False
         self.assertTrue(second['barModules']['clock'])
         self.assertEqual(second['workspaceCount'], 5)
+
+    def test_layout_is_complete_unique_and_independent(self):
+        a, b = state.validate({}), state.validate({})
+        a['barLayout']['top'].clear()
+        self.assertEqual(b['barLayout']['top'], ['launcher', 'workspaces'])
+        for value in (None, [], {}, {'top': []}, {**b['barLayout'], 'middle': ['clock', 'clock']}, {**b['barLayout'], 'top': ['launcher', None]}):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                state.validate({'barLayout': value})
+        changed = b['barLayout']
+        changed['middle'].remove('clock'); changed['bottom'].insert(0, 'clock')
+        self.assertEqual(state.validate({'barLayout': changed})['barLayout'], changed)
+        self.assertEqual(state.validate({'recipe': 'wallpaper'})['recipe'], 'wallpaper')
+        self.assertEqual(state.validate({'recipe': 'black'})['recipe'], 'black')
+        self.assertFalse(state.validate({'clockShowDate': False})['clockShowDate'])
 
     def test_launcher_edge_validation(self):
         self.assertEqual(state.validate({})['launcherEdge'], 'top')

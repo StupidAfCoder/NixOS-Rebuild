@@ -61,6 +61,18 @@ class ThemeTests(unittest.TestCase):
         self.assertGreater(theme.Hct.from_int(int(blue['background'][1:], 16) | 0xff000000).chroma, 12)
         self.assertEqual(theme.generate(self.path, recipe='black')['background'], '#000000')
 
+    def test_balanced_surfaces_are_restrained_but_wallpaper_derived(self):
+        red = theme.generate(self.path, recipe='balanced')
+        vivid = theme.generate(self.path, recipe='wallpaper')
+        def chroma(c): return theme.Hct.from_int(int(c[1:], 16) | 0xff000000).chroma
+        for key in ('background', 'surface_container', 'outline_variant'):
+            self.assertLess(chroma(red[key]), 8)
+            self.assertLess(chroma(red[key]), chroma(vivid[key]))
+        Image.new('RGB', (32, 32), (20, 80, 210)).save(self.path)
+        blue = theme.generate(self.path, recipe='balanced')
+        self.assertNotEqual(red['background'], blue['background'])
+        self.assertNotEqual(red['accent'], blue['accent'])
+
     def test_population_not_tiny_bright_patch(self):
         image = Image.new("RGB", (100, 100), (170, 35, 45))
         image.paste((255, 240, 0), (0, 0, 10, 10))

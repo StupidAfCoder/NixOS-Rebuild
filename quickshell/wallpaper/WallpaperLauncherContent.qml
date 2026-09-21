@@ -1,19 +1,19 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "../bar"
 import "../common"
+import "../common/CollectionState.js" as CollectionState
 
 Sheet {
     id: root
-    property int topOffset: 0
     shown: WallpaperLauncher.shown
-    title: "Wallpapers"
-    subtitle: "Preview first. Apply when it feels right."
+    title: "Wallpaper studio"
+    subtitle: Settings.previewMode ? "Private preview · live app sync is a separate confirmation" : "Collection, palette and desktop colors"
     centered: true
     initialFocusItem: search
-    preferredWidth: 860
-    preferredHeight: 660
+    preferredWidth: 820; preferredHeight: 790
     onDismiss: WallpaperLauncher.hide()
     property string selectedPath: ""
     property string recipe: Settings.recipe
@@ -22,118 +22,142 @@ Sheet {
     property string sourcePreference: Settings.sourcePreference
     property bool confirmAppSync: false
     property bool confirmTrash: false
+    property bool advanced: false
+    readonly property bool busy: WallpaperBackend.applying || WallpaperBackend.tryingColors || WallpaperBackend.syncingApps
     readonly property var filtered: WallpaperBackend.wallpapers.filter(w => w.name.toLowerCase().includes(search.text.toLowerCase()))
     function preview() {
-        if (selectedPath) WallpaperBackend.preview(selectedPath, recipe, tone, saturation, sourcePreference, Settings.contrast);
+        if (selectedPath && shown) WallpaperBackend.preview(selectedPath, recipe, tone, saturation, sourcePreference, Settings.contrast);
     }
+    function select(index) {
+        if (index >= 0 && index < filtered.length) { gallery.currentIndex = index; selectedPath = filtered[index].path; }
+    }
+    function move(step) {
+        select(CollectionState.boundedIndex(filtered.length, gallery.currentIndex + step));
+        if (gallery.currentIndex >= 0) gallery.positionViewAtIndex(gallery.currentIndex, GridView.Contain);
+    }
+    onFilteredChanged: Qt.callLater(function() { gallery.currentIndex = CollectionState.indexFor(root.filtered, root.selectedPath, ""); })
     onSelectedPathChanged: { confirmAppSync = false; confirmTrash = false; preview(); }
     onRecipeChanged: preview()
     onToneChanged: preview()
     onSaturationChanged: preview()
     onSourcePreferenceChanged: preview()
-    onShownChanged: if (!shown) confirmAppSync = false; else {
+    onShownChanged: if (!shown) { confirmAppSync = false; confirmTrash = false; } else {
         recipe = Settings.recipe; tone = Settings.tone; saturation = Settings.saturation; sourcePreference = Settings.sourcePreference;
+        advanced = ["balanced", "wallpaper", "black", "paper"].indexOf(recipe) < 0;
         if (WallpaperLauncher.requestedPath) {
             selectedPath = WallpaperLauncher.requestedPath;
             WallpaperLauncher.requestedPath = "";
-        } else if (!selectedPath) selectedPath = WallpaperBackend.currentPath;
+        } else selectedPath = (Settings.previewMode ? WallpaperBackend.previewPath : "") || WallpaperBackend.currentPath || selectedPath;
+        gallery.currentIndex = CollectionState.indexFor(filtered, selectedPath, "");
+        if (gallery.currentIndex >= 0) gallery.positionViewAtIndex(gallery.currentIndex, GridView.Contain);
         preview();
-
     }
-    PixelField { id: search; Layout.fillWidth: true; placeholderText: "Search your collection…" }
-    GridLayout {
+    RowLayout {
         Layout.fillWidth: true
-        columns: root.width > 660 ? 2 : 1
-        columnSpacing: 20; rowSpacing: 16
-        ColumnLayout {
-            Layout.fillWidth: true; Layout.preferredWidth: 440; Layout.alignment: Qt.AlignTop
-            GridView {
-                id: gallery
-                Layout.fillWidth: true
-                Layout.preferredHeight: root.width > 660 ? 400 : 240
-                clip: true
-                model: root.filtered
-                cellWidth: width / Math.max(2, Math.floor(width / 145))
-                cellHeight: cellWidth * .65 + 32
-                keyNavigationEnabled: true
-                activeFocusOnTab: true
-                highlightMoveDuration: Settings.motionMs
-                Keys.onReturnPressed: if (currentIndex >= 0 && currentIndex < root.filtered.length) root.selectedPath = root.filtered[currentIndex].path
-                ScrollBar.vertical: ScrollBar {}
-                delegate: Item {
-                    required property var modelData
-                    required property int index
-                    width: gallery.cellWidth; height: gallery.cellHeight
-                    Rectangle {
-                        anchors.fill: parent; anchors.margins: 5
-                        color: Colors.background
-                        border.width: root.selectedPath === modelData.path ? 2 : 1
-                        border.color: root.selectedPath === modelData.path || (gallery.activeFocus && gallery.currentIndex === index) ? Colors.accent : Colors.outlineVariant
-                        Image {
-                            anchors.fill: parent; anchors.margins: 3; anchors.bottomMargin: 28
-                            source: Settings.fileUrl(modelData.path)
-                            asynchronous: true; sourceSize.width: 320
-                            fillMode: Image.PreserveAspectCrop
-                        }
-                        PixelText { anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: 7; text: modelData.name }
-                        MouseArea { anchors.fill: parent; onClicked: { gallery.currentIndex = index; root.selectedPath = modelData.path; } }
-                    }
+        PixelField { id: search; Layout.fillWidth: true; placeholderText: "Search collection…"; Keys.onDownPressed: { gallery.forceActiveFocus(); root.move(0); } }
+        PixelButton { text: "Refresh"; enabled: !WallpaperBackend.scanning; onClicked: WallpaperBackend.refresh() }
+    }
+    // A full-width contact sheet, not a tall empty left column.
+    GridView {
+        id: gallery
+        Layout.fillWidth: true; Layout.preferredHeight: 204
+        readonly property int columns: Math.max(2, Math.floor(width / 145))
+        cellWidth: Math.floor(width / columns); cellHeight: 102
+        model: root.filtered; clip: true; keyNavigationEnabled: false; activeFocusOnTab: true
+        Keys.onLeftPressed: root.move(-1)
+        Keys.onRightPressed: root.move(1)
+        Keys.onUpPressed: root.move(-columns)
+        Keys.onDownPressed: root.move(columns)
+        Keys.onReturnPressed: root.select(currentIndex)
+        Keys.onEnterPressed: root.select(currentIndex)
+        ScrollBar.vertical: ScrollBar {}
+        delegate: Item {
+            id: tile
+            required property var modelData
+            required property int index
+            width: gallery.cellWidth; height: gallery.cellHeight
+            PixelButton {
+                anchors.fill: parent; anchors.margins: 3; padding: 4; topPadding: 4; bottomPadding: 4
+                focusPolicy: Qt.NoFocus; checked: root.selectedPath === tile.modelData.path
+                Accessible.name: tile.modelData.name
+                contentItem: Item {
+                    Image { anchors.fill: parent; anchors.bottomMargin: 22; source: Settings.fileUrl(tile.modelData.path); asynchronous: true; sourceSize.width: 320; sourceSize.height: 180; fillMode: Image.PreserveAspectCrop; clip: true }
+                    PixelText { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; text: tile.modelData.name }
                 }
+                onClicked: { root.select(tile.index); gallery.forceActiveFocus(); }
             }
-            PixelText { Layout.fillWidth: true; text: WallpaperBackend.scanning ? "Reading collection…" : root.filtered.length + " wallpapers · arrows + Enter to select"; color: Colors.textOnSurfaceVariant }
-            PixelButton { text: "Refresh collection"; onClicked: WallpaperBackend.refresh() }
         }
+        PixelText { anchors.centerIn: parent; visible: !gallery.count; text: WallpaperBackend.scanning ? "Reading collection…" : "No matching wallpapers. Choose a folder in Settings → Profile."; width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; color: Colors.textOnSurfaceVariant }
+    }
+    GridLayout {
+        Layout.fillWidth: true; columns: root.width >= 660 ? 2 : 1; columnSpacing: 18; rowSpacing: 12
         ColumnLayout {
-            Layout.fillWidth: true; Layout.preferredWidth: 300; Layout.alignment: Qt.AlignTop; spacing: 10
-            Rectangle {
-                Layout.fillWidth: true; Layout.preferredHeight: 160; color: Colors.background
-                Image { anchors.fill: parent; source: Settings.fileUrl(root.selectedPath); asynchronous: true; sourceSize.width: 640; fillMode: Image.PreserveAspectFit }
-                PixelText { anchors.centerIn: parent; visible: !root.selectedPath; text: "Select a wallpaper" }
+            Layout.fillWidth: true; Layout.preferredWidth: 238; Layout.alignment: Qt.AlignTop; spacing: 8
+            Image {
+                Layout.fillWidth: true; Layout.preferredHeight: 140
+                source: Settings.fileUrl(root.selectedPath); asynchronous: true; sourceSize.width: 640; sourceSize.height: 360
+                fillMode: Image.PreserveAspectFit
+                PixelText { anchors.centerIn: parent; visible: !root.selectedPath; text: "Choose a wallpaper" }
             }
             PixelText { Layout.fillWidth: true; text: root.selectedPath.split("/").pop() || "Nothing selected" }
             RowLayout {
-                Rectangle { Layout.preferredWidth: 24; Layout.preferredHeight: 24; color: WallpaperBackend.previewColors.accent || Colors.accent; border.color: Colors.outlineVariant }
-                PixelText { text: WallpaperBackend.previewBusy ? "Generating preview…" : "One seed · " + (WallpaperBackend.previewColors._meta?.seed || "—"); Layout.fillWidth: true }
+                Layout.fillWidth: true; spacing: 4
+                Repeater {
+                    model: ["background", "surface_container", "outline", "accent", "on_surface"]
+                    Rectangle { required property string modelData; Layout.fillWidth: true; implicitHeight: 12; color: WallpaperBackend.previewColors[modelData] || Colors.background }
+                }
             }
+            PixelButton {
+                Layout.fillWidth: true; primary: true; enabled: !!root.selectedPath && !root.busy
+                text: Settings.previewMode ? (WallpaperBackend.tryingColors ? "Trying…" : "Try in preview") : WallpaperBackend.applying ? "Applying…" : "Apply wallpaper + palette"
+                onClicked: Settings.previewMode ? WallpaperBackend.tryColors(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast) : WallpaperBackend.apply(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast)
+            }
+        }
+        ColumnLayout {
+            Layout.fillWidth: true; Layout.preferredWidth: 460; Layout.alignment: Qt.AlignTop; spacing: 8
             Flow {
                 Layout.fillWidth: true; spacing: 6
                 Repeater {
-                    model: ["wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"]
-                    PixelButton { required property string modelData; text: modelData; checked: root.recipe === modelData; primary: checked; onClicked: root.recipe = modelData }
+                    model: [{id:"balanced",label:"Balanced"},{id:"wallpaper",label:"Tinted"},{id:"black",label:"True black"},{id:"paper",label:"Paper"}]
+                    TabButton { required property var modelData; text: modelData.label; selected: root.recipe === modelData.id; onClicked: root.recipe = modelData.id }
                 }
             }
-            PixelText { Layout.fillWidth: true; wrapMode: Text.Wrap; color: Colors.textOnSurfaceVariant; text: root.recipe === "black" ? "True-black surfaces; wallpaper-colored highlights." : root.recipe === "wallpaper" ? "Wallpaper hue colors the rail, frame, panels and icons." : "A quieter variation of this wallpaper's palette." }
-            PixelText { text: "Accent tone · " + Math.round(root.tone); color: Colors.textOnSurfaceVariant }
-            PixelSlider { Layout.fillWidth: true; from: -15; to: 15; stepSize: 1; value: root.tone; onMoved: root.tone = value }
-            PixelText { text: "Color intensity · " + Math.round(root.saturation * 100) + "%"; color: Colors.textOnSurfaceVariant }
-            PixelSlider { Layout.fillWidth: true; from: 0; to: 1.6; stepSize: .05; value: root.saturation; onMoved: root.saturation = value }
-            Flow {
-                Layout.fillWidth: true; spacing: 6
-                Repeater { model: ["representative", "dominant", "colorful"]; PixelButton { required property string modelData; text: modelData; checked: root.sourcePreference === modelData; onClicked: root.sourcePreference = modelData } }
-            }
-            Rectangle {
-                Layout.fillWidth: true; implicitHeight: 46
-                color: WallpaperBackend.previewColors.background || Colors.background
-                border.color: WallpaperBackend.previewColors.outline_variant || Colors.outlineVariant
-                PixelText { anchors.centerIn: parent; text: "Aa  /  live palette preview"; color: WallpaperBackend.previewColors.accent || Colors.accent }
-            }
-            PixelButton {
-                Layout.fillWidth: true; primary: true; enabled: !!root.selectedPath && !WallpaperBackend.applying && !WallpaperBackend.tryingColors
-                text: Settings.previewMode ? (WallpaperBackend.tryingColors ? "Trying colors…" : "Try colors on this preview") : WallpaperBackend.applying ? "Applying…" : "Apply wallpaper & palette"
-                onClicked: Settings.previewMode ? WallpaperBackend.tryColors(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast) : WallpaperBackend.apply(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast)
-            }
-            PixelButton {
+            PixelText { Layout.fillWidth: true; wrapMode: Text.Wrap; maximumLineCount: 3; color: Colors.textOnSurfaceVariant; text: root.recipe === "balanced" ? "Lightly tinted charcoal, clear text, wallpaper-colored keys." : root.recipe === "wallpaper" ? "Strong wallpaper tint across the frame, rail and panels." : root.recipe === "black" ? "Exact black background, colored highlights." : "A quieter variation of this wallpaper’s palette." }
+            RowLayout {
                 Layout.fillWidth: true
-                text: WallpaperBackend.syncingApps ? "Syncing apps…" : root.confirmAppSync ? "Confirm live app recoloring" : "Sync live app colors…"
-                enabled: !!root.selectedPath && !WallpaperBackend.syncingApps && !WallpaperBackend.applying && !WallpaperBackend.tryingColors
-                onClicked: { if (root.confirmAppSync) { WallpaperBackend.syncLiveApps(root.selectedPath); root.confirmAppSync = false; } else root.confirmAppSync = true; }
+                PixelText { text: "Tone"; Layout.preferredWidth: 68 }
+                PixelSlider { Layout.fillWidth: true; from: -15; to: 15; stepSize: 1; value: root.tone; onMoved: root.tone = value }
+                PixelText { text: Math.round(root.tone); Layout.preferredWidth: 28; horizontalAlignment: Text.AlignRight }
             }
-            PixelText { visible: root.confirmAppSync; Layout.fillWidth: true; text: "This writes your LIVE Wallust templates and recolors Firefox / terminals, even in preview. It does not change the wallpaper."; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.warning }
-            PixelButton { visible: root.confirmAppSync; text: "Cancel app sync"; onClicked: root.confirmAppSync = false }
-            PixelText { visible: !!WallpaperBackend.appSyncMessage; Layout.fillWidth: true; text: WallpaperBackend.appSyncMessage; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
-            PixelButton { Layout.fillWidth: true; text: root.confirmTrash ? "Confirm move to Trash" : "Move selected to Trash…"; danger: root.confirmTrash; enabled: !!root.selectedPath && !WallpaperBackend.applying; onClicked: { if (root.confirmTrash) { WallpaperBackend.trash(root.selectedPath); root.selectedPath = ""; } else root.confirmTrash = true; } }
-            PixelButton { visible: root.confirmTrash; text: "Cancel"; onClicked: root.confirmTrash = false }
+            RowLayout {
+                Layout.fillWidth: true
+                PixelText { text: "Intensity"; Layout.preferredWidth: 68 }
+                PixelSlider { Layout.fillWidth: true; from: 0; to: 1.6; stepSize: .05; value: root.saturation; onMoved: root.saturation = value }
+                PixelText { text: Math.round(root.saturation * 100) + "%"; Layout.preferredWidth: 36; horizontalAlignment: Text.AlignRight }
+            }
+            PixelButton { text: root.advanced ? "Fewer options ↑" : "More palette options ↓"; checked: root.advanced; onClicked: root.advanced = !root.advanced }
+            PixelText { text: WallpaperBackend.previewBusy ? "Generating preview…" : "Seed " + (WallpaperBackend.previewColors._meta?.seed || "—"); color: Colors.textOnSurfaceVariant }
         }
     }
-    PixelText { Layout.fillWidth: true; visible: text.length > 0; text: WallpaperBackend.lastError; color: Colors.error; wrapMode: Text.Wrap; elide: Text.ElideNone }
+    Flow {
+        visible: root.advanced; Layout.fillWidth: true; spacing: 6
+        Repeater { model: ["neutral", "tonal", "expressive", "mono"]; TabButton { required property string modelData; text: modelData; selected: root.recipe === modelData; onClicked: root.recipe = modelData } }
+    }
+    Flow {
+        visible: root.advanced; Layout.fillWidth: true; spacing: 6
+        Repeater { model: ["representative", "dominant", "colorful"]; PixelButton { required property string modelData; text: modelData; checked: root.sourcePreference === modelData; onClicked: root.sourcePreference = modelData } }
+    }
+    Flow {
+        Layout.fillWidth: true; spacing: 8
+        PixelButton {
+            text: WallpaperBackend.syncingApps ? "Syncing…" : root.confirmAppSync ? "Confirm live recoloring" : "Sync live app colors…"
+            enabled: !!root.selectedPath && !root.busy
+            onClicked: { if (root.confirmAppSync) { WallpaperBackend.syncLiveApps(root.selectedPath); root.confirmAppSync = false; } else root.confirmAppSync = true; }
+        }
+        PixelButton { text: root.confirmTrash ? "Confirm Trash" : "Trash…"; danger: root.confirmTrash; enabled: !!root.selectedPath && !root.busy; onClicked: { if (root.confirmTrash) { WallpaperBackend.trash(root.selectedPath); root.selectedPath = ""; root.confirmTrash = false; } else root.confirmTrash = true; } }
+        PixelButton { visible: root.confirmAppSync || root.confirmTrash; text: "Cancel"; onClicked: { root.confirmAppSync = false; root.confirmTrash = false; } }
+    }
+    PixelText { visible: root.confirmAppSync; Layout.fillWidth: true; text: "Writes LIVE Wallust templates and requests Firefox / terminal recoloring, even in preview. This is separate from the shell palette above. The wallpaper is not changed."; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.warning }
+    PixelText { visible: !!WallpaperBackend.appSyncMessage; Layout.fillWidth: true; text: WallpaperBackend.appSyncMessage; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+    PixelText { Layout.fillWidth: true; visible: !!text; text: WallpaperBackend.lastError; color: Colors.error; wrapMode: Text.Wrap; elide: Text.ElideNone }
 }

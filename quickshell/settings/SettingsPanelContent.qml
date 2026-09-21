@@ -22,6 +22,7 @@ Sheet {
     property string pickKey: ""
     function pick(key, value, directory, filters) { pickKey = key; picking = true; pathPicker.start(value, directory, filters); resetScroll(); }
     property string tab: "Profile"
+    property bool editingLayout: false
     property bool clearConfirm: false
     property bool resetConfirm: false
     onShownChanged: if (!shown) { clearConfirm = false; resetConfirm = false; picking = false; }
@@ -92,8 +93,12 @@ Sheet {
         PixelGroup {
             title: "Build your rail"; iconName: "settings-2.svg"; Layout.fillWidth: true
             PixelText { text: "Keep what you reach for. Hide what you don't. Changes are live, including open panels."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+            RowLayout {
+                TabButton { text: "Modules"; selected: !root.editingLayout; onClicked: root.editingLayout = false }
+                TabButton { text: "Placement"; selected: root.editingLayout; onClicked: root.editingLayout = true }
+            }
             Repeater {
-                model: Settings.moduleCatalog
+                model: root.editingLayout ? [] : Settings.moduleCatalog
                 ColumnLayout {
                     required property var modelData
                     Layout.fillWidth: true; spacing: 12
@@ -106,7 +111,31 @@ Sheet {
                     Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Colors.outlineVariant }
                 }
             }
-            PixelText { text: "Settings is always reachable from the bottom of the rail, Library search or Super+Ctrl+S. Hidden modules keep their keyboard shortcuts. The rail scrolls on short screens rather than overlapping."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+            Repeater {
+                model: root.editingLayout ? ["top", "middle", "bottom"] : []
+                ColumnLayout {
+                    id: zoneGroup
+                    required property string modelData
+                    Layout.fillWidth: true; spacing: 6
+                    PixelText { text: zoneGroup.modelData === "middle" ? "Center" : zoneGroup.modelData === "top" ? "Top" : "Bottom"; color: Colors.accent; font.family: "Silkscreen"; font.pixelSize: 10 }
+                    Repeater {
+                        model: Settings.barLayout[zoneGroup.modelData]
+                        RowLayout {
+                            id: moduleRow
+                            required property string modelData
+                            required property int index
+                            Layout.fillWidth: true; spacing: 4
+                            PixelText { Layout.fillWidth: true; text: Settings.moduleCatalog.find(m => m.key === moduleRow.modelData)?.label || moduleRow.modelData; opacity: Settings.moduleEnabled(moduleRow.modelData) ? 1 : .5 }
+                            IconButton { iconName: "chevron-up.svg"; hint: "Move " + moduleRow.modelData + " up"; enabled: moduleRow.index > 0; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData, -1) }
+                            IconButton { iconName: "chevron-down.svg"; hint: "Move " + moduleRow.modelData + " down"; enabled: moduleRow.index < Settings.barLayout[zoneGroup.modelData].length - 1; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData, 1) }
+                            PixelButton { text: zoneGroup.modelData === "top" ? "To center" : zoneGroup.modelData === "middle" ? "To bottom" : "To top"; implicitWidth: 88; onClicked: Settings.relocateModule(moduleRow.modelData, zoneGroup.modelData === "top" ? "middle" : zoneGroup.modelData === "middle" ? "bottom" : "top", 0) }
+                        }
+                    }
+                }
+            }
+            PixelButton { visible: root.editingLayout; text: "Reset placement"; onClicked: Settings.resetLayout() }
+            PreferenceRow { Layout.fillWidth: true; label: "Date below the time"; description: "One horizontal time line; an optional short date."; selected: Settings.clockShowDate; onToggled: Settings.patch({clockShowDate: !Settings.clockShowDate}) }
+            PixelText { text: "Hover the top-center screen edge for Settings, search Library, or press Super+Ctrl+S. Hidden modules take no rail space. Hidden modules keep their keyboard shortcuts. The rail scrolls on short screens rather than overlapping."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
         }
         PixelGroup {
             title: "Room to breathe"; iconName: "app-windows.svg"; Layout.fillWidth: true

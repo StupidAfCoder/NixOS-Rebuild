@@ -1,25 +1,26 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
 import "../common"
 import "../bar"
-import "../settings"
 import "../common/CollectionState.js" as CollectionState
 
-Sheet {
+// Deliberately not a Sheet: only the photographs float over the desktop.
+FocusScope {
     id: root
-    shown: QuickWallpapers.shown
-    title: "Wallpapers"
-    subtitle: Settings.previewMode ? "Preview colors only · live apps are unchanged" : "Choose a scene · the desktop follows"
-    edge: "right"
-    preferredWidth: 820; preferredHeight: 390
-    initialFocusItem: carousel
-    onDismiss: QuickWallpapers.hide()
+    property bool shown: QuickWallpapers.shown
+    property real reveal: shown ? 1 : 0
+    width: Math.max(1, Math.min(960, parent.width - Settings.barWidth - 40))
+    height: Math.min(330, parent.height - Settings.frameWidth * 2 - 40)
+    x: Settings.barWidth + (parent.width - Settings.barWidth - width) / 2 + 28 * (1 - reveal)
+    y: Math.round((parent.height - height) / 2)
+    visible: shown || reveal > 0; enabled: shown; opacity: reveal
+    Behavior on reveal { NumberAnimation { duration: Settings.motionMs; easing.type: Easing.OutCubic } }
     readonly property bool busy: WallpaperBackend.applying || WallpaperBackend.tryingColors || WallpaperBackend.syncingApps
     property string selectedPath: ""
     readonly property string appliedPath: Settings.previewMode ? WallpaperBackend.previewPath || WallpaperBackend.currentPath : WallpaperBackend.currentPath
     function restoreSelection() {
+        carousel.userScrolling = false;
         carousel.currentIndex = CollectionState.indexFor(WallpaperBackend.wallpapers, selectedPath, appliedPath);
         if (carousel.currentIndex >= 0) selectedPath = WallpaperBackend.wallpapers[carousel.currentIndex].path;
     }
@@ -34,24 +35,35 @@ Sheet {
     function choose(index) {
         const wallpaper = WallpaperBackend.wallpapers[index];
         if (!wallpaper || busy) return;
-        carousel.currentIndex = index;
-        selectedPath = wallpaper.path;
+        carousel.currentIndex = index; selectedPath = wallpaper.path;
         if (Settings.previewMode) WallpaperBackend.tryColors(wallpaper.path, Settings.recipe, Settings.tone, Settings.saturation, Settings.sourcePreference, Settings.contrast);
         else WallpaperBackend.apply(wallpaper.path, Settings.recipe, Settings.tone, Settings.saturation, Settings.sourcePreference, Settings.contrast);
     }
-    onShownChanged: if (shown) { selectedPath = appliedPath; restoreSelection(); }
+    onShownChanged: if (shown) {
+        selectedPath = appliedPath; restoreSelection();
+        Qt.callLater(function() { if (root.shown) carousel.forceActiveFocus(); });
+    }
+    Keys.onEscapePressed: QuickWallpapers.hide()
     ListView {
         id: carousel
-        Layout.fillWidth: true; Layout.preferredHeight: 210
-        orientation: ListView.Horizontal; spacing: 10; clip: true
+        width: parent.width; height: Math.max(80, parent.height - 54)
+        orientation: ListView.Horizontal; spacing: 16; clip: true
         model: WallpaperBackend.wallpapers
         snapMode: ListView.SnapToItem
-        highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: Math.max(0, (width - 260) / 2)
-        preferredHighlightEnd: preferredHighlightBegin + 260
+        highlightRangeMode: ListView.StrictlyEnforceRange
+        preferredHighlightBegin: (width - 300) / 2
+        preferredHighlightEnd: preferredHighlightBegin + 300
         highlightMoveDuration: Settings.motionMs
+        property bool userScrolling: false
+        onDraggingChanged: if (dragging) userScrolling = true
+        onMovementEnded: if (userScrolling) {
+            userScrolling = false;
+            if (currentIndex >= 0 && currentIndex < WallpaperBackend.wallpapers.length) root.selectedPath = WallpaperBackend.wallpapers[currentIndex].path;
+        }
         Keys.onLeftPressed: root.move(-1)
         Keys.onRightPressed: root.move(1)
+        Keys.onUpPressed: root.move(-1)
+        Keys.onDownPressed: root.move(1)
         Keys.onReturnPressed: root.choose(currentIndex)
         Keys.onEnterPressed: root.choose(currentIndex)
         delegate: Item {
@@ -59,15 +71,16 @@ Sheet {
             required property var modelData
             required property int index
             readonly property bool selected: carousel.currentIndex === index
-            width: selected ? 260 : 160; height: 210
-            Behavior on width { NumberAnimation { duration: Settings.motionMs } }
-            Button {
-                anchors.centerIn: parent; width: parent.width; height: tile.selected ? 210 : 178
+            width: 300; height: carousel.height
+            PixelButton {
+                anchors.centerIn: parent; width: tile.selected ? 300 : 250; height: tile.selected ? parent.height : parent.height * .8
+                Behavior on width { NumberAnimation { duration: Settings.motionMs } }
                 Behavior on height { NumberAnimation { duration: Settings.motionMs } }
-                padding: 3; enabled: !root.busy; focusPolicy: Qt.NoFocus
+                padding: 3; topPadding: 3; bottomPadding: 3; focusPolicy: Qt.NoFocus
+                enabled: !root.busy
                 Accessible.name: "Apply " + tile.modelData.name
-                background: Rectangle { color: Colors.background; border.width: tile.selected ? 2 : 0; border.color: Colors.accent }
-                contentItem: Image { source: Settings.fileUrl(tile.modelData.path); asynchronous: true; sourceSize.width: 400; fillMode: Image.PreserveAspectCrop }
+                background: ConsoleSurface { raised: false; fillColor: Colors.background; edgeColor: tile.selected ? Colors.accent : Colors.outlineVariant }
+                contentItem: Image { source: Settings.fileUrl(tile.modelData.path); asynchronous: true; sourceSize.width: 600; sourceSize.height: 480; fillMode: Image.PreserveAspectCrop; clip: true }
                 onClicked: { root.choose(tile.index); carousel.forceActiveFocus(); }
             }
         }
@@ -75,15 +88,16 @@ Sheet {
             anchors.fill: parent; acceptedButtons: Qt.NoButton
             onWheel: event => { const delta = event.angleDelta.y || event.angleDelta.x || event.pixelDelta.y || event.pixelDelta.x; if (delta) root.move(delta < 0 ? 1 : -1); event.accepted = true; }
         }
-        PixelText { visible: carousel.count === 0; anchors.centerIn: parent; text: WallpaperBackend.scanning ? "Reading collection…" : "No wallpapers in this folder."; color: Colors.textOnSurfaceVariant }
     }
-    RowLayout {
-        Layout.fillWidth: true
-        IconButton { iconName: "chevron-left.svg"; hint: "Previous wallpaper"; enabled: carousel.currentIndex > 0; onClicked: root.move(-1) }
-        PixelText { Layout.fillWidth: true; text: root.busy ? "Applying colors…" : WallpaperBackend.wallpapers[carousel.currentIndex]?.name || "Choose a wallpaper folder in Settings" }
-        IconButton { iconName: "chevron-right.svg"; hint: "Next wallpaper"; enabled: carousel.currentIndex < carousel.count - 1; onClicked: root.move(1) }
-        PixelButton { text: "Adjust colors"; onClicked: { QuickWallpapers.hide(); WallpaperLauncher.openFor(root.selectedPath); } }
+    // Outlined text remains legible without a panel or a translucent scrim.
+    PixelText {
+        anchors.top: carousel.bottom; anchors.topMargin: 10; width: parent.width
+        horizontalAlignment: Text.AlignHCenter; style: Text.Outline; styleColor: "#000000"; color: "#ffffff"
+        text: WallpaperBackend.lastError || (root.busy ? "Applying…" : !carousel.count ? (WallpaperBackend.scanning ? "Reading collection…" : "Choose a collection in Settings → Profile.") : root.selectedPath.split("/").pop())
     }
-    PixelButton { visible: carousel.count === 0; text: "Choose folder…"; onClicked: { QuickWallpapers.hide(); SettingsPanel.toggle(); } }
-    PixelText { Layout.fillWidth: true; visible: !!WallpaperBackend.lastError; text: WallpaperBackend.lastError; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.error }
+    PixelText {
+        anchors.bottom: parent.bottom; width: parent.width
+        horizontalAlignment: Text.AlignHCenter; style: Text.Outline; styleColor: "#000000"; color: "#ffffff"; font.pixelSize: 12
+        text: (Settings.previewMode ? "Preview colors only · " : "") + "← → browse · Enter or click applies · Esc closes"
+    }
 }

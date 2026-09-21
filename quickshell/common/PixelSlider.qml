@@ -10,10 +10,11 @@ Slider {
         color: Colors.outlineVariant
         Rectangle { width: root.visualPosition * parent.width; height: parent.height; color: Colors.accent }
     }
-    handle: Rectangle {
+    handle: ConsoleSurface {
         x: root.leftPadding + root.visualPosition * (root.availableWidth - width)
         y: root.topPadding + root.availableHeight / 2 - height / 2
-        width: 12; height: 20; color: Colors.accent
-        border.width: root.activeFocus ? 2 : 0; border.color: Colors.textOnBackground
+        width: 14; height: 20; fillColor: Colors.accent
+        edgeColor: root.visualFocus ? Colors.textOnBackground : Colors.outline
+        pressed: root.pressed
     }
 }

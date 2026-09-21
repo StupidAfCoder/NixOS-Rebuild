@@ -22,6 +22,10 @@ Item {
     readonly property bool saving: writer.running || Object.keys(pending).length > 0
     readonly property var moduleCatalog: Modules.entries()
     readonly property var barModules: Object.assign({}, Modules.defaults(), values.barModules || {})
+    readonly property var barLayout: Modules.layout(values.barLayout)
+    readonly property bool clockShowDate: values.clockShowDate === true
+    function relocateModule(key, zone, offset) { patch({barLayout: Modules.relocate(barLayout, key, zone, offset)}); }
+    function resetLayout() { patch({barLayout: Modules.layoutDefaults()}); }
     readonly property int workspaceCount: bounded("workspaceCount", 5, 1, 10)
     function moduleEnabled(key) { return barModules[key] !== false; }
     function setModule(key, enabled) {
@@ -41,7 +45,7 @@ Item {
     readonly property int motionMs: reducedMotion ? 0 : bounded("motionMs", 180, 80, 350)
     readonly property bool quickWallpaperEdgeEnabled: values.quickWallpaperEdgeEnabled !== false
     readonly property string launcherEdge: ["top", "bottom", "center"].indexOf(values.launcherEdge) >= 0 ? values.launcherEdge : "top"
-    readonly property string recipe: ["wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"].indexOf(values.recipe) >= 0 ? values.recipe : "wallpaper"
+    readonly property string recipe: ["balanced", "wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"].indexOf(values.recipe) >= 0 ? values.recipe : "balanced"
     readonly property real tone: bounded("tone", 0, -15, 15)
     readonly property real saturation: bounded("saturation", 1, 0, 1.6)
     readonly property string sourcePreference: ["representative", "dominant", "colorful"].indexOf(values.source) >= 0 ? values.source : "representative"

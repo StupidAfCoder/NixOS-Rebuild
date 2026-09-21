@@ -3,6 +3,7 @@
 No window titles, URLs, keystrokes or screenshots are collected. No network requests.
 """
 import argparse
+import copy
 import fcntl
 import json
 import math
@@ -21,10 +22,12 @@ BAR_MODULES = ("launcher", "workspaces", "clock", "wizard", "media", "audio", "s
 DEFAULTS = dict(displayName=os.environ.get("USER", "User"), avatarPath="", bio="A little magic, every day.",
                 videoPath=str(HOME / "Videos/pixel-traffic.mp4"), wallpaperDir=str(HOME / "Pictures/Wallpapers"),
                 frameWidth=6, barWidth=44, motionMs=180, reducedMotion=False, bodySize=13,
-                recipe="wallpaper", tone=0, saturation=1., source="representative", contrast=0.,
+                recipe="balanced", tone=0, saturation=1., source="representative", contrast=0.,
                 trackingEnabled=False, retentionDays=30, workspaceAudioEnabled=False,
                 mutedWorkspaces=[], dailyGoalMinutes=240,
-                barModules={key: key not in ("system", "settings") for key in BAR_MODULES}, workspaceCount=5, launcherEdge="top", quickWallpaperEdgeEnabled=True)
+                barLayout={"top": ["launcher", "workspaces"], "middle": ["wizard", "media", "clock"],
+                           "bottom": ["audio", "system", "battery", "network", "bluetooth", "tray", "settings", "power"]},
+                clockShowDate=False, barModules={key: key not in ("system", "settings") for key in BAR_MODULES}, workspaceCount=5, launcherEdge="top", quickWallpaperEdgeEnabled=True)
 
 
 def load(path, fallback):
@@ -51,10 +54,10 @@ def save(path, data):
 
 
 def validate(values):
-    result = {**DEFAULTS, "barModules": DEFAULTS["barModules"].copy()}
+    result = copy.deepcopy(DEFAULTS)
     if not isinstance(values, dict):
         raise ValueError("Settings must be an object")
-    enums = {"recipe": ("wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"),
+    enums = {"recipe": ("balanced", "wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"),
              "source": ("representative", "dominant", "colorful"),
              "launcherEdge": ("top", "bottom", "center")}
     limits = {"frameWidth": (4, 10), "barWidth": (36, 64), "motionMs": (80, 350), "bodySize": (12, 18),
@@ -67,6 +70,13 @@ def validate(values):
             if not isinstance(value, dict) or any(k not in BAR_MODULES or type(v) is not bool for k, v in value.items()):
                 raise ValueError("barModules expects known module names and boolean values")
             value = {**DEFAULTS["barModules"], **value}
+        elif key == "barLayout":
+            if not isinstance(value, dict) or set(value) != {"top", "middle", "bottom"} or any(not isinstance(v, list) for v in value.values()):
+                raise ValueError("barLayout expects top, middle and bottom lists")
+            ordered = [v for zone in ("top", "middle", "bottom") for v in value[zone]]
+            if any(not isinstance(v, str) for v in ordered) or len(ordered) != len(BAR_MODULES) or set(ordered) != set(BAR_MODULES):
+                raise ValueError("barLayout must contain every module exactly once")
+            value = copy.deepcopy(value)
         elif key in enums:
             if value not in enums[key]:
                 raise ValueError(f"Invalid {key}")
@@ -93,7 +103,7 @@ def settings():
     try:
         return validate(load(CONFIG, {}))
     except ValueError:
-        return DEFAULTS.copy()
+        return copy.deepcopy(DEFAULTS)
 
 
 def command(args, json_output=False):

@@ -47,3 +47,11 @@ test('actual QML apply function defers settings persistence and blocks competing
  ctx.syncingApps=false;ctx.apply('/image','wallpaper',0,1,'representative',0);
  assert.equal(ctx.applyProc.running,true);assert.equal(ctx.applyProc.settingsPatch.recipe,'wallpaper');assert.equal(writes.length,0);
 });
+test('actual picker arrows preview the current file and clear stale file selection on a folder',()=>{
+ const source=fs.readFileSync(path.join(root,'quickshell/common/PathPicker.qml'),'utf8');
+ const ctx=vm.createContext({CollectionState:state,FolderListModel:{Ready:1},GridView:{Contain:0},files:{status:1,count:3,isFolder:i=>i===0,get:i=>['/folder','/a.png','/b.png'][i]},list:{currentIndex:0,positionViewAtIndex(){}},selectedPath:''});
+ vm.runInContext(qmlFunction(source,'move'),ctx);
+ ctx.move(1);assert.equal(ctx.selectedPath,'/a.png');ctx.move(1);assert.equal(ctx.selectedPath,'/b.png');
+ ctx.move(-2);assert.equal(ctx.selectedPath,'');assert.equal(ctx.list.currentIndex,0);
+ ctx.files.status=0;ctx.move(2);assert.equal(ctx.list.currentIndex,0);
+});

@@ -5,7 +5,7 @@ import QtQuick
 
 // All nmcli interaction lives here -- nothing else in the shell talks
 // to nmcli directly. Root is Item (not QtObject) so Process/Timer
-// children can nest directly, same convention as SystemTray.qml's
+// children can nest directly, same convention as the shell's
 // netCheck block.
 Item {
     id: root

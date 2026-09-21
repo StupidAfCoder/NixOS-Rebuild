@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import "../bar"
+import "PopupGeometry.js" as Placement
 
 // A bounded, keyboard-accessible popup. Content scrolls; title and close stay reachable.
 FocusScope {
@@ -12,6 +13,8 @@ FocusScope {
     property int preferredWidth: 380
     property int preferredHeight: 500
     property bool centered: false
+    // Window-local origin captured at the bar click; IPC opens use -1.
+    property real anchorY: -1
     property bool fitContent: true
     property int contentPadding: 16
     property Item initialFocusItem: root
@@ -28,7 +31,7 @@ FocusScope {
        : centered ? Settings.barWidth + (parent.width - Settings.barWidth - width) / 2 : Settings.barWidth + 12
     y: edge === "top" ? Settings.frameWidth + 12 - (height + Settings.frameWidth + 12) * (1 - reveal)
        : edge === "bottom" ? parent.height - (height + Settings.frameWidth + 12) * reveal
-       : Math.round((parent.height - height) / 2)
+       : Placement.popupY(parent.height, height, Settings.frameWidth + 12, centered ? -1 : anchorY)
     z: 20
     visible: shown || reveal > 0
     enabled: shown
@@ -39,7 +42,7 @@ FocusScope {
         function onShownChanged() { if (root.shown) Qt.callLater(function() { if (root.shown && root.initialFocusItem) root.initialFocusItem.forceActiveFocus(); }); }
     }
     Keys.onEscapePressed: event => { root.dismiss(); event.accepted = true; }
-    Rectangle { anchors.fill: parent; color: Colors.surfaceContainerLow; border.color: Colors.outlineVariant; antialiasing: false }
+    ConsoleSurface { anchors.fill: parent; fillColor: Colors.surfaceContainerLow; edgeColor: Colors.outlineVariant; raised: false }
     Rectangle { x: 0; y: 0; width: 18; height: 2; color: Colors.accent }
     MouseArea { anchors.fill: parent; onClicked: {} }
     ColumnLayout {

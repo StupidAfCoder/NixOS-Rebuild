@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 selected_path="${1:?usage: apply-wallpaper.sh image [recipe tone saturation source contrast]}"
 mapfile -t prefs < <(python3 "$ROOT/scripts/shell-state.py" theme-args)
-recipe="${2:-${prefs[0]:-wallpaper}}"; tone="${3:-${prefs[1]:-0}}"; saturation="${4:-${prefs[2]:-1}}"
+recipe="${2:-${prefs[0]:-balanced}}"; tone="${3:-${prefs[1]:-0}}"; saturation="${4:-${prefs[2]:-1}}"
 source="${5:-${prefs[3]:-representative}}"; contrast="${6:-${prefs[4]:-0}}"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper"
 mkdir -p "$STATE_DIR"

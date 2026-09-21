@@ -62,20 +62,14 @@ Sheet {
             onFileChanged: if (sessionClip.item) sessionClip.item.reloadClip()
         }
     }
-    RowLayout {
-        Layout.fillWidth: true; spacing: 14
-        ProfileAvatar { Layout.preferredWidth: 28; Layout.preferredHeight: 28 }
-        PixelText { text: Settings.displayName; Layout.fillWidth: true; font.pixelSize: 20; font.family: "Pixel Operator" }
-        Rectangle { implicitWidth: 5; implicitHeight: 5; color: Colors.accent }
-    }
     ColumnLayout {
-        visible: !root.pending; Layout.fillWidth: true; spacing: 2
+        visible: !root.pending; Layout.fillWidth: true; spacing: 6
         Repeater {
             model: [{name:"Lock",icon:"lock.svg"},{name:"Sleep",icon:"clock.svg"},{name:"Log out",icon:"app-windows.svg"},{name:"Restart",icon:"power.svg"},{name:"Shut down",icon:"power.svg"}]
             MenuRow {
                 required property var modelData
                 Layout.fillWidth: true; implicitHeight: 38; padding: 8
-                label: modelData.name; iconName: modelData.icon
+                label: modelData.name; iconName: modelData.icon; raised: true
                 danger: modelData.name === "Shut down"
                 onClicked: modelData.name === "Lock" || modelData.name === "Sleep" ? root.execute(modelData.name) : root.confirm(modelData.name)
             }

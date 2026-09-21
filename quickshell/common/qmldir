@@ -16,3 +16,5 @@ ConnectionScreen 1.0 ConnectionScreen.qml
 PathPicker 1.0 PathPicker.qml
 
 singleton AppIdentity 1.0 AppIdentity.qml
+
+ConsoleSurface 1.0 ConsoleSurface.qml

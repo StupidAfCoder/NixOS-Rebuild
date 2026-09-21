@@ -13,16 +13,19 @@ Button {
     property string trailing: ""
     property bool selected: false
     property bool danger: false
+    property bool raised: false
     implicitHeight: detail ? 62 : 46
     implicitWidth: 240
     padding: 12
     hoverEnabled: true
     Accessible.name: label + (detail ? ", " + detail : "")
-    background: Rectangle {
-        color: root.down || root.selected ? Colors.surfaceContainerHigh : root.hovered ? Colors.surfaceContainer : "transparent"
-        border.width: root.visualFocus ? 1 : 0
-        border.color: Colors.accent
-        Rectangle { width: 2; height: 14; anchors.verticalCenter: parent.verticalCenter; color: Colors.accent; visible: root.selected }
+    background: ConsoleSurface {
+        visible: root.raised || root.hovered || root.down || root.selected || root.visualFocus
+        fillColor: root.selected ? Colors.surfaceContainerHigh : root.hovered ? Colors.surfaceContainerHigh : Colors.surfaceContainer
+        edgeColor: root.visualFocus || root.selected ? Colors.accent : Colors.outlineVariant
+        raised: root.raised
+        pressed: root.down
+        lit: root.hovered
     }
     contentItem: RowLayout {
         spacing: 14

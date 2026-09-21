@@ -12,9 +12,9 @@ function setup(){
  const click=selector=>{const el=doc.querySelector(selector);assert.ok(el,selector);el.click()};
  return {dom,doc,errors,click};
 }
-test('all ten illustrated scenes open, close and have no JS errors',()=>{
+test('all twelve illustrated scenes open, close and have no JS errors',()=>{
  const {dom,doc,errors,click}=setup();
- const buttons=[...doc.querySelectorAll('#tabs button')];assert.equal(buttons.length,10);
+ const buttons=[...doc.querySelectorAll('#tabs button')];assert.equal(buttons.length,12);
  for(const b of buttons){b.click();assert.ok(doc.querySelector('.panel,.sheetempty'));}
  click('[data-close]');assert.ok(doc.querySelector('.sheetempty'));assert.deepEqual(errors,[]);dom.window.close();
 });
@@ -28,7 +28,7 @@ test('library search, empty state, keyboard and placements',()=>{
  assert.deepEqual(errors,[]);dom.window.close();
 });
 test('connection and history flows; power focuses safe choice',()=>{
- const {dom,doc,errors,click}=setup();click('[data-wifi="Scan"]');click('[data-wifi="Join"]');assert.ok(doc.querySelector('input[type=password]'));click('[data-wifi="Link"]');
+ const {dom,doc,errors,click}=setup();click('#tabs [data-scene="Wireless"]');click('[data-wifi="Scan"]');click('[data-wifi="Join"]');assert.ok(doc.querySelector('input[type=password]'));click('[data-wifi="Link"]');
  click('#tabs [data-scene="Your day"]');click('[data-day="History"]');assert.equal(doc.querySelectorAll('.calendar button').length,30);click('[data-date="17"]');assert.match(doc.querySelector('.panel').textContent,/September 17/);click('[data-day="Apps"]');assert.equal(doc.querySelectorAll('.progress').length,3);
  click('#tabs [data-scene="Session"]');click('[data-power="Shut down"]');assert.equal(doc.activeElement.id,'cancel');
  doc.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'Escape'}));assert.equal(doc.getElementById('cancel'),null);assert.ok(doc.querySelector('[data-power="Shut down"]'));
@@ -45,5 +45,18 @@ test('quick ribbon selects scenes and wallpaper mode recolors the surface',()=>{
  assert.equal(doc.getElementById('poster-name').textContent,'Blue hour');
  const theme=doc.getElementById('theme');theme.value='black';theme.dispatchEvent(new dom.window.Event('change'));
  assert.equal(doc.getElementById('desktop').style.getPropertyValue('--bg'),'#000000');
+ assert.deepEqual(errors,[]);dom.window.close();
+});
+test('cartridge navigation, background-free ribbon keys, thumbnail preview and rail placement',()=>{
+ const {dom,doc,errors,click}=setup();
+ click('[data-app="1"]');assert.match(doc.getElementById('app-readout').textContent,/Firefox/);
+ doc.activeElement.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));assert.match(doc.getElementById('app-readout').textContent,/Foot/);
+ click('#tabs [data-scene="Quick wallpapers"]');assert.equal(doc.querySelector('.ribbon .panelhead'),null);assert.doesNotMatch(doc.querySelector('.ribbon').textContent,/Adjust colors/);
+ doc.dispatchEvent(new dom.window.KeyboardEvent('keydown',{key:'ArrowRight'}));assert.equal(doc.getElementById('poster-name').textContent,'Blue hour');
+ click('#tabs [data-scene="Image browser"]');click('[data-photo="3"]');assert.equal(doc.getElementById('photo-name').textContent,'Ember.png');
+ click('#tabs [data-scene="Your corner"]');click('[data-corner="Bar"]');
+ assert.equal(doc.querySelector('#rail [aria-label="Settings"]'),null);
+ click('[data-relocate="clock"]');assert.ok(doc.querySelector('#rail [data-zone="bottom"] .clock'));
+ click('#tabs [data-scene="Session"]');assert.equal(doc.querySelector('.session .profile'),null);
  assert.deepEqual(errors,[]);dom.window.close();
 });

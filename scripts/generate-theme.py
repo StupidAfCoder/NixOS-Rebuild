@@ -2,7 +2,7 @@
 """Single-seed wallpaper themes. Preview is pure; only the CLI publishes files.
 
 Compatible: generate-theme.py IMAGE dark|light [CONTRAST]
-New: --recipe wallpaper|black|neutral|tonal|expressive|paper|mono --tone -15..15
+New: --recipe balanced|wallpaper|black|neutral|tonal|expressive|paper|mono --tone -15..15
      --saturation 0..1.6 --source representative|dominant|colorful --preview
 """
 import argparse
@@ -16,7 +16,7 @@ from PIL import Image, ImageOps
 from materialyoucolor.hct import Hct
 
 ROOT = Path(__file__).resolve().parents[1]
-RECIPES = ("wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono")
+RECIPES = ("balanced", "wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono")
 
 
 def atomic_write(path, text):
@@ -103,8 +103,12 @@ def generate(path, mode="dark", contrast_level=0., recipe="black", tone=0., satu
     hue = seed["hue"]
     chroma = 0 if neutral else min(90, seed["chroma"] * saturation * (1.3 if recipe == "expressive" else 1))
     light = mode == "light" or recipe == "paper"
-    tinted = recipe in ("wallpaper", "tonal", "expressive", "paper") and not neutral
+    tinted = recipe in ("balanced", "wallpaper", "tonal", "expressive", "paper") and not neutral
     surface_chroma = min(chroma * (.55 if recipe == "wallpaper" else .25), 36 if recipe == "wallpaper" else 16) if tinted else 0
+    # Balanced keeps a trace of the seed in charcoal surfaces. Intensity changes
+    # the keys more than the furniture; the vivid wallpaper recipe is untouched.
+    if recipe == "balanced":
+        surface_chroma = min(6, chroma * .10) if not neutral else 0
     levels = [96, 98, 94, 91, 87, 83] if light else ([0, 3, 5, 8, 12, 16] if recipe == "black" else [5, 7, 9, 12, 16, 20])
     if recipe == "wallpaper" and not light:
         levels = [12, 14, 16, 19, 22, 26]

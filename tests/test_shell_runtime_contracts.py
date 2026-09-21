@@ -27,12 +27,11 @@ class RuntimeContracts(unittest.TestCase):
         self.assertIn('svgData', source)
 
     def test_no_rail_tooltips_and_only_one_third_party_tray_control(self):
-        for name in ['bar/Bar.qml', 'bar/SystemTray.qml', 'common/IconButton.qml']:
+        for name in ['bar/Bar.qml', 'bar/BarModule.qml', 'common/IconButton.qml']:
             self.assertNotIn('ToolTip.', (ROOT / 'quickshell' / name).read_text())
-        tray = (ROOT / 'quickshell/bar/SystemTray.qml').read_text()
-        self.assertIn('TrayApps.toggle()', tray)
+        tray = (ROOT / 'quickshell/bar/BarModule.qml').read_text()
+        self.assertEqual(tray.count('tray: TrayApps'), 1)
         self.assertNotIn('IconImage', tray)
-        self.assertNotIn('Repeater', tray)
         self.assertIn('TrayAppsContent', (ROOT / 'quickshell/bar/ShellFrame.qml').read_text())
 
     def test_decoder_lifetime_and_no_player_guard(self):
@@ -62,7 +61,42 @@ class RuntimeContracts(unittest.TestCase):
         launcher = (ROOT / 'quickshell/launcher/AppLauncherContent.qml').read_text()
         self.assertIn('fitContent: false', launcher)  # avoids a ListView height cycle
         self.assertIn('shellAction: "settings"', launcher)
-        self.assertIn('Settings.moduleEnabled("settings")', (ROOT / 'quickshell/bar/Bar.qml').read_text())
+        frame = (ROOT / 'quickshell/bar/ShellFrame.qml').read_text()
+        self.assertIn('Region { item: settingsEdge }', frame)
+        self.assertIn('text: "↓ Settings"', frame)
+        self.assertIn('visible: settingsEdge.revealed', frame)
+        self.assertNotIn('visible: settingsEdge.height >', frame)
+        self.assertNotIn('anchors.bottomMargin: 46', (ROOT / 'quickshell/bar/Bar.qml').read_text())
+        self.assertIn('Settings.moduleEnabled(moduleKey)', (ROOT / 'quickshell/bar/BarModule.qml').read_text())
+
+    def test_workspace_selection_and_console_geometry(self):
+        module = (ROOT / 'quickshell/bar/BarModule.qml').read_text()
+        self.assertIn('checked: isActive', module)
+        self.assertIn('Hyprland.focusedWorkspace?.id === wsId', module)
+        self.assertIn('focusPolicy: Qt.NoFocus', module)
+        self.assertNotIn('ws.activeFocus', module)
+        self.assertIn('"HH:mm"', module)
+        self.assertNotIn('hoverPreview', (ROOT / 'quickshell/bar/MediaBarWidget.qml').read_text())
+        button = (ROOT / 'quickshell/common/PixelButton.qml').read_text()
+        self.assertIn('background: ConsoleSurface', button)
+        self.assertIn('root.visualFocus', button)
+        self.assertIn('implicitContentWidth', button)  # works for overridden contentItem too
+        self.assertNotIn('Colors.mix(Colors.surfaceContainer', button)  # checked text uses validated surfaces
+
+    def test_wallpaper_split_and_image_previews(self):
+        picker = (ROOT / 'quickshell/common/PathPicker.qml').read_text()
+        self.assertIn('GridView {', picker)
+        self.assertIn('sourceSize.width: 240', picker)
+        self.assertIn('function isImage', picker)
+        quick = (ROOT / 'quickshell/wallpaper/QuickWallpapersContent.qml').read_text()
+        self.assertNotIn('\nSheet {', quick)
+        self.assertNotIn('Sync live', quick)
+        self.assertNotIn('Adjust colors', quick)
+        self.assertIn('Keys.onRightPressed', quick)
+        self.assertIn('userScrolling = false', quick)
+        power = (ROOT / 'quickshell/bar/PowerMenuContent.qml').read_text()
+        self.assertNotIn('ProfileAvatar', power)
+        self.assertIn('MediaPlayer {', power)
 
     def test_file_picker_and_quick_wallpaper_registration(self):
         picker = (ROOT / 'quickshell/common/PathPicker.qml').read_text()
