@@ -103,7 +103,15 @@ Sheet {
             }
             PixelText { text: "Opacity / " + Math.round(Settings.barOpacity * 100) + "%" }
             PixelSlider { Layout.fillWidth: true; from: .35; to: 1; stepSize: .01; value: Settings.barOpacity; onMoved: Settings.patch({barOpacity: value}) }
-            PreferenceRow { Layout.fillWidth: true; label: "Background blur"; description: "Softens the desktop behind the translucent rail. Requires the Hyprland blur rule."; selected: Settings.barBlur; onToggled: Settings.patch({barBlur: !Settings.barBlur}) }
+            PreferenceRow { Layout.fillWidth: true; label: "Background blur"; description: "Softens the desktop behind the translucent rail."; selected: Settings.barBlur; onToggled: Settings.patch({barBlur: !Settings.barBlur}) }
+            PixelText {
+                Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.warning
+                visible: Settings.barBlur && (Settings.barOpacity >= 1 || (Settings.previewMode && !Settings.previewBlurConfigured))
+                text: [Settings.previewMode && !Settings.previewBlurConfigured ? "Preview needs --preview-blur or an already installed compositor rule." : "",
+                       Settings.barOpacity >= 1 ? "Opacity is 100%. Lower it to see the blur." : ""].filter(s => s.length > 0).join("\n")
+            }
+            PreferenceRow { Layout.fillWidth: true; label: "Workspace manager button"; description: "When hidden, hover the last gem and confirm, search Library, or use Super+Ctrl+E."; selected: Settings.workspaceManagerButton; onToggled: Settings.patch({workspaceManagerButton: !Settings.workspaceManagerButton}) }
+            PreferenceRow { Layout.fillWidth: true; label: "Window previews"; description: "Live and local, only while Workspaces is open. Nothing is saved."; selected: Settings.workspacePreviews; onToggled: Settings.patch({workspacePreviews: !Settings.workspacePreviews}) }
         }
         PixelGroup {
             title: "Modules"; iconName: "settings-2.svg"; Layout.fillWidth: true

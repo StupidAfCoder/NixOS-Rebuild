@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import QtQuick
+import QtQuick.Layouts
 import "../common"
 import "../wallpaper"
 import "../launcher"
@@ -25,12 +26,13 @@ PanelWindow {
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.namespace: blurred ? "quickshell:frame-blur" : "quickshell:frame"
+    WlrLayershell.namespace: blurred ? Settings.blurNamespace : "quickshell:frame"
     readonly property bool onScreen: controller.popupScreen === frame.shellScreen.name
     readonly property bool openHere: onScreen && controller.anyPanelShown
     WlrLayershell.keyboardFocus: openHere ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     mask: Region {
         Region { item: barArea }
+        Region { item: workspacePrompt }
         Region { item: wallpaperEdge }
         Region { item: settingsEdge }
         Region { item: catchArea }
@@ -99,7 +101,31 @@ PanelWindow {
         TrayAppsContent { invokingScreen: frame.shellScreen.name; anchorX: controller.popupAnchorX; anchorY: controller.popupAnchorY; shown: TrayApps.shown && frame.onScreen }
         TrayMenuContent { visible: TrayMenu.shown && frame.onScreen }
     }
-    Bar { id: barArea; x: frame.railRect.x; y: frame.railRect.y; width: frame.railRect.width; height: frame.railRect.height; barWidth: controller.barWidth; z: 30; onOpenPanel: (panel, origin) => controller.toggleFrom(panel, origin, frame.shellScreen.name) }
+    Bar { id: barArea; x: frame.railRect.x; y: frame.railRect.y; width: frame.railRect.width; height: frame.railRect.height; barWidth: controller.barWidth; z: 30; onOpenPanel: (panel, origin) => controller.toggleFrom(panel, origin, frame.shellScreen.name); onWorkspaceHint: origin => { if (!controller.anyPanelShown && !Settings.workspaceManagerButton) workspacePrompt.origin = origin; } }
+    Item {
+        id: workspacePrompt
+        property var origin: null
+        readonly property bool offered: !!origin && origin.visible && !Settings.workspaceManagerButton && !controller.anyPanelShown
+        readonly property var point: origin ? origin.mapToItem(null, origin.width / 2, origin.height / 2) : ({x: -1, y: -1})
+        readonly property real hintHeight: Math.max(78, hintContents.implicitHeight + 20)
+        readonly property var position: Geometry.panelPosition(Geometry.bounds(frame.width, frame.height, Settings.desktopInsets, 8), 218, hintHeight, Settings.barEdge, false, point.x, point.y)
+        x: position.x; y: position.y; z: 40
+        width: offered ? 218 : 0; height: offered ? hintHeight : 0
+        visible: offered
+        HoverHandler { id: hintHover }
+        Connections { target: frame.controller; function onAnyPanelShownChanged() { if (frame.controller.anyPanelShown) workspacePrompt.origin = null; } }
+        Timer { interval: 350; running: workspacePrompt.offered && !workspacePrompt.origin?.hovered && !hintHover.hovered; onTriggered: workspacePrompt.origin = null }
+        ConsoleSurface { anchors.fill: parent; fillColor: Colors.surfaceContainerLow; edgeColor: Colors.accent }
+        ColumnLayout {
+            id: hintContents
+            x: 10; y: 10; width: 198; height: implicitHeight; spacing: 6
+            PixelText { text: "Open workspace manager?"; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone }
+            RowLayout {
+                PixelButton { text: "Yes"; primary: true; onClicked: { const origin = workspacePrompt.origin; workspacePrompt.origin = null; if (origin) controller.toggleFrom(WorkspacePanel, origin, frame.shellScreen.name); } }
+                PixelButton { text: "Not now"; onClicked: workspacePrompt.origin = null }
+            }
+        }
+    }
     CornerAccent { corner: "topLeft"; thickness: controller.borderThickness; color: controller.accentColor; anchors.left: parent.left; anchors.top: parent.top; anchors.leftMargin: Settings.desktopInsets.left; anchors.topMargin: Settings.desktopInsets.top }
     CornerAccent { corner: "bottomLeft"; thickness: controller.borderThickness; color: controller.accentColor; anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.leftMargin: Settings.desktopInsets.left; anchors.bottomMargin: Settings.desktopInsets.bottom }
     CornerAccent { corner: "topRight"; thickness: controller.borderThickness; color: controller.accentColor; anchors.right: parent.right; anchors.top: parent.top; anchors.rightMargin: Settings.desktopInsets.right; anchors.topMargin: Settings.desktopInsets.top }

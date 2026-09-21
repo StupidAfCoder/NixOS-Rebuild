@@ -67,46 +67,49 @@ Sheet {
         PixelButton { text: "Refresh"; enabled: !WallpaperBackend.scanning; onClicked: WallpaperBackend.refresh() }
     }
     // A full-width contact sheet, not a tall empty left column.
-    GridView {
-        id: gallery
-        Layout.fillWidth: true; Layout.preferredHeight: 204
-        readonly property int columns: Math.max(2, Math.floor((width - 12) / 145))
-        cellWidth: Math.floor((width - 12) / columns); cellHeight: 102
-        pressDelay: 120
-        model: root.filtered; clip: true; keyNavigationEnabled: false; activeFocusOnTab: true
-        Keys.onLeftPressed: root.move(-1)
-        Keys.onRightPressed: root.move(1)
-        Keys.onUpPressed: root.move(-columns)
-        Keys.onDownPressed: root.move(columns)
-        // Home/End/Page keys have no dedicated Keys signals in Qt Quick.
-        Keys.onPressed: event => {
-            if (event.key === Qt.Key_PageUp) root.move(-gallery.columns * 2);
-            else if (event.key === Qt.Key_PageDown) root.move(gallery.columns * 2);
-            else if (event.key === Qt.Key_Home) root.select(0);
-            else if (event.key === Qt.Key_End) root.select(gallery.count - 1);
-            else { event.accepted = false; return; }
-            event.accepted = true;
-        }
-        Keys.onReturnPressed: root.select(currentIndex)
-        Keys.onEnterPressed: root.select(currentIndex)
-        ScrollBar.vertical: CollectionScrollBar { Accessible.name: "Wallpaper collection" }
-        delegate: Item {
-            id: tile
-            required property var modelData
-            required property int index
-            width: gallery.cellWidth; height: gallery.cellHeight
-            PixelButton {
-                anchors.fill: parent; anchors.margins: 3; padding: 4; topPadding: 4; bottomPadding: 4
-                focusPolicy: Qt.NoFocus; checked: root.selectedPath === tile.modelData.path
-                Accessible.name: tile.modelData.name
-                contentItem: Item {
-                    Image { anchors.fill: parent; anchors.bottomMargin: 22; source: Settings.fileUrl(tile.modelData.path); asynchronous: true; sourceSize.width: 320; sourceSize.height: 180; fillMode: Image.PreserveAspectCrop; clip: true }
-                    PixelText { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; text: tile.modelData.name }
-                }
-                onClicked: { root.select(tile.index); gallery.forceActiveFocus(); }
+    RowLayout {
+        Layout.fillWidth: true; Layout.preferredHeight: 204; spacing: 4
+        GridView {
+            id: gallery
+            Layout.fillWidth: true; Layout.fillHeight: true
+            readonly property int columns: Math.max(2, Math.floor(width / 145))
+            cellWidth: Math.floor(width / columns); cellHeight: 102
+            pressDelay: 120
+            model: root.filtered; clip: true; keyNavigationEnabled: false; activeFocusOnTab: true
+            Keys.onLeftPressed: root.move(-1)
+            Keys.onRightPressed: root.move(1)
+            Keys.onUpPressed: root.move(-columns)
+            Keys.onDownPressed: root.move(columns)
+            // Home/End/Page keys have no dedicated Keys signals in Qt Quick.
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_PageUp) root.move(-gallery.columns * 2);
+                else if (event.key === Qt.Key_PageDown) root.move(gallery.columns * 2);
+                else if (event.key === Qt.Key_Home) root.select(0);
+                else if (event.key === Qt.Key_End) root.select(gallery.count - 1);
+                else { event.accepted = false; return; }
+                event.accepted = true;
             }
+            Keys.onReturnPressed: root.select(currentIndex)
+            Keys.onEnterPressed: root.select(currentIndex)
+            delegate: Item {
+                id: tile
+                required property var modelData
+                required property int index
+                width: gallery.cellWidth; height: gallery.cellHeight
+                PixelButton {
+                    anchors.fill: parent; anchors.margins: 3; padding: 4; topPadding: 4; bottomPadding: 4
+                    focusPolicy: Qt.NoFocus; checked: root.selectedPath === tile.modelData.path
+                    Accessible.name: tile.modelData.name
+                    contentItem: Item {
+                        Image { anchors.fill: parent; anchors.bottomMargin: 22; source: Settings.fileUrl(tile.modelData.path); asynchronous: true; sourceSize.width: 320; sourceSize.height: 180; fillMode: Image.PreserveAspectCrop; clip: true }
+                        PixelText { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; text: tile.modelData.name }
+                    }
+                    onClicked: { root.select(tile.index); gallery.forceActiveFocus(); }
+                }
+            }
+            PixelText { anchors.centerIn: parent; visible: !gallery.count; text: WallpaperBackend.scanning ? "Reading collection…" : "No matching wallpapers. Choose a folder in Settings → Profile."; width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; color: Colors.textOnSurfaceVariant }
         }
-        PixelText { anchors.centerIn: parent; visible: !gallery.count; text: WallpaperBackend.scanning ? "Reading collection…" : "No matching wallpapers. Choose a folder in Settings → Profile."; width: parent.width; horizontalAlignment: Text.AlignHCenter; wrapMode: Text.Wrap; color: Colors.textOnSurfaceVariant }
+        CollectionScrollBar { target: gallery; Layout.preferredWidth: 20; Layout.fillHeight: true; Accessible.name: "Wallpaper collection" }
     }
     GridLayout {
         Layout.fillWidth: true; columns: root.width >= 660 ? 2 : 1; columnSpacing: 18; rowSpacing: 12

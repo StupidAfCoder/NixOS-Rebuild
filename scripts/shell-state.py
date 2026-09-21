@@ -27,7 +27,7 @@ DEFAULTS = dict(displayName=os.environ.get("USER", "User"), avatarPath="", bio="
                 mutedWorkspaces=[], dailyGoalMinutes=240,
                 barLayout={"top": ["launcher", "workspaces"], "middle": ["wizard", "media", "clock"],
                            "bottom": ["audio", "system", "battery", "network", "bluetooth", "tray", "settings", "power"]},
-                clockShowDate=False, barModules={key: key not in ("system", "settings") for key in BAR_MODULES}, workspaceCount=5, launcherEdge="top", quickWallpaperEdgeEnabled=True)
+                clockShowDate=False, workspaceManagerButton=True, workspacePreviews=True, barModules={key: key not in ("system", "settings") for key in BAR_MODULES}, workspaceCount=5, launcherEdge="top", quickWallpaperEdgeEnabled=True)
 
 
 def load(path, fallback):

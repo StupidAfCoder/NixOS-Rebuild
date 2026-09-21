@@ -59,7 +59,7 @@ Sheet {
             PixelButton { text: "Disconnect"; visible: NetworkBackend.wifiConnected; enabled: !NetworkBackend.busy; onClicked: NetworkBackend.disconnectWifi() }
             PixelButton { text: root.forgetConfirm ? "Confirm forget" : "Forget…"; visible: NetworkBackend.wifiConnected; danger: root.forgetConfirm; enabled: !NetworkBackend.busy; onClicked: { if (root.forgetConfirm) { NetworkBackend.forgetNetwork(NetworkBackend.connectedSsid); root.forgetConfirm = false; } else root.forgetConfirm = true; } }
             PixelButton { visible: root.forgetConfirm; text: "Cancel"; onClicked: root.forgetConfirm = false }
-            PixelButton { text: "Advanced"; onClicked: Quickshell.execDetached(["nm-connection-editor"]) }
+            PixelButton { text: NetworkEditor.running ? "Editor open" : "Advanced…"; Accessible.name: "Edit Ethernet and Wi-Fi connections"; enabled: !NetworkEditor.running; onClicked: NetworkEditor.open() }
         }
     }
     ColumnLayout {
@@ -102,5 +102,6 @@ Sheet {
             PixelButton { id: connectButton; text: NetworkBackend.busy ? "Connecting…" : "Connect"; primary: true; enabled: !NetworkBackend.busy; onClicked: { NetworkBackend.connectToNetwork(root.selectedSsid, password.text); password.text = ""; } }
         }
     }
+    PixelText { text: NetworkEditor.errorMessage; visible: !!text; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.error }
     PixelText { text: NetworkBackend.lastError; visible: !!text; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.error }
 }

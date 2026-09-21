@@ -11,10 +11,12 @@ Sheet {
     id: root
     title: "Workspaces"
     shown: WorkspacePanel.shown
-    preferredWidth: 470; preferredHeight: 620
+    preferredWidth: 470; preferredHeight: 730
     initialFocusItem: board
     property int selectedId: Hyprland.focusedWorkspace?.id ? Hyprland.focusedWorkspace.id : 1
     property string movingAddress: ""
+    property string previewAddress: ""
+    readonly property var previewWindow: windows.find(w => w.address === previewAddress) || windows[0] || null
     readonly property var workspaceIds: State.ids(Hyprland.workspaces.values, Settings.workspaceCount)
     readonly property var selectedWorkspace: Hyprland.workspaces.values.find(w => w.id === selectedId)
     readonly property var windows: selectedWorkspace?.toplevels.values || []
@@ -31,7 +33,7 @@ Sheet {
     function cancel() { if (movingAddress) movingAddress = ""; else WorkspacePanel.hide(); }
     onDismiss: cancel()
     onShownChanged: {
-        movingAddress = "";
+        movingAddress = ""; previewAddress = "";
         if (shown) { selectedId = Hyprland.focusedWorkspace?.id ? Hyprland.focusedWorkspace.id : 1; Hyprland.refreshToplevels(); }
     }
     Timer { interval: 2000; repeat: true; running: root.shown; onTriggered: Hyprland.refreshToplevels() }
@@ -88,6 +90,25 @@ Sheet {
         PixelText { Layout.fillWidth: true; text: root.selectedWorkspace?.name && root.selectedWorkspace.name !== String(root.selectedId) ? root.selectedWorkspace.name : "Workspace " + root.selectedId }
         PixelButton { text: "Open"; primary: true; enabled: !root.movingAddress; onClicked: WorkspacePanel.focusWorkspace(root.selectedId) }
     }
+    Rectangle {
+        visible: Settings.workspacePreviews && root.windows.length > 0
+        Layout.fillWidth: true; Layout.preferredHeight: 144
+        color: Colors.background; border.color: Colors.outlineVariant
+        clip: true
+        Loader {
+            id: previewLoader
+            anchors.fill: parent; anchors.margins: 2
+            active: root.shown && Settings.workspacePreviews && !!root.previewWindow?.wayland
+            source: "WindowCapture.qml"
+            onLoaded: item.captureSource = Qt.binding(function() { return root.previewWindow?.wayland || null; })
+        }
+        Column {
+            anchors.centerIn: parent; spacing: 8
+            visible: !previewLoader.item?.hasContent
+            ColoredIcon { anchors.horizontalCenter: parent.horizontalCenter; width: 28; height: 28; iconName: AppIdentity.fallback(root.previewWindow?.lastIpcObject?.class || "") || "app-windows.svg" }
+            PixelText { text: "Preview unavailable"; color: Colors.textOnSurfaceVariant }
+        }
+    }
     PixelText { visible: !root.windows.length; text: "No windows"; color: Colors.textOnSurfaceVariant }
     Repeater {
         model: root.windows
@@ -102,6 +123,8 @@ Sheet {
                 detail: windowRow.modelData.title || ""
                 iconName: AppIdentity.fallback(windowRow.appClass)
                 iconSource: AppIdentity.icon(windowRow.appClass)
+                onHoveredChanged: if (hovered) root.previewAddress = windowRow.modelData.address
+                onActiveFocusChanged: if (activeFocus) root.previewAddress = windowRow.modelData.address
                 onClicked: WorkspacePanel.focusWindow(windowRow.modelData.address)
             }
             PixelButton {

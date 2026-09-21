@@ -167,12 +167,55 @@ test('actual wallpaper navigation handlers handle Home/End/Page keys without app
  ]) {
   const calls=[];const ctx=vm.createContext({Qt,carousel:{currentIndex:50,count:1000},gallery:{columns:4,count:1000},root:{scrubTo(i){calls.push(['scrubTo',i])},move(i){calls.push(['move',i])},select(i){calls.push(['select',i])}}});
   const source=fs.readFileSync(path.join(__dirname,'../quickshell/wallpaper',file),'utf8');
-  const handler=source.match(/        Keys\.onPressed: (event => \{[^]*?\n        \})/);assert.ok(handler,file);
-  vm.runInContext('var handle = '+handler[1],ctx);
+  const handler=source.match(/(^[ \t]*)Keys\.onPressed: (event => \{[^]*?\n\1\})/m);assert.ok(handler,file);
+  vm.runInContext('var handle = '+handler[2],ctx);
   for(const key of [Qt.Key_PageUp,Qt.Key_PageDown,Qt.Key_Home,Qt.Key_End]) {const event={key,accepted:false};ctx.handle(event);assert.equal(event.accepted,true)}
   assert.deepEqual(calls,expected);
   for(const key of [Qt.Key_Tab,Qt.Key_Escape,999]) {const event={key,accepted:true};ctx.handle(event);assert.equal(event.accepted,false)}
   assert.equal(calls.length,4);
   ctx.carousel.count=0;ctx.gallery.count=0;ctx.handle({key:Qt.Key_End});assert.equal(calls.at(-1)[1],-1);
  }
+});
+
+const railGeometry=load('quickshell/common/RailGeometry.js');
+test('rail middle stays screen-centered despite unequal or hidden end modules',()=>{
+ for(const [start,end] of [[196,280],[196,0],[0,280],[32,32],[0,0]]) {
+  const layout=railGeometry.arrange(1080,start,164,end,12,16);
+  assert.equal(layout.positions[1]+82,540);
+  assert.equal(layout.extent,1080);assert.equal(layout.positions[0],12);
+  assert.equal(layout.positions[2]+end,1068);
+ }
+});
+test('rail shifts the middle only for collisions and scrolls instead of overlapping',()=>{
+ for(const viewport of [320,480,800,1080,1920]) for(const start of [0,32,240,500])
+ for(const middle of [0,40,180,900]) for(const end of [0,32,240,500]) {
+  const l=railGeometry.arrange(viewport,start,middle,end,12,16),p=l.positions;
+  assert.ok(l.extent>=viewport);assert.equal(p[2]+end,l.extent-12);
+  if(middle) {
+   assert.ok(p[1]>=p[0]+start+(start?16:0));
+   assert.ok(p[1]+middle+(end?16:0)<=p[2]);
+   const ideal=(l.extent-middle)/2,low=12+start+(start?16:0),high=p[2]-(end?16:0)-middle;
+   assert.equal(p[1],Math.max(low,Math.min(high,ideal)));
+  } else assert.ok(p[0]+start+(start&&end?16:0)<=p[2]);
+ }
+});
+const scrolling=load('quickshell/common/ScrollGeometry.js');
+test('gallery scrubber reaches both collection ends, preserves grab offset and clamps outside drags',()=>{
+ const track=196,thumb=scrolling.thumbSize(track,204,20400),range=20400-204;
+ assert.equal(thumb,28);
+ assert.equal(scrolling.contentPosition(7,7,track,thumb,0,range),0);
+ assert.equal(scrolling.contentPosition(track-thumb+7,7,track,thumb,0,range),range);
+ assert.equal(scrolling.contentPosition((track-thumb)/2+7,7,track,thumb,-204,range),-204+range/2);
+ assert.equal(scrolling.contentPosition(-500,7,track,thumb,0,range),0);
+ assert.equal(scrolling.contentPosition(5000,7,track,thumb,0,range),range);
+ assert.equal(scrolling.thumbSize(196,204,0),196);
+ assert.equal(scrolling.contentPosition(10,0,196,196,0,0),0);
+ assert.equal(scrolling.thumbSize(10,20,200),10);
+});
+test('actual studio drag seek changes only the target collection offset',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../quickshell/common/CollectionScrollBar.qml'),'utf8');
+ const ctx=vm.createContext({ScrollGeometry:scrolling,grabOffset:14,trackHeight:196,thumbHeight:28,range:20000,target:{originY:-200,contentY:-200}});
+ vm.runInContext(source.match(/    function seek\([^]*?\n    \}/)[0],ctx);
+ ctx.seek(186);assert.equal(ctx.target.contentY,19800);
+ ctx.seek(-50);assert.equal(ctx.target.contentY,-200);
 });

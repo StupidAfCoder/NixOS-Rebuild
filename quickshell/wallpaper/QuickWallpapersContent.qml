@@ -56,7 +56,7 @@ FocusScope {
     Keys.onEscapePressed: QuickWallpapers.hide()
     ListView {
         id: carousel
-        width: parent.width; height: Math.max(1, parent.height - 66)
+        width: parent.width; height: Math.max(1, parent.height - (quickStatus.visible ? 66 : 34))
         pressDelay: 120
         orientation: ListView.Horizontal; spacing: 16; clip: true
         model: WallpaperBackend.wallpapers
@@ -98,7 +98,7 @@ FocusScope {
                 Behavior on height { NumberAnimation { duration: Settings.motionMs } }
                 padding: 3; topPadding: 3; bottomPadding: 3; focusPolicy: Qt.NoFocus
                 enabled: !root.busy
-                Accessible.name: "Apply " + tile.modelData.name
+                Accessible.name: (Settings.previewMode ? "Try preview colors: " : "Apply ") + tile.modelData.name
                 background: ConsoleSurface { raised: false; fillColor: Colors.background; edgeColor: tile.selected ? Colors.accent : Colors.outlineVariant }
                 contentItem: Image { source: Settings.fileUrl(tile.modelData.path); asynchronous: true; sourceSize.width: 600; sourceSize.height: 480; fillMode: Image.PreserveAspectCrop; clip: true }
                 onClicked: { if (!carousel.dragging && !carousel.flicking) root.choose(tile.index); carousel.forceActiveFocus(); }
@@ -109,11 +109,13 @@ FocusScope {
             onWheel: event => { const delta = event.angleDelta.y || event.angleDelta.x || event.pixelDelta.y || event.pixelDelta.x; if (delta) root.move(delta < 0 ? 3 : -3); event.accepted = true; }
         }
     }
-    // Outlined text remains legible without a panel or a translucent scrim.
+    // Only actionable status/errors; filenames stay in accessible tile labels.
     PixelText {
+        id: quickStatus
+        visible: text.length > 0
         anchors.top: carousel.bottom; anchors.topMargin: 10; width: parent.width
         horizontalAlignment: Text.AlignHCenter; style: Text.Outline; styleColor: "#000000"; color: "#ffffff"
-        text: WallpaperBackend.lastError || (root.busy ? "Applying…" : !carousel.count ? (WallpaperBackend.scanning ? "Reading collection…" : "Choose a collection in Settings → Profile.") : ((Settings.previewMode ? "Preview · " : "") + (WallpaperBackend.wallpapers[carousel.currentIndex]?.name || "")))
+        text: WallpaperBackend.lastError || (root.busy ? "Applying…" : !carousel.count ? (WallpaperBackend.scanning ? "Reading collection…" : "Choose a collection in Settings → Profile.") : "")
     }
     PixelSlider {
         id: scrub

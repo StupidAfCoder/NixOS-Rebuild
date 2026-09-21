@@ -33,3 +33,5 @@ TrayAppsContent 1.0 TrayAppsContent.qml
 BarModule 1.0 BarModule.qml
 
 FrameWindow 1.0 FrameWindow.qml
+
+singleton NetworkEditor 1.0 NetworkEditor.qml

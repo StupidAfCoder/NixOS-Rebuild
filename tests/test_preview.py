@@ -1,6 +1,7 @@
 """Helper integration tests replace ALL session-facing commands with temporary stubs."""
 import json
 import os
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -12,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PreviewTests(unittest.TestCase):
-    def run_preview(self, active=True, code=0, manual=False, software=False):
+    def run_preview(self, active=True, code=0, manual=False, software=False, blur=False, blur_failure=False):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             bin_dir = base / 'bin'
@@ -32,10 +33,12 @@ printf '%s\n' "$*" >> "$TEST_TRACE"
 case "$*" in *is-active*) exit "$TEST_SERVICE_STATUS";; esac
 exit 0
 ''',
+                'hyprctl': '#!/bin/sh\nprintf "blur %s\\n" "$*" >> "$TEST_TRACE"\ncase "$*" in *getoption*) echo \'{"bool":true}\';; *hl.layer_rule*) if [ "$TEST_BLUR_FAILURE" = 1 ]; then echo unsupported >&2; exit 1; else echo ok; fi;; *) echo ok;; esac\n',
                 'pgrep': '#!/bin/sh\nexit "$TEST_MANUAL_STATUS"\n',
                 'quickshell': '''#!/bin/sh
 printf 'preview=%s config=%s args=%s\n' "$PIXEL_SHELL_PREVIEW" "$XDG_CONFIG_HOME" "$*" >> "$TEST_TRACE"
 printf 'root=%s video=%s texture=%s\n' "$PIXEL_SHELL_ROOT" "${QT_FFMPEG_DECODING_HW_DEVICE_TYPES:-auto}" "${QT_DISABLE_HW_TEXTURES_CONVERSION:-auto}" >> "$TEST_TRACE"
+printf 'blur-enabled=%s namespace=%s\\n' "${PIXEL_SHELL_PREVIEW_BLUR:-0}" "${PIXEL_SHELL_BLUR_NAMESPACE:-none}" >> "$TEST_TRACE"
 exit "$TEST_QS_EXIT"
 ''',
             }
@@ -47,8 +50,9 @@ exit "$TEST_QS_EXIT"
                    'WAYLAND_DISPLAY': 'test-only-no-real-wayland', 'XDG_RUNTIME_DIR': tmp,
                    'XDG_CONFIG_HOME': str(config.parent.parent), 'XDG_STATE_HOME': str(original_state.parent.parent),
                    'TEST_TRACE': str(base / 'trace'), 'TEST_SERVICE_STATUS': '0' if active else '3',
+                   'TEST_BLUR_FAILURE': '1' if blur_failure else '0',
                    'TEST_MANUAL_STATUS': '0' if manual else '1', 'TEST_QS_EXIT': str(code)}
-            result = subprocess.run(['bash', str(ROOT / 'scripts/preview-shell.sh'), '--sample-history'] + (['--software-video'] if software else []),
+            result = subprocess.run(['bash', str(ROOT / 'scripts/preview-shell.sh'), '--sample-history'] + (['--software-video'] if software else []) + (['--preview-blur'] if blur else []),
                                     env=env, capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, 1 if manual else code, result.stderr)
             self.assertEqual(config.read_text(), original)
@@ -69,6 +73,24 @@ exit "$TEST_QS_EXIT"
             self.assertTrue((preview / 'cache/quickshell/preview-theme/quickshell/bar/theme/colors.json').is_file())
             self.assertTrue((preview / 'state/pixel-shell/status.json').is_file())
             self.assertTrue((preview / 'state/wallpaper/current').is_file())
+            if blur and not manual:
+                self.assertIn('blur -j getoption decoration:blur:enabled', trace)
+                self.assertIn('namespace = "^quickshell:preview-blur-', trace)
+                self.assertIn(':set_enabled(false)', trace)
+                # Cleanup precedes restoring the original service, including shell failures.
+                if active:
+                    self.assertLess(trace.rindex(':set_enabled(false)'), trace.index('--user start'))
+                if not blur_failure:
+                    token = re.search(r'namespace=quickshell:preview-blur-([0-9a-f]{24})', trace).group(1)
+                    self.assertIn('namespace = "^quickshell:preview-blur-' + token + '$"', trace)
+                    self.assertIn('_G.pixel_shell_preview_blur_' + token + ':set_enabled(false)', trace)
+                    self.assertTrue(cfg['barBlur'])
+                    self.assertEqual(cfg['barOpacity'], .8)
+                else:
+                    self.assertIn('Continuing without', result.stderr)
+                    self.assertIn('blur-enabled=0 namespace=none', trace)
+            else:
+                self.assertNotIn('blur ', trace)
             if not manual:
                 self.assertIn('root=' + str(ROOT), trace)
                 if software:
@@ -96,6 +118,15 @@ exit "$TEST_QS_EXIT"
             result = subprocess.run([sys.executable, str(ROOT / 'scripts/preview-history.py'), str(path)], capture_output=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertEqual(path.read_text(), 'real history')
+
+    def test_explicit_blur_rule_is_disabled_on_normal_exit(self):
+        self.run_preview(blur=True)
+
+    def test_explicit_blur_rule_is_disabled_on_shell_failure(self):
+        self.run_preview(blur=True, code=7)
+
+    def test_failed_blur_rule_does_not_prevent_preview_or_service_restoration(self):
+        self.run_preview(blur=True, blur_failure=True)
 
 
 if __name__ == '__main__':

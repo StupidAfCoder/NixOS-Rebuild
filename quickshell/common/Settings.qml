@@ -24,6 +24,10 @@ Item {
     readonly property var moduleCatalog: Modules.entries()
     readonly property var barModules: Object.assign({}, Modules.defaults(), values.barModules || {})
     readonly property var barLayout: Modules.layout(values.barLayout)
+    readonly property bool workspaceManagerButton: values.workspaceManagerButton !== false
+    readonly property bool workspacePreviews: values.workspacePreviews === undefined || values.workspacePreviews === true
+    readonly property bool previewBlurConfigured: Quickshell.env("PIXEL_SHELL_PREVIEW_BLUR") === "1"
+    readonly property string blurNamespace: Quickshell.env("PIXEL_SHELL_BLUR_NAMESPACE") || "quickshell:frame-blur"
     readonly property bool clockShowDate: values.clockShowDate === true
     function relocateModule(key, zone, offset) { patch({barLayout: Modules.relocate(barLayout, key, zone, offset)}); }
     function resetLayout() { patch({barLayout: Modules.layoutDefaults()}); }

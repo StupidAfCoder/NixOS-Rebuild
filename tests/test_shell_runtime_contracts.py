@@ -140,7 +140,7 @@ class RuntimeContracts(unittest.TestCase):
         self.assertIn('blurred: false', manager)
         self.assertIn('blurred: true', manager)
         self.assertNotIn('Settings.barBlur', frame)
-        self.assertIn('blurred ? "quickshell:frame-blur" : "quickshell:frame"', frame)
+        self.assertIn('blurred ? Settings.blurNamespace : "quickshell:frame"', frame)
         rules = (ROOT / 'hyprland.lua').read_text()
         self.assertIn('namespace = "^quickshell:frame-blur$"', rules)
         self.assertIn('ignore_alpha = 0.2', rules)
@@ -173,10 +173,10 @@ class RuntimeContracts(unittest.TestCase):
         self.assertIn('onMoved: root.scrubTo(Math.round(value))', quick)
         self.assertIn('!carousel.dragging && !carousel.flicking', quick)
         studio = (ROOT / 'quickshell/wallpaper/WallpaperLauncherContent.qml').read_text()
-        self.assertIn('ScrollBar.vertical: CollectionScrollBar', studio)
+        self.assertIn('CollectionScrollBar { target: gallery;', studio)
         scroll = (ROOT / 'quickshell/common/CollectionScrollBar.qml').read_text()
-        self.assertIn('policy: ScrollBar.AlwaysOn', scroll)
-        self.assertIn('interactive: true', scroll)
+        self.assertIn('preventStealing: true', scroll)
+        self.assertIn('target.contentY = ScrollGeometry.contentPosition', scroll)
 
     def test_minimal_copy_keeps_safety_and_real_option_descriptions(self):
         settings = (ROOT / 'quickshell/settings/SettingsPanelContent.qml').read_text()
@@ -202,4 +202,47 @@ class RuntimeContracts(unittest.TestCase):
         bar = (ROOT / 'quickshell/bar/BarModule.qml').read_text()
         self.assertIn('WorkspaceMark', bar)
         self.assertNotIn('text: String(ws.', bar)
-        self.assertIn('font.pixelSize: 11; color: Colors.accent', bar)
+        self.assertIn('font.pixelSize: 12; color: Colors.accent', bar)
+
+    def test_centering_and_optional_workspace_hint_are_independent_of_end_groups(self):
+        bar = (ROOT / 'quickshell/bar/Bar.qml').read_text()
+        self.assertIn('RailGeometry.arrange', bar)
+        self.assertIn('root.arrangement.positions[index]', bar)
+        self.assertNotIn('Layout.fillHeight: true', bar)
+        module = (ROOT / 'quickshell/bar/BarModule.qml').read_text()
+        self.assertIn('visible: Settings.workspaceManagerButton', module)
+        self.assertIn('ws.index === Settings.workspaceCount - 1', module)
+        frame = (ROOT / 'quickshell/bar/FrameWindow.qml').read_text()
+        self.assertIn('Region { item: workspacePrompt }', frame)
+        self.assertIn('text: "Yes"', frame)
+        self.assertIn('text: "Not now"', frame)
+        self.assertIn('!controller.anyPanelShown', frame)
+
+    def test_live_preview_is_single_lazy_capture_and_not_persisted(self):
+        panel = (ROOT / 'quickshell/workspaces/WorkspacePanelContent.qml').read_text()
+        self.assertIn('active: root.shown && Settings.workspacePreviews && !!root.previewWindow?.wayland', panel)
+        self.assertIn('source: "WindowCapture.qml"', panel)
+        self.assertNotIn('ScreencopyView {', panel)  # optional type cannot break shell load
+        capture = (ROOT / 'quickshell/workspaces/WindowCapture.qml').read_text()
+        self.assertIn('constraintSize: Qt.size(root.width, root.height)', capture)
+        self.assertIn('live: !Settings.reducedMotion', capture)
+        self.assertIn('paintCursor: false', capture)
+        self.assertNotIn('Process', capture)
+        self.assertNotIn('grabToImage', capture)
+        self.assertNotIn('saveToFile', capture)
+
+    def test_network_editor_releases_exclusive_input_only_after_spawn(self):
+        source = (ROOT / 'quickshell/bar/NetworkEditor.qml').read_text()
+        self.assertIn('data.trim() === "started") WifiPanel.hide()', source)
+        self.assertIn('if (code !== 0)', source)
+        self.assertIn('WifiPanel.shown = true', source)
+        wifi = (ROOT / 'quickshell/bar/WifiPanelContent.qml').read_text()
+        self.assertIn('NetworkEditor.errorMessage', wifi)
+        self.assertNotIn('execDetached(["nm-connection-editor"])', wifi)
+
+    def test_quick_strip_keeps_slider_and_errors_but_no_visible_filename(self):
+        source = (ROOT / 'quickshell/wallpaper/QuickWallpapersContent.qml').read_text()
+        status = source.split('id: quickStatus', 1)[1].split('PixelSlider {', 1)[0]
+        self.assertNotIn('.name', status)
+        self.assertIn('WallpaperBackend.lastError', status)
+        self.assertIn('onMoved: root.scrubTo(Math.round(value))', source)

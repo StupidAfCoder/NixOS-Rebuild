@@ -43,6 +43,17 @@ class StateTests(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 state.validate(bad)
 
+    def test_workspace_visibility_and_preview_preferences_are_independent(self):
+        defaults = state.validate({})
+        self.assertTrue(defaults['workspaceManagerButton'])
+        self.assertTrue(defaults['workspacePreviews'])
+        values = state.validate({'workspaceManagerButton': False, 'workspacePreviews': False})
+        self.assertTrue(values['barModules']['workspaces'])
+        self.assertFalse(values['workspaceManagerButton'])
+        for key in ('workspaceManagerButton', 'workspacePreviews'):
+            with self.assertRaises(ValueError):
+                state.validate({key: 'false'})
+
     def test_reject_invalid_settings(self):
         for bad in ({"tone": float("nan")}, {"frameWidth": 1}, {"mutedWorkspaces": [-1]}, {"trackingEnabled": "yes"}, {"recipe": "invalid"}, {"saturation": True}):
             with self.assertRaises(ValueError):

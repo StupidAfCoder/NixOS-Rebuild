@@ -3,19 +3,24 @@
 set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ "${1:-}" == --help ]]; then
-    echo 'usage: preview-shell.sh [--sample-history] [--software-video]'
+    echo 'usage: preview-shell.sh [--sample-history] [--software-video] [--preview-blur]'
     echo 'Temporarily stops the quickshell user service; restores it when preview exits.'
     echo 'Uses private temporary settings/history/cache. Power, wallpaper apply and Trash are disabled.'
     echo 'App launches, network, Bluetooth and audio controls still use the real session.'
+    echo '--preview-blur explicitly adds a uniquely scoped temporary compositor rule, disabled on exit.'
     echo 'Sync live app colors requires separate confirmation and writes real Wallust templates.'
     exit 0
 fi
 sample=0
 software_video=0
+preview_blur=0
+blur_token=""
+unset PIXEL_SHELL_PREVIEW_BLUR PIXEL_SHELL_BLUR_NAMESPACE
 for option in "$@"; do
     case "$option" in
         --sample-history) sample=1 ;;
         --software-video) software_video=1 ;;
+        --preview-blur) preview_blur=1 ;;
         *) echo 'Unknown option; use --help' >&2; exit 2 ;;
     esac
 done
@@ -65,6 +70,9 @@ cleanup() {
         kill "$child" 2>/dev/null || true
         wait "$child" 2>/dev/null || true
     fi
+    if [[ -n "$blur_token" ]]; then
+        python3 "$ROOT/scripts/preview-blur.py" disable "$blur_token" || echo 'Could not disable the scoped preview blur rule; a compositor config reload clears it.' >&2
+    fi
     if [[ "$restore" == 1 ]]; then systemctl --user start quickshell.service || echo 'Restart your original quickshell service manually.' >&2; fi
     printf '\nPreview ended. Logs and temporary preferences: %s\n' "$preview"
     exit "$code"
@@ -79,6 +87,16 @@ fi
 if pgrep -u "$UID" -x 'quickshell|qs' >/dev/null; then
     echo 'Another manually started Quickshell is running. Close it yourself, then retry.' >&2
     exit 1
+fi
+if [[ "$preview_blur" == 1 ]]; then
+    blur_token="$(python3 -c 'import secrets; print(secrets.token_hex(12))')"
+    if python3 "$ROOT/scripts/preview-blur.py" enable "$blur_token"; then
+        export PIXEL_SHELL_PREVIEW_BLUR=1 PIXEL_SHELL_BLUR_NAMESPACE="quickshell:preview-blur-$blur_token"
+        python3 "$ROOT/scripts/shell-state.py" patch '{"barBlur":true,"barOpacity":0.8}'
+        echo 'Blur preview: temporary scoped rule enabled; private rail opacity is 80%. Live preferences unchanged.'
+    else
+        echo 'Continuing without the temporary blur rule. See the error above.' >&2
+    fi
 fi
 printf 'Native preview: %s\nCtrl+C here to exit and restore your original service.\n' "$ROOT"
 printf 'Open from another terminal: qs ipc --path %q call settings toggle\n' "$ROOT/quickshell/shell.qml"

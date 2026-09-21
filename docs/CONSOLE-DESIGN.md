@@ -104,9 +104,32 @@ Blur uses a separate **static namespace**, selected by replacing the frame compo
 by changing an already-connected layer's namespace. Singleton backends and struts outlive
 that replacement; Settings retains its tab. Other ephemeral widget state may reset.
 `ignore_alpha = 0.2` excludes the transparent desktop and the editor's 0.15 scrim, while
-rail opacity cannot fall below 0.35. Preview does not install compositor rules: without the
-new rule only transparency is visible. Native composition/input validation remains pending.
+rail opacity cannot fall below 0.35. Normal preview does not install compositor rules: without the
+new rule only transparency is visible. The explicit `--preview-blur` option installs
+a uniquely scoped session rule, starts private opacity at 80%, and disables its
+rule on exit. It never edits files or turns on globally disabled blur. Native composition/input validation remains pending.
 
 API references: [Quickshell layershell declaration](https://github.com/quickshell-mirror/quickshell/blob/master/src/wayland/wlr_layershell/wlr_layershell.hpp),
 [Hyprland Lua dispatchers](https://wiki.hypr.land/Configuring/Basics/Dispatchers/),
 Hyprland Lua layer rules [2](https://wiki.hypr.land/Configuring/Basics/Window-Rules/).
+
+## Native-review adjustments
+
+Middle placement uses `RailGeometry.arrange`: center in the full axis, clamp only
+against occupied end groups, extend the scrollable axis if needed. Hiding end
+modules therefore no longer changes an otherwise feasible center.
+
+The date is a small pixel calendar with the same Silkscreen face as the time.
+The overview icon can be hidden separately; a delayed last-gem hover offers
+Yes/Not now outside the clipped rail, with its own input region and exit grace.
+
+The contact sheet's scrollbar is a sibling of the GridView, not its attached
+control inside another ScrollView. The mouse grab is protected from ancestor
+Flickables, and pointer-to-content mapping keeps the initial thumb offset.
+The quick strip has no filename caption; status/errors remain.
+
+One optional window preview is active only while Workspaces is shown. Its lazy
+capture component uses the window's Wayland handle, fits aspect ratio and has an
+unavailable fallback. Nothing is written to disk or included in activity history.
+The external network editor uses a start handshake before the shell releases
+exclusive input; missing packages and process failures are surfaced in the panel.

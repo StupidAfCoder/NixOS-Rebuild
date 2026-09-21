@@ -22,6 +22,7 @@ Loader {
     property real railHeight: 0
     property bool horizontal: false
     signal openPanel(var panel, var origin)
+    signal workspaceHint(var origin)
     readonly property bool available: Settings.moduleEnabled(moduleKey)
         && (moduleKey !== "bluetooth" || Bluetooth.defaultAdapter !== null)
         && (moduleKey !== "tray" || TrayApps.items.length > 0)
@@ -56,6 +57,12 @@ Loader {
                 PixelButton {
                     id: ws
                     required property int modelData
+                    required property int index
+                    Timer {
+                        interval: 450
+                        running: ws.hovered && ws.index === Settings.workspaceCount - 1 && !Settings.workspaceManagerButton && !WorkspacePanel.shown
+                        onTriggered: root.workspaceHint(ws)
+                    }
                     readonly property var workspace: Hyprland.workspaces.values.find(w => w.id === modelData)
                     readonly property bool isActive: Hyprland.focusedWorkspace?.id === modelData
                     readonly property bool occupied: !!workspace && workspace.toplevels.values.length > 0
@@ -68,14 +75,14 @@ Loader {
                     onClicked: WorkspacePanel.focusWorkspace(modelData)
                 }
             }
-            IconButton { iconName: "app-windows.svg"; hint: "Manage all workspaces"; checked: WorkspacePanel.shown; onClicked: root.request(WorkspacePanel) }
+            IconButton { visible: Settings.workspaceManagerButton; iconName: "app-windows.svg"; hint: "Manage all workspaces"; checked: WorkspacePanel.shown; onClicked: root.request(WorkspacePanel) }
         }
     }
     Component {
         id: clock
         PixelButton {
-            implicitWidth: root.horizontal ? (Settings.clockShowDate ? 112 : 54) : 36
-            implicitHeight: root.horizontal ? 32 : Settings.clockShowDate ? 70 : 44
+            implicitWidth: root.horizontal ? (Settings.clockShowDate ? 114 : 54) : 36
+            implicitHeight: root.horizontal ? 32 : Settings.clockShowDate ? 80 : 44
             padding: 1; quiet: true; checked: WellbeingPanel.shown
             Accessible.name: Qt.formatDateTime(clockTimer.now, "dddd, d MMMM, HH:mm") + ", Your day"
             Timer { id: clockTimer; property date now: new Date(); interval: 1000; running: true; repeat: true; onTriggered: now = new Date() }
@@ -91,12 +98,26 @@ Loader {
                         font.family: "Silkscreen"; font.pixelSize: root.horizontal ? 12 : 14
                         lineHeight: .95
                     }
-                    PixelText {
+                    Item {
                         visible: Settings.clockShowDate
-                        width: root.horizontal ? 46 : 32
-                        horizontalAlignment: Text.AlignHCenter
-                        text: Qt.formatDate(clockTimer.now, root.horizontal ? "dd MMM" : "dd\nMMM").toUpperCase()
-                        font.pixelSize: 11; color: Colors.accent
+                        width: root.horizontal ? 52 : 30; height: root.horizontal ? 28 : 34
+                        // A tiny pixel calendar, using the same display face as the time.
+                        Rectangle { x: 1; y: 4; width: parent.width - 2; height: 1; color: Colors.accent; opacity: .55 }
+                        Rectangle { x: 4; y: 1; width: 2; height: 5; color: Colors.accent }
+                        Rectangle { x: parent.width - 6; y: 1; width: 2; height: 5; color: Colors.accent }
+                        PixelText {
+                            x: 0; y: 8; width: root.horizontal ? 24 : parent.width
+                            horizontalAlignment: Text.AlignHCenter
+                            text: Qt.formatDate(clockTimer.now, "dd")
+                            font.family: "Silkscreen"; font.pixelSize: 12; color: Colors.accent
+                        }
+                        PixelText {
+                            x: root.horizontal ? 25 : 0; y: root.horizontal ? 11 : 24
+                            width: root.horizontal ? 27 : parent.width
+                            horizontalAlignment: Text.AlignHCenter
+                            text: Qt.formatDate(clockTimer.now, "MMM").toUpperCase()
+                            font.family: "Silkscreen"; font.pixelSize: 8; color: Colors.accent
+                        }
                     }
                 }
             }
