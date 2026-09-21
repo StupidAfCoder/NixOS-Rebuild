@@ -59,7 +59,9 @@ Sheet {
     }
     // Do not infer identity from currentIndex when GridView replaces its model:
     // Qt may already have reset it to zero by the time this callback runs.
-    onApplicationsChanged: Qt.callLater(root.restoreSelection)
+    // Owned by this view: destruction cancels queued selection work.
+    Timer { id: selectionRefresh; interval: 0; onTriggered: root.restoreSelection() }
+    onApplicationsChanged: selectionRefresh.restart()
     onCategoryChanged: resetSelection()
     onShownChanged: if (shown) { search.text = ""; category = "All"; resetSelection(); }
     PixelField {

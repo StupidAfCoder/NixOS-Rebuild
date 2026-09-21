@@ -13,9 +13,7 @@ hl.monitor({
 ---------------------
 local terminal    = "foot"
 local fileManager = "thunar"
-local menu        = "qs ipc call launcher toggle"
 local browser     = "firefox"
-local wallpaper_change = "qs ipc call wallpaper toggle"
 local theme_mode = "~/.nixos_dotfiles/scripts/theme-mode-toggle.sh"
 local colors = dofile("/home/swami/.nixos_dotfiles/hypr/colors.lua")
 
@@ -328,7 +326,7 @@ hl.device({
 ---- KEYBINDINGS ----
 ---------------------
 
-local mainMod = "ALT" -- Sets "Windows" key as main modifier
+local mainMod = "ALT" -- Window/desktop modifier; shell shortcuts have independent Keys preferences.
 
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
 hl.bind(mainMod .. " + RETURN", hl.dsp.exec_cmd(terminal))
@@ -337,17 +335,15 @@ local closeWindowBind = hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 hl.bind("SUPER" .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(wallpaper_change))
-hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("qs ipc call quickwallpaper toggle"))
--- Live shell preferences and local calendar / focused-app history.
-hl.bind(mainMod .. " + CTRL + E", hl.dsp.exec_cmd("qs ipc call workspaces toggle"))
-hl.bind(mainMod .. " + CTRL + S", hl.dsp.exec_cmd("qs ipc call settings toggle"))
-hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("qs ipc call wellbeing toggle"))
-hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("qs ipc call power toggle"))
+-- Shell-only shortcuts are editable in Your corner / Keys.
+-- Own handles allow safe replacement without touching window/desktop bindings.
+-- Defaults: ALT+SPACE library, ALT+CTRL+W quick wallpapers, ALT+CTRL+E spaces,
+-- ALT+CTRL+comma settings (CTRL+S was already used by screenshot-to-clipboard).
+-- IPC recovery: qs ipc call settings toggle / qs ipc call quickwallpaper toggle
+local shellKeys = dofile(os.getenv("HOME") .. "/.nixos_dotfiles/scripts/shell-keybindings.lua")
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(theme_mode))
 hl.bind(mainMod .. " + R" , hl.dsp.exec_cmd("~/.nixos_dotfiles/scripts/start-recording.sh"))
 hl.bind(mainMod .. " + SHIFT + R" , hl.dsp.exec_cmd("~/.nixos_dotfiles/scripts/stop-recording.sh"))

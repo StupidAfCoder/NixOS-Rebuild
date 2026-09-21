@@ -15,6 +15,12 @@ Item {
     readonly property string repo: (Quickshell.env("PIXEL_SHELL_ROOT") || Quickshell.shellPath("..")).replace(/\/+$/, "") + "/"
     readonly property string themeRoot: previewMode ? cacheDir + "/preview-theme/" : repo
     readonly property string themeFile: themeRoot + "quickshell/bar/theme/colors.json"
+    property bool ready: false
+    property bool initialized: false
+    Timer {
+        interval: 3000; running: !root.ready
+        onTriggered: { root.error = root.error || "Settings unavailable; showing defaults"; root.ready = true; }
+    }
     property var persisted: ({})
     readonly property var values: merge(merge(persisted, inFlight), pending)
     property string error: ""
@@ -93,13 +99,15 @@ Item {
         path: root.configDir + "/settings.json"
         watchChanges: true
         onFileChanged: reload()
+        onLoadFailed: if (root.initialized) { root.error = "Settings could not be read"; root.ready = true; }
         onLoaded: {
             try {
                 const data = JSON.parse(text());
                 if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("Expected a JSON object");
                 if (!writer.running) root.persisted = data;
-                if (root.error.indexOf("Settings not loaded:") === 0) root.error = "";
+                if (root.error.indexOf("Settings not loaded:") === 0 || ["Settings could not be read", "Settings could not be initialized", "Settings unavailable; showing defaults"].indexOf(root.error) >= 0) root.error = "";
             } catch (e) { root.error = "Settings not loaded: " + e; }
+            root.ready = true;
         }
     }
     Process {
@@ -117,5 +125,5 @@ Item {
             root.savePending();
         }
     }
-    Process { command: ["python3", root.repo + "scripts/shell-state.py", "init"]; running: true; onExited: file.reload() }
+    Process { command: ["python3", root.repo + "scripts/shell-state.py", "init"]; running: true; onExited: (code, status) => { root.initialized = true; if (code !== 0) { root.error = "Settings could not be initialized"; root.ready = true; } else file.reload(); } }
 }

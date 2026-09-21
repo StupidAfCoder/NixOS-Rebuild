@@ -105,6 +105,10 @@ Scope {
                 // Switching Components recreates only this surface, with a fresh
                 // immutable namespace. Backends/jobs and struts stay alive.
                 Loader {
+                    // Wait for saved blur choice before incubating an entire frame.
+                    // Otherwise startup destroys the plain frame mid-construction.
+                    active: Settings.ready
+                    asynchronous: false
                     sourceComponent: Settings.barBlur ? blurredFrame : plainFrame
                 }
                 Component { id: plainFrame; FrameWindow { controller: manager; shellScreen: screenRoot.modelData; blurred: false } }

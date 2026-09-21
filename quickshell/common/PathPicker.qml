@@ -8,6 +8,7 @@ import "CollectionState.js" as CollectionState
 
 ColumnLayout {
     id: root
+    Timer { id: locationFocus; interval: 0; onTriggered: { location.text = root.localPath(root.folder); if (root.visible) location.forceActiveFocus(); } }
     property bool directoryOnly: false
     property var filters: ["*"]
     property alias folder: files.folder
@@ -21,7 +22,7 @@ ColumnLayout {
         directoryOnly = directories; filters = patterns; selectedPath = "";
         const initial = directories ? path : CollectionState.parentPath(path, Settings.home);
         folder = Settings.fileUrl(initial || Settings.home);
-        Qt.callLater(function() { location.text = root.localPath(root.folder); location.forceActiveFocus(); });
+        locationFocus.restart();
     }
     function activateIndex(index) {
         if (files.status !== FolderListModel.Ready || index < 0 || index >= files.count) return;

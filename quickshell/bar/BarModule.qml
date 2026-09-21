@@ -81,39 +81,41 @@ Loader {
     Component {
         id: clock
         PixelButton {
-            implicitWidth: root.horizontal ? (Settings.clockShowDate ? 114 : 54) : 36
-            implicitHeight: root.horizontal ? 32 : Settings.clockShowDate ? 80 : 44
+            implicitWidth: root.horizontal ? (Settings.clockShowDate ? 100 : 64) : 36
+            implicitHeight: root.horizontal ? 36 : Settings.clockShowDate ? 80 : 44
             padding: 1; quiet: true; checked: WellbeingPanel.shown
             Accessible.name: Qt.formatDateTime(clockTimer.now, "dddd, d MMMM, HH:mm") + ", Your day"
             Timer { id: clockTimer; property date now: new Date(); interval: 1000; running: true; repeat: true; onTriggered: now = new Date() }
             contentItem: Item {
-                Grid {
+                GridLayout {
                     anchors.centerIn: parent
                     columns: root.horizontal ? 2 : 1
-                    rowSpacing: 5; columnSpacing: 9
+                    rowSpacing: 5; columnSpacing: 8
                     PixelText {
-                        width: root.horizontal ? 44 : 32
+                        Layout.preferredWidth: root.horizontal ? 56 : 32
+                        Layout.alignment: Qt.AlignCenter
                         horizontalAlignment: Text.AlignHCenter
                         text: Qt.formatTime(clockTimer.now, root.horizontal ? "HH:mm" : "HH\nmm")
-                        font.family: "Silkscreen"; font.pixelSize: root.horizontal ? 12 : 14
+                        font.family: "Silkscreen"; font.pixelSize: 14
                         lineHeight: .95
                     }
                     Item {
                         visible: Settings.clockShowDate
-                        width: root.horizontal ? 52 : 30; height: root.horizontal ? 28 : 34
+                        Layout.preferredWidth: 30; Layout.preferredHeight: 34
+                        Layout.alignment: Qt.AlignCenter
                         // A tiny pixel calendar, using the same display face as the time.
                         Rectangle { x: 1; y: 4; width: parent.width - 2; height: 1; color: Colors.accent; opacity: .55 }
                         Rectangle { x: 4; y: 1; width: 2; height: 5; color: Colors.accent }
                         Rectangle { x: parent.width - 6; y: 1; width: 2; height: 5; color: Colors.accent }
                         PixelText {
-                            x: 0; y: 8; width: root.horizontal ? 24 : parent.width
+                            x: 0; y: 8; width: parent.width
                             horizontalAlignment: Text.AlignHCenter
                             text: Qt.formatDate(clockTimer.now, "dd")
                             font.family: "Silkscreen"; font.pixelSize: 12; color: Colors.accent
                         }
                         PixelText {
-                            x: root.horizontal ? 25 : 0; y: root.horizontal ? 11 : 24
-                            width: root.horizontal ? 27 : parent.width
+                            x: 0; y: 24
+                            width: parent.width
                             horizontalAlignment: Text.AlignHCenter
                             text: Qt.formatDate(clockTimer.now, "MMM").toUpperCase()
                             font.family: "Silkscreen"; font.pixelSize: 8; color: Colors.accent

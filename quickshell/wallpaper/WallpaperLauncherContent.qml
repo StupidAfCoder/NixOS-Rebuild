@@ -44,7 +44,8 @@ Sheet {
     function move(step) {
         select(CollectionState.boundedIndex(filtered.length, gallery.currentIndex + step));
     }
-    onFilteredChanged: Qt.callLater(function() { gallery.currentIndex = CollectionState.indexFor(root.filtered, root.selectedPath, ""); })
+    Timer { id: selectionRefresh; interval: 0; onTriggered: gallery.currentIndex = CollectionState.indexFor(root.filtered, root.selectedPath, "") }
+    onFilteredChanged: selectionRefresh.restart()
     onSelectedPathChanged: { confirmAppSync = false; confirmTrash = false; preview(); }
     onRecipeChanged: preview()
     onToneChanged: preview()

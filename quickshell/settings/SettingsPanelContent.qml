@@ -56,7 +56,7 @@ Sheet {
         visible: !root.picking
         Layout.fillWidth: true; spacing: 6
         Repeater {
-            model: [{id:"Profile",label:"Profile"},{id:"Bar",label:"Bar"},{id:"Appearance",label:"Look"},{id:"Audio",label:"Audio"},{id:"Privacy",label:"Data"}]
+            model: [{id:"Profile",label:"Profile"},{id:"Bar",label:"Bar"},{id:"Appearance",label:"Look"},{id:"Audio",label:"Audio"},{id:"Privacy",label:"Data"},{id:"Keys",label:"Keys"}]
             TabButton {
                 required property var modelData
                 text: modelData.label
@@ -66,6 +66,7 @@ Sheet {
             }
         }
     }
+    KeybindingsContent { visible: !root.picking && root.tab === "Keys"; Layout.fillWidth: true }
     ColumnLayout {
         visible: !root.picking && root.tab === "Profile"; Layout.fillWidth: true; spacing: 16
         PixelGroup {
@@ -110,7 +111,7 @@ Sheet {
                 text: [Settings.previewMode && !Settings.previewBlurConfigured ? "Preview needs --preview-blur or an already installed compositor rule." : "",
                        Settings.barOpacity >= 1 ? "Opacity is 100%. Lower it to see the blur." : ""].filter(s => s.length > 0).join("\n")
             }
-            PreferenceRow { Layout.fillWidth: true; label: "Workspace manager button"; description: "When hidden, hover the last gem and confirm, search Library, or use Super+Ctrl+E."; selected: Settings.workspaceManagerButton; onToggled: Settings.patch({workspaceManagerButton: !Settings.workspaceManagerButton}) }
+            PreferenceRow { Layout.fillWidth: true; label: "Workspace manager button"; description: "When hidden, hover the last gem and confirm, or search Library. Shortcuts are editable in Keys."; selected: Settings.workspaceManagerButton; onToggled: Settings.patch({workspaceManagerButton: !Settings.workspaceManagerButton}) }
             PreferenceRow { Layout.fillWidth: true; label: "Window previews"; description: "Live and local, only while Workspaces is open. Nothing is saved."; selected: Settings.workspacePreviews; onToggled: Settings.patch({workspacePreviews: !Settings.workspacePreviews}) }
         }
         PixelGroup {

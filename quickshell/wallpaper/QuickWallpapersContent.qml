@@ -9,6 +9,8 @@ import "../common/CollectionState.js" as CollectionState
 // Deliberately not a Sheet: only the photographs float over the desktop.
 FocusScope {
     id: root
+    Timer { id: selectionRefresh; interval: 0; onTriggered: if (root.shown) root.restoreSelection() }
+    Timer { id: focusRefresh; interval: 0; onTriggered: if (root.shown) carousel.forceActiveFocus() }
     property bool shown: QuickWallpapers.shown
     property real reveal: shown ? 1 : 0
     readonly property var area: Geometry.bounds(parent.width, parent.height, Settings.desktopInsets, 20)
@@ -40,7 +42,7 @@ FocusScope {
     }
     Connections {
         target: WallpaperBackend
-        function onWallpapersChanged() { if (root.shown) Qt.callLater(function() { if (root.shown) root.restoreSelection(); }); }
+        function onWallpapersChanged() { if (root.shown) selectionRefresh.restart(); }
     }
     function choose(index) {
         const wallpaper = WallpaperBackend.wallpapers[index];
@@ -51,7 +53,7 @@ FocusScope {
     }
     onShownChanged: if (shown) {
         selectedPath = appliedPath; restoreSelection();
-        Qt.callLater(function() { if (root.shown) carousel.forceActiveFocus(); });
+        focusRefresh.restart();
     }
     Keys.onEscapePressed: QuickWallpapers.hide()
     ListView {

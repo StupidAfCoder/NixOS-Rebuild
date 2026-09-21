@@ -17,7 +17,8 @@ Sheet {
     property string actionMessage: ""
     property string clipError: ""
     function cancel() { if (pending) pending = ""; else PowerMenu.hide(); }
-    function confirm(action) { pending = action; Qt.callLater(function() { cancelButton.forceActiveFocus(); }); }
+    Timer { id: confirmFocus; interval: 0; onTriggered: if (root.shown) cancelButton.forceActiveFocus() }
+    function confirm(action) { pending = action; confirmFocus.restart(); }
     function execute(action) {
         if (Settings.previewMode) { pending = ""; actionMessage = "Preview only · " + action + " was not executed."; return; }
         PowerMenu.hide();

@@ -7,6 +7,7 @@ import "../common"
 
 Sheet {
     id: root
+    Timer { id: joinFocus; interval: 0; onTriggered: if (root.shown && root.mode === "join") (root.secured ? password : connectButton).forceActiveFocus() }
     shown: WifiPanel.shown
     title: "Wireless"
     preferredWidth: 360
@@ -85,7 +86,7 @@ Sheet {
                     root.selectedSsid = modelData.ssid; root.secured = modelData.secured;
                     password.text = ""; reveal.checked = false; root.mode = modelData.inUse ? "link" : "join";
                     root.resetScroll();
-                    if (root.mode === "join") Qt.callLater(function() { (root.secured ? password : connectButton).forceActiveFocus(); });
+                    if (root.mode === "join") joinFocus.restart();
                 }
             }
             PixelText { anchors.centerIn: parent; visible: networks.count === 0 && !NetworkBackend.scanning; text: !NetworkBackend.wifiIface ? "No Wi-Fi adapter" : NetworkBackend.wifiRadioEnabled ? "No signals found" : "Radio is off"; color: Colors.textOnSurfaceVariant }

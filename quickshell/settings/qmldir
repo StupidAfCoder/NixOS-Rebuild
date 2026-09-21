@@ -1,2 +1,4 @@
 singleton SettingsPanel 1.0 SettingsPanel.qml
 SettingsPanelContent 1.0 SettingsPanelContent.qml
+singleton Keybindings 1.0 Keybindings.qml
+KeybindingsContent 1.0 KeybindingsContent.qml

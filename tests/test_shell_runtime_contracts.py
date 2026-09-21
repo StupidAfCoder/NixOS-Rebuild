@@ -194,7 +194,8 @@ class RuntimeContracts(unittest.TestCase):
     def test_workspaces_have_recovery_access_and_moves_are_preview_guarded(self):
         launcher = (ROOT / 'quickshell/launcher/AppLauncherContent.qml').read_text()
         self.assertIn('shellAction: "workspaces"', launcher)
-        self.assertIn('call workspaces toggle', (ROOT / 'hyprland.lua').read_text())
+        self.assertIn('shell-keybindings.lua', (ROOT / 'hyprland.lua').read_text())
+        self.assertIn('workspaces = true', (ROOT / 'scripts/shell-keybindings.lua').read_text())
         panel = (ROOT / 'quickshell/workspaces/WorkspacePanelContent.qml').read_text()
         self.assertIn('Hyprland.toplevels.values.some', panel)
         self.assertIn('alive && !Settings.previewMode', panel)

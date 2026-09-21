@@ -133,3 +133,17 @@ capture component uses the window's Wayland handle, fits aspect ratio and has an
 unavailable fallback. Nothing is written to disk or included in activity history.
 The external network editor uses a start handshake before the shell releases
 exclusive input; missing packages and process failures are surfaced in the panel.
+
+## Final Keys and orientation pass
+
+The horizontal clock keeps the vertical display's 14px face and centers `HH:mm`
+alongside the 30×34 calendar, rather than shrinking the time and stretching the
+date sideways. View-local deferred work now uses owned timers; initial frame
+creation waits for loaded preferences before choosing its immutable namespace.
+Network-editor feedback is temporary (seven seconds or panel dismissal).
+
+Keys is a dedicated sixth Settings tab. Shared modifier / Own chord controls and
+per-action enable switches cover the seven existing shell actions. Drafts do not
+apply until the explicit button; preview writes only private data. Live updates
+use owned Lua handles and preserve unrelated compositor bindings. The shared
+modifier is independent of Hyprland's window-management `mainMod`.

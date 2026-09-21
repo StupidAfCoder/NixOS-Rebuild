@@ -38,9 +38,13 @@ FocusScope {
     enabled: shown
     opacity: edge ? 1 : reveal
     Behavior on reveal { NumberAnimation { duration: Settings.motionMs; easing.type: Easing.OutCubic } }
+    Timer {
+        id: focusLater; interval: 0
+        onTriggered: if (root.shown && root.initialFocusItem) root.initialFocusItem.forceActiveFocus()
+    }
     Connections {
         target: root
-        function onShownChanged() { if (root.shown) Qt.callLater(function() { if (root.shown && root.initialFocusItem) root.initialFocusItem.forceActiveFocus(); }); }
+        function onShownChanged() { if (root.shown) focusLater.restart(); else focusLater.stop(); }
     }
     Keys.onEscapePressed: event => { root.dismiss(); event.accepted = true; }
     ConsoleSurface { anchors.fill: parent; fillColor: Colors.surfaceContainerLow; edgeColor: Colors.outlineVariant; raised: false }
