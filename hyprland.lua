@@ -342,6 +342,10 @@ hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(wallpaper_change))
+-- Live shell preferences and local calendar / focused-app history.
+hl.bind(mainMod .. " + CTRL + S", hl.dsp.exec_cmd("qs ipc call settings toggle"))
+hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("qs ipc call wellbeing toggle"))
+hl.bind(mainMod .. " + CTRL + P", hl.dsp.exec_cmd("qs ipc call power toggle"))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd(theme_mode))
 hl.bind(mainMod .. " + R" , hl.dsp.exec_cmd("~/.nixos_dotfiles/scripts/start-recording.sh"))
 hl.bind(mainMod .. " + SHIFT + R" , hl.dsp.exec_cmd("~/.nixos_dotfiles/scripts/stop-recording.sh"))

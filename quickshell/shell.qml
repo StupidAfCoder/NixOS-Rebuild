@@ -1,13 +1,22 @@
 //@ pragma UseQApplication
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import "notifications"
 import "bar"
 import "wallpaper"
 import "./launcher"
+import "common"
+import "osd"
 
 ShellRoot {
     id: root
+    FeedbackOsd {}
+    // Populate the mascot cache on first launch too, not only after a theme switch.
+    Process {
+        command: ["bash", Settings.repo + "quickshell/bar/scripts/generate-theme-assets.sh"]
+        running: true
+    }
 
     // Instantiate our custom notification server framework
     NotificationManager {
@@ -19,11 +28,11 @@ ShellRoot {
     // visible seam the way two separately-positioned layer-shell
     // windows could.
     ShellFrame {
-        barWidth: 40
-        borderThickness: 10
+        barWidth: Settings.barWidth
+        borderThickness: Settings.frameWidth
         frameColor: Colors.background
-        accentColor: Colors.outline
+        accentColor: Colors.accent
     }
 
-    AppLauncherContent {}
+
 }

@@ -1,9 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Notifications as Notifs
-import Qt5Compat.GraphicalEffects
 import QtQuick.Shapes
 import "../bar"
+import "../common"
 
 Item {
     id: root
@@ -24,15 +24,15 @@ Item {
 
     Behavior on x {
         enabled: !dragArea.drag.active
-        NumberAnimation { duration: 150; easing.type: Easing.OutQuad }
+        NumberAnimation { duration: Settings.motionMs; easing.type: Easing.OutQuad }
     }
 
     Text {
         id: bodyMeasure
         visible: false
-        width: 380 - 42 - 10
+        width: root.width - 42 - 14
         font.family: "Cozette"
-        font.pixelSize: 13
+        font.pixelSize: Settings.bodySize
         wrapMode: Text.Wrap
         text: (root.notif && root.notif.body) || ""
     }
@@ -128,22 +128,15 @@ Item {
                         }
                     }
 
-                    Image {
+                    ColoredIcon {
                         id: urgencyIcon
                         anchors.centerIn: parent
-                        width: 18
-                        height: 18
-                        source: "file:///home/swami/.local/share/pixelarticons/svg/info-box-sharp.svg"
-                        sourceSize: Qt.size(18, 18)
-                        smooth: false
-                        visible: false
+                        width: 20; height: 20
+                        iconName: "info-box-sharp.svg"
+                        tint: Colors.textOnAccent
                     }
 
-                    ColorOverlay {
-                        anchors.fill: urgencyIcon
-                        source: urgencyIcon
-                        color: Colors.background
-                    }
+
                 }
 
                 Rectangle {
@@ -151,7 +144,7 @@ Item {
                     anchors.right: parent.right
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    width: 4
+                    width: 2
                     color: root.urgencyColor
                     antialiasing: false
                 }
@@ -172,8 +165,8 @@ Item {
 
                         Text {
                             text: (root.notif && root.notif.appName) ? root.notif.appName.toUpperCase() : "SYSTEM"
-                            color: "#bb9af7"
-                            font.family: "SilkScreen"
+                            color: Colors.accent
+                            font.family: "Silkscreen"
                             font.pixelSize: 10
                             font.letterSpacing: 1
                             renderType: Text.NativeRendering
@@ -183,8 +176,10 @@ Item {
 
                         Item {
                             id: closeBtnWrapper
-                            width: 20
-                            height: 20
+                            Layout.preferredWidth: 28
+                            Layout.preferredHeight: 28
+                            activeFocusOnTab: true
+                            Keys.onReturnPressed: if (root.notif) root.notif.dismiss()
 
                             Rectangle {
                                 id: closeBg
@@ -209,21 +204,14 @@ Item {
                                 }
                             }
 
-                            Image {
+                            ColoredIcon {
                                 id: closeIcon
-                                anchors.fill: parent
-                                anchors.margins: 3
-                                source: "file:///home/swami/.local/share/pixelarticons/svg/close.svg"
-                                sourceSize: Qt.size(14, 14)
-                                smooth: false
-                                visible: false
+                                anchors.fill: parent; anchors.margins: 4
+                                iconName: "close.svg"
+                                tint: Colors.textOnSurfaceVariant
                             }
 
-                            ColorOverlay {
-                                anchors.fill: closeIcon
-                                source: closeIcon
-                                color: closeArea.containsMouse ? Qt.lighter(Colors.error, 1.2) : Colors.error
-                            }
+
 
                             MouseArea {
                                 id: closeArea
@@ -250,12 +238,26 @@ Item {
                         text: (root.notif && root.notif.body) || ""
                         color: Colors.mutedOnSurfaceContainer
                         font.family: "Cozette"
-                        font.pixelSize: 13
+                        font.pixelSize: Settings.bodySize
                         renderType: Text.NativeRendering
                         wrapMode: Text.Wrap
                         Layout.fillWidth: true
-                        maximumLineCount: root.expanded ? 0 : 1
+                        maximumLineCount: root.expanded ? 12 : 1
                         elide: root.expanded ? Text.ElideNone : Text.ElideRight
+                    }
+
+                    Flow {
+                        Layout.fillWidth: true
+                        implicitHeight: childrenRect.height
+                        spacing: 6
+                        Repeater {
+                            model: root.notif ? root.notif.actions : []
+                            PixelButton {
+                                required property var modelData
+                                text: modelData.text
+                                onClicked: modelData.invoke()
+                            }
+                        }
                     }
 
                     Item {
@@ -263,34 +265,26 @@ Item {
                         visible: bodyText.truncated || root.expanded
                         Layout.alignment: Qt.AlignHCenter
                         Layout.topMargin: root.expanded ? 8 : 2
-                        width: 16
-                        height: 16
+                        Layout.preferredWidth: 16
+                        Layout.preferredHeight: 16
 
                         Item {
                             id: chevronVisual
                             width: 16
                             height: 16
 
-                            Image {
+                            ColoredIcon {
                                 id: chevronIcon
                                 anchors.fill: parent
-                                source: root.expanded
-                                    ? "file:///home/swami/.local/share/pixelarticons/svg/chevron-up.svg"
-                                    : "file:///home/swami/.local/share/pixelarticons/svg/chevron-down.svg"
-                                sourceSize: Qt.size(16, 16)
-                                smooth: false
-                                visible: false
+                                iconName: root.expanded ? "chevron-up.svg" : "chevron-down.svg"
+                                tint: Colors.accent
                             }
 
-                            ColorOverlay {
-                                anchors.fill: chevronIcon
-                                source: chevronIcon
-                                color: Colors.accent
-                            }
+
                         }
 
                         SequentialAnimation {
-                            running: chevronWrapper.visible
+                            running: chevronWrapper.visible && !Settings.reducedMotion
                             loops: Animation.Infinite
 
                             NumberAnimation {
@@ -335,10 +329,13 @@ Item {
         }
     }
 
+    HoverHandler { id: hover }
+
     Timer {
         id: dismissTimer
-        interval: (root.notif && root.notif.expireTimeout > 0) ? root.notif.expireTimeout : 8000 + Math.min(extraLines, 10) * 2000
-        running: !root.isCritical
-        onTriggered: if (root.notif) root.notif.dismiss()
+        interval: (root.notif && root.notif.expireTimeout > 0) ? root.notif.expireTimeout * 1000 : 8000 + Math.min(extraLines, 10) * 2000
+        running: !root.isCritical && root.notif.expireTimeout !== 0 && !hover.hovered
+        repeat: false
+        onTriggered: if (root.notif) root.notif.expire()
     }
 }

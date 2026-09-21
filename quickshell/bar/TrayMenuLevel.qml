@@ -1,142 +1,54 @@
 import QtQuick
-import QtQuick.Layouts
+import QtQuick.Controls
 import Quickshell
-import "."
+import "../common"
 
-Item {
+FocusScope {
     id: level
     required property var levelData
     required property int levelIndex
-
-    implicitWidth: 180
-    implicitHeight: panelBox.height
-    width: implicitWidth
-    height: implicitHeight
-    x: Math.min(Math.max(levelData.x, 0), parent ? parent.width - width : 0)
-    y: Math.min(Math.max(levelData.y, 0), parent ? parent.height - height : 0)
-    z: 10 + levelIndex
-
-    QsMenuOpener {
-        id: opener
-        menu: level.levelData.handle
+    width: Math.min(270, parent.width - Settings.barWidth - 20)
+    height: Math.min(list.contentHeight + 16, parent.height - 32)
+    x: Math.max(Settings.barWidth + 8, Math.min(levelData.x, parent.width - width - 12))
+    y: Math.max(12, Math.min(levelData.y, parent.height - height - 12))
+    z: 30 + levelIndex
+    Component.onCompleted: forceActiveFocus()
+    Connections { target: TrayMenu; function onStackChanged() { if (level.levelIndex === TrayMenu.stack.length - 1) level.forceActiveFocus(); } }
+    QsMenuOpener { id: opener; menu: level.levelData.handle }
+    function activate(index) {
+        const entry = opener.children.values[index];
+        if (!entry || entry.isSeparator || !entry.enabled) return;
+        if (entry.hasChildren) {
+            const nextX = level.x + width + 4 + width <= parent.width ? level.x + width + 4 : level.x - width - 4;
+            TrayMenu.openSubmenu(entry, nextX, level.y + index * 36 - list.contentY, levelIndex + 1);
+        } else { entry.triggered(); TrayMenu.hide(); }
     }
-
-    Rectangle {
-        id: panelBox
-        width: level.implicitWidth
-        height: menuColumn.implicitHeight + 16
-        color: Colors.background
-        antialiasing: false
-        z: 0
-
-        Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Colors.outlineVariant; z: 1 }
-        Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: Colors.outlineVariant; z: 1 }
-        Rectangle { anchors.right: parent.right; height: parent.height; width: 1; color: Colors.outlineVariant; z: 1 }
-        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Colors.outlineVariant; z: 1 }
-
-        Repeater {
-            model: [
-                { x: -1, y: -1, hFlip: false, vFlip: false },
-                { x: panelBox.width - 9, y: -1, hFlip: true, vFlip: false },
-                { x: -1, y: panelBox.height - 9, hFlip: false, vFlip: true },
-                { x: panelBox.width - 9, y: panelBox.height - 9, hFlip: true, vFlip: true }
-            ]
-            delegate: Item {
-                x: modelData.x; y: modelData.y
-                width: 10; height: 10
-                z: 2
-                Rectangle {
-                    width: 3; height: 10; antialiasing: false; color: Colors.outline
-                    x: modelData.hFlip ? 7 : 0
-                }
-                Rectangle {
-                    width: 10; height: 3; antialiasing: false; color: Colors.outline
-                    y: modelData.vFlip ? 7 : 0
-                }
-            }
-        }
-
-        ColumnLayout {
-            id: menuColumn
-            anchors.fill: parent
-            anchors.margins: 8
-            spacing: 2
-            z: 3
-
-            Repeater {
-                model: opener.children
-                delegate: Loader {
-                    required property var modelData
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: modelData.isSeparator ? 1 : 24
-                    sourceComponent: modelData.isSeparator ? sepComp : itemComp
-
-                    Component {
-                        id: sepComp
-                        Rectangle { anchors.fill: parent; color: Colors.surfaceContainerHigh; antialiasing: false }
-                    }
-
-                    Component {
-                        id: itemComp
-                        Rectangle {
-                            id: rowRect
-                            anchors.fill: parent
-                            color: entryArea.containsMouse ? Colors.surfaceContainer : "transparent"
-                            antialiasing: false
-                            opacity: modelData.enabled ? 1.0 : 0.4
-
-                            Text {
-                                anchors.left: parent.left
-                                anchors.leftMargin: 8
-                                anchors.right: arrow.visible ? arrow.left : parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: modelData.text
-                                color: Colors.textOnBackground
-                                font.family: "Cozette"
-                                font.pixelSize: 9
-                                elide: Text.ElideRight
-                            }
-
-                            Text {
-                                id: arrow
-                                visible: modelData.hasChildren
-                                anchors.right: parent.right
-                                anchors.rightMargin: 6
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: ">"
-                                color: Colors.mutedOnBackground
-                                font.family: "Cozette"
-                                font.pixelSize: 9
-                            }
-
-                            MouseArea {
-                                id: entryArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                enabled: modelData.enabled
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (modelData.hasChildren) {
-                                        const pos = mapToItem(null, rowRect.width, 0)
-                                        TrayMenu.openSubmenu(modelData, pos.x, pos.y, level.levelIndex + 1)
-                                    } else {
-                                        modelData.triggered()
-                                        TrayMenu.hide()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            Text {
-                visible: opener.children.count === 0
-                text: "empty"
-                color: Colors.mutedOnBackground
-                font.family: "Cozette"
-                font.pixelSize: 9
-                Layout.alignment: Qt.AlignHCenter
+    Keys.onEscapePressed: TrayMenu.hide()
+    Keys.onDownPressed: list.currentIndex = Math.min(list.count - 1, list.currentIndex + 1)
+    Keys.onUpPressed: list.currentIndex = Math.max(0, list.currentIndex - 1)
+    Keys.onReturnPressed: activate(list.currentIndex)
+    Keys.onRightPressed: { const entry = opener.children.values[list.currentIndex]; if (entry && entry.hasChildren) activate(list.currentIndex); }
+    Keys.onLeftPressed: { if (levelIndex > 0) TrayMenu.stack = TrayMenu.stack.slice(0, levelIndex); else TrayMenu.hide(); }
+    Rectangle { anchors.fill: parent; color: Colors.surfaceContainerLow; border.color: Colors.outlineVariant }
+    ListView {
+        id: list
+        anchors.fill: parent; anchors.margins: 8
+        model: opener.children
+        clip: true; currentIndex: 0
+        onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+        ScrollBar.vertical: ScrollBar {}
+        delegate: Item {
+            required property var modelData
+            required property int index
+            width: list.width; height: modelData.isSeparator ? 8 : 36
+            Rectangle { visible: modelData.isSeparator; width: parent.width; height: 1; anchors.verticalCenter: parent.verticalCenter; color: Colors.outlineVariant }
+            PixelButton {
+                anchors.fill: parent
+                visible: !modelData.isSeparator
+                enabled: modelData.enabled
+                checked: list.currentIndex === index
+                text: (modelData.checkState === Qt.Checked ? "✓ " : "") + modelData.text + (modelData.hasChildren ? "  >" : "")
+                onClicked: level.activate(index)
             }
         }
     }

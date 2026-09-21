@@ -1,0 +1,171 @@
+pragma ComponentBehavior: Bound
+import QtQuick
+import QtQuick.Layouts
+import Quickshell.Io
+import Quickshell.Hyprland
+import "../common"
+import "../bar"
+import "../wallpaper"
+import "../wellbeing"
+
+Sheet {
+    id: root
+    shown: SettingsPanel.shown
+    title: "Your corner"
+    subtitle: Settings.previewMode ? "Native preview / temporary preferences" : "Small details. Your desktop."
+    edge: "right"
+    preferredWidth: 500
+    preferredHeight: parent.height
+    onDismiss: SettingsPanel.hide()
+    property string tab: "Profile"
+    property bool clearConfirm: false
+    property bool resetConfirm: false
+    onShownChanged: if (!shown) { clearConfirm = false; resetConfirm = false; }
+
+    Rectangle {
+        Layout.fillWidth: true
+        implicitHeight: identity.implicitHeight + 32
+        color: Colors.surfaceContainer
+        border.color: Colors.outlineVariant
+        Rectangle { width: 3; height: parent.height; color: Colors.accent }
+        RowLayout {
+            id: identity
+            x: 16; y: 16; width: parent.width - 32; spacing: 16
+            ProfileAvatar { Layout.preferredWidth: 56; Layout.preferredHeight: 56 }
+            ColumnLayout {
+                Layout.fillWidth: true; spacing: 5
+                PixelText { text: Settings.displayName; Layout.fillWidth: true; font.family: "Pixel Operator"; font.pixelSize: 24 }
+                PixelText { text: Settings.bio; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant; wrapMode: Text.Wrap; elide: Text.ElideNone }
+                PixelText { text: Settings.saving ? "[ SAVING ]" : "[ LOCAL / AUTO-SAVED ]"; color: Colors.accent; font.pixelSize: 12 }
+            }
+        }
+    }
+    Flow {
+        Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+        Repeater {
+            model: [{id:"Profile",label:"Profile"},{id:"Bar",label:"Bar"},{id:"Appearance",label:"Look"},{id:"Audio",label:"Audio"},{id:"Privacy",label:"Data"}]
+            PixelButton {
+                required property var modelData
+                text: modelData.label
+                primary: root.tab === modelData.id
+                font.family: "Silkscreen"; font.pixelSize: 10
+                onClicked: root.tab = modelData.id
+            }
+        }
+    }
+    ColumnLayout {
+        visible: root.tab === "Profile"; Layout.fillWidth: true; spacing: 16
+        PixelGroup {
+            title: "Identity"; detail: "01"; iconName: "user.svg"; Layout.fillWidth: true
+            PixelText { text: "Display name" }
+            PixelField { Layout.fillWidth: true; text: Settings.displayName; onEditingFinished: Settings.patch({displayName: text}) }
+            PixelText { text: "A short note" }
+            PixelField { Layout.fillWidth: true; text: Settings.bio; onEditingFinished: Settings.patch({bio: text}) }
+            PixelText { text: "Avatar / local file" }
+            PixelField { Layout.fillWidth: true; text: Settings.avatarPath; placeholderText: Settings.home + "/Pictures/avatar.png"; onEditingFinished: Settings.patch({avatarPath: text}) }
+            PixelText { text: "The square portrait is shared with your power drawer. Nothing is uploaded."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+        }
+        PixelGroup {
+            title: "Your collection"; detail: "02"; iconName: "folder.svg"; Layout.fillWidth: true
+            PixelText { text: "Power drawer video / local file" }
+            PixelField { Layout.fillWidth: true; text: Settings.videoPath; onEditingFinished: Settings.patch({videoPath: text}) }
+            PixelText { text: "Wallpaper directory" }
+            PixelField { Layout.fillWidth: true; text: Settings.wallpaperDir; onEditingFinished: Settings.patch({wallpaperDir: text}) }
+            PixelText { text: "Use absolute paths. Enter or leave a field to save; images and video reload when replaced."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+        }
+    }
+    ColumnLayout {
+        visible: root.tab === "Bar"; Layout.fillWidth: true; spacing: 16
+        PixelGroup {
+            title: "Build your rail"; iconName: "settings-2.svg"; Layout.fillWidth: true
+            PixelText { text: "Keep what you reach for. Hide what you don't. Changes are live, including open panels."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+            Repeater {
+                model: Settings.moduleCatalog
+                ColumnLayout {
+                    required property var modelData
+                    Layout.fillWidth: true; spacing: 12
+                    PreferenceRow {
+                        Layout.fillWidth: true
+                        label: modelData.label; description: modelData.description; iconName: modelData.icon
+                        selected: Settings.moduleEnabled(modelData.key)
+                        onToggled: Settings.setModule(modelData.key, !Settings.moduleEnabled(modelData.key))
+                    }
+                    Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Colors.outlineVariant }
+                }
+            }
+            PixelText { text: "Settings stays pinned so you cannot hide your way out. Hidden modules keep their keyboard shortcuts. The rail scrolls on short screens rather than overlapping."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+        }
+        PixelGroup {
+            title: "Room to breathe"; iconName: "app-windows.svg"; Layout.fillWidth: true
+            PixelText { text: "Workspace indicators / " + Settings.workspaceCount }
+            PixelSlider { Layout.fillWidth: true; from: 1; to: 10; stepSize: 1; value: Settings.workspaceCount; onMoved: Settings.patch({workspaceCount: value}) }
+            PixelText { text: "Rail width / " + Settings.barWidth + "px" }
+            PixelSlider { Layout.fillWidth: true; from: 36; to: 64; stepSize: 2; value: Settings.barWidth; onMoved: Settings.patch({barWidth: value}) }
+            PixelButton {
+                Layout.fillWidth: true
+                text: root.resetConfirm ? "Confirm restore all modules" : "Restore module defaults…"
+                onClicked: {
+                    if (root.resetConfirm) {
+                        const defaults = {}; Settings.moduleCatalog.forEach(m => defaults[m.key] = true);
+                        Settings.patch({barModules: defaults, workspaceCount: 5}); root.resetConfirm = false;
+                    } else root.resetConfirm = true;
+                }
+            }
+            PixelButton { visible: root.resetConfirm; text: "Cancel"; onClicked: root.resetConfirm = false }
+        }
+    }
+    ColumnLayout {
+        visible: root.tab === "Appearance"; Layout.fillWidth: true; spacing: 16
+        PixelGroup {
+            title: "Edges & type"; iconName: "brush.svg"; Layout.fillWidth: true
+            PixelText { text: "Frame / " + Settings.frameWidth + "px" }
+            PixelSlider { Layout.fillWidth: true; from: 4; to: 10; stepSize: 1; value: Settings.frameWidth; onMoved: Settings.patch({frameWidth: value}) }
+            PixelText { text: "Body text / " + Settings.bodySize + "px" }
+            PixelSlider { Layout.fillWidth: true; from: 12; to: 18; stepSize: 1; value: Settings.bodySize; onMoved: Settings.patch({bodySize: value}) }
+            PreferenceRow { Layout.fillWidth: true; label: "High contrast"; description: "Applied with the next wallpaper palette."; iconName: "brush.svg"; selected: Settings.contrast >= .5; onToggled: Settings.patch({contrast: Settings.contrast >= .5 ? 0 : 1}) }
+            PixelButton { Layout.fillWidth: true; text: "Wallpaper, tone & palette…"; primary: true; onClicked: { SettingsPanel.hide(); WallpaperLauncher.toggle(); } }
+        }
+        PixelGroup {
+            title: "Quiet motion"; iconName: "clock.svg"; Layout.fillWidth: true
+            PixelText { text: "Transition time / " + (Settings.values.motionMs || 180) + "ms" }
+            PixelSlider { Layout.fillWidth: true; from: 80; to: 350; stepSize: 10; value: Settings.values.motionMs || 180; enabled: !Settings.reducedMotion; onMoved: Settings.patch({motionMs: value}) }
+            PreferenceRow { Layout.fillWidth: true; label: "Reduced motion"; description: "Instant drawers; pauses decorative motion and video."; iconName: "clock.svg"; selected: Settings.reducedMotion; onToggled: Settings.patch({reducedMotion: !Settings.reducedMotion}) }
+            PixelText { text: "Settings and Session slide from the screen edge without scaling your pixel text. Compositor animations are configured separately."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+        }
+    }
+    PixelGroup {
+        visible: root.tab === "Audio"; Layout.fillWidth: true
+        title: "Workspace audio"; iconName: "volume-2.svg"
+        PreferenceRow { Layout.fillWidth: true; label: "Enable workspace muting"; description: "Opt in before choosing workspaces below."; iconName: "volume-2.svg"; selected: Settings.workspaceAudioEnabled; onToggled: Settings.patch({workspaceAudioEnabled: !Settings.workspaceAudioEnabled}) }
+        Flow {
+            Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+            Repeater {
+                model: Hyprland.workspaces.values.filter(w => w.id > 0)
+                PixelButton {
+                    required property var modelData
+                    text: "Workspace " + modelData.id + (Settings.mutedWorkspaces.indexOf(modelData.id) >= 0 ? " / muted" : "")
+                    checked: Settings.mutedWorkspaces.indexOf(modelData.id) >= 0
+                    enabled: Settings.workspaceAudioEnabled && !stateAction.running
+                    onClicked: { stateAction.command = ["python3", Settings.repo + "scripts/shell-state.py", "toggle-workspace", String(modelData.id)]; stateAction.running = true; }
+                }
+            }
+        }
+        PixelText { text: Usage.audioStatus; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+        PixelText { text: "Shared browser processes, remote and unidentified streams are skipped. Only mutes owned by this feature are restored; your existing mutes stay untouched."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+    }
+    PixelGroup {
+        visible: root.tab === "Privacy"; Layout.fillWidth: true
+        title: "Time, kept locally"; iconName: "chart.svg"
+        PreferenceRow { Layout.fillWidth: true; label: "Focused-app history"; description: "App classes and focused time. No titles, URLs or keystrokes."; iconName: "chart.svg"; selected: Settings.trackingEnabled; onToggled: Settings.patch({trackingEnabled: !Settings.trackingEnabled}) }
+        PixelText { text: "Keep history / " + (Settings.values.retentionDays || 30) + " days" }
+        PixelSlider { Layout.fillWidth: true; from: 1; to: 90; stepSize: 1; value: Settings.values.retentionDays || 30; onMoved: Settings.patch({retentionDays: value}) }
+        PixelText { text: "Daily reference goal / " + Settings.dailyGoalMinutes + " minutes" }
+        PixelSlider { Layout.fillWidth: true; from: 15; to: 1440; stepSize: 15; value: Settings.dailyGoalMinutes; onMoved: Settings.patch({dailyGoalMinutes: value}) }
+        PixelText { text: "Calendar intensity uses ¼, ½ and 1× this goal, consistently across months. Idle detection depends on the installed Hypridle integration."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+        PixelButton { text: "Open Your day"; onClicked: { SettingsPanel.hide(); WellbeingPanel.toggle(); } }
+        PixelButton { Layout.fillWidth: true; text: root.clearConfirm ? "Confirm delete local history" : "Clear local history…"; danger: root.clearConfirm; enabled: !stateAction.running; onClicked: { if (root.clearConfirm) { stateAction.command = ["python3", Settings.repo + "scripts/shell-state.py", "clear-history"]; stateAction.running = true; root.clearConfirm = false; } else root.clearConfirm = true; } }
+        PixelButton { visible: root.clearConfirm; text: "Cancel"; onClicked: root.clearConfirm = false }
+    }
+    PixelText { text: Settings.error; visible: text.length > 0; color: Colors.error; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone }
+    Process { id: stateAction; stderr: StdioCollector { onStreamFinished: { if (text.trim()) Settings.error = text.trim(); } } }
+}

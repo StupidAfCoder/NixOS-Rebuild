@@ -96,6 +96,10 @@ in
     foliate
 
     pixelarticons
+    glib # gio trash: wallpaper removal is recoverable
+    networkmanagerapplet # advanced Wi-Fi/enterprise configuration
+    pavucontrol
+    pulseaudio # pactl for conservative per-workspace stream controls
     scriptPython
 
     libreoffice-fresh
@@ -410,6 +414,35 @@ in
     style.name = "Fusion";
   };
 
+  # Local-only collector. Recording is OFF until enabled in shell Settings / Privacy.
+  systemd.user.services.pixel-shell-state = {
+    Unit = {
+      Description = "Pixel shell local history and workspace audio";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+    };
+    Service = {
+      ExecStart = "${scriptPython}/bin/python3 %h/.nixos_dotfiles/scripts/shell-state.py daemon";
+      Restart = "on-failure";
+      RestartSec = 3;
+      UMask = "0077";
+      Environment = "PATH=${pkgs.pulseaudio}/bin:/run/current-system/sw/bin:%h/.nix-profile/bin";
+    };
+    Install.WantedBy = [ "graphical-session.target" ];
+  };
+
+  # Idle notifications only: this does not add automatic lock/suspend policies.
+  services.hypridle = {
+    enable = true;
+    settings = {
+      listener = [{
+        timeout = 300;
+        on-timeout = "${scriptPython}/bin/python3 $HOME/.nixos_dotfiles/scripts/shell-state.py idle true";
+        on-resume = "${scriptPython}/bin/python3 $HOME/.nixos_dotfiles/scripts/shell-state.py idle false";
+      }];
+    };
+  };
+
   #Systemd User defined Services
   systemd.user.services.pywalfox-install-manifest = {
     Unit.Description = "Regenerate Pywalfox native messaging manifest";
@@ -528,7 +561,7 @@ in
         dpi-aware = "yes";
         font = "Pixel Operator Mono:pixelsize=16,JetBrainsMono Nerd Font:pixelsize=16";
         include = "~/.config/foot/wallust-colors.ini";
-        pad = "8x8";
+        pad = "12x12";
       };
       cursor = {
         style = "block";

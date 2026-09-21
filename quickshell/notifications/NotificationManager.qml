@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell.Services.Notifications as Notifs
 import Quickshell.Wayland
 import "." as Local
+import "../common"
 
 Scope {
     id: manager
@@ -28,8 +29,8 @@ Scope {
                 WlrLayershell.namespace: "quickshell:notifications"
 
                 anchors { top: true; right: true }
-                implicitWidth: 400
-                implicitHeight: 700
+                implicitWidth: Math.min(400, screen.width - Settings.barWidth - 32)
+                implicitHeight: Math.max(1, screen.height - 32)
                 color: "transparent"
 
                 margins { top: 16; right: 16 }
@@ -43,20 +44,21 @@ Scope {
                     anchors.top: parent.top
                     width: parent.width
                     height: Math.min(contentHeight, parent.height)
-                    interactive: false
+                    interactive: contentHeight > height
+                    clip: true
                     spacing: 10
                     model: server.trackedNotifications
 
                     add: Transition {
-                        NumberAnimation { property: "revealProgress"; from: 0; to: 1; duration: 560; easing.type: Easing.OutQuint }
-                        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 240 }
+                        NumberAnimation { property: "revealProgress"; from: 0; to: 1; duration: Settings.motionMs * 1.4; easing.type: Easing.OutQuint }
+                        NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Settings.motionMs }
                     }
                     remove: Transition {
-                        NumberAnimation { property: "revealProgress"; to: 0; duration: 420; easing.type: Easing.InQuint }
-                        NumberAnimation { property: "opacity"; to: 0; duration: 240 }
+                        NumberAnimation { property: "revealProgress"; to: 0; duration: Settings.motionMs; easing.type: Easing.InQuint }
+                        NumberAnimation { property: "opacity"; to: 0; duration: Settings.motionMs }
                     }
                     displaced: Transition {
-                        NumberAnimation { property: "y"; duration: 180; easing.type: Easing.OutQuad }
+                        NumberAnimation { property: "y"; duration: Settings.motionMs; easing.type: Easing.OutQuad }
                     }
 
                     delegate: Local.NotificationCard {

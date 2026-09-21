@@ -1,259 +1,70 @@
+pragma ComponentBehavior: Bound
 import Quickshell
-import Quickshell.Io
 import Quickshell.Widgets
 import Quickshell.Services.UPower
 import Quickshell.Bluetooth
-import Quickshell.Services.SystemTray
+import Quickshell.Services.SystemTray as TrayService
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Window
+import QtQuick.Controls
+import "../common"
 
 ColumnLayout {
     id: root
-    spacing: 12
-
-    readonly property int iconSize: 16
-    readonly property color glowColor: Colors.accent
-    readonly property color dimColor: Colors.outline
-    readonly property color warnColor: Colors.warning
-
-    readonly property var trayFallback: ({
-            "udiskie": "database.svg"
-        })
-    // apps that already have a dedicated indicator elsewhere in the bar --
-    // don't show their raw tray icon too
-    readonly property var trayHidden: ["blueman"]
-
-    // ---------------- Battery ----------------
-    Item {
+    spacing: 10
+    readonly property var extraItems: TrayService.SystemTray.items.values.filter(item => item.id !== "blueman")
+    IconButton {
+        visible: Settings.moduleEnabled("battery")
         Layout.alignment: Qt.AlignHCenter
-        width: root.iconSize + 4
-        height: root.iconSize + 4
-
         readonly property bool hasBattery: UPower.displayDevice.ready && UPower.displayDevice.isLaptopBattery
-        readonly property real pct: UPower.displayDevice.percentage
-        readonly property bool charging: UPower.displayDevice.state === UPowerDeviceState.Charging
-
-        ColoredIcon {
-            anchors.centerIn: parent
-            width: root.iconSize
-            height: root.iconSize
-            visible: parent.hasBattery
-            iconName: parent.pct < 0.2 ? "battery-low.svg" : parent.pct < 0.6 ? "battery-medium.svg" : "battery-full.svg"
-            tint: parent.pct < 0.2 ? root.warnColor : root.glowColor
-        }
-        ColoredIcon {
-            anchors.centerIn: parent
-            width: root.iconSize
-            height: root.iconSize
-            visible: !parent.hasBattery
-            iconName: "cancel.svg"
-            tint: root.dimColor
-        }
-
-        MouseArea {
-            id: battArea
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: BatteryPanel.toggle()
-        }
-        Rectangle {
-            visible: battArea.containsMouse && !parent.hasBattery
-            anchors.left: parent.right
-            anchors.leftMargin: 6
-            anchors.verticalCenter: parent.verticalCenter
-            width: tipText.width + 12
-            height: tipText.height + 8
-            color: Colors.background
-            border.color: Colors.outlineVariant
-            border.width: 1
-            Text {
-                id: tipText
-                anchors.centerIn: parent
-                text: "No battery detected"
-                color: Colors.textOnBackground
-                font.family: "Cozette"
-                font.pixelSize: 10
-            }
-        }
+        readonly property real percent: UPower.displayDevice.percentage
+        iconName: hasBattery ? (percent < .2 ? "battery-low.svg" : percent < .6 ? "battery-medium.svg" : "battery-full.svg") : "battery-full.svg"
+        hint: hasBattery ? "Battery · " + Math.round(percent * 100) + "%" : "Energy profiles"
+        onClicked: BatteryPanel.toggle()
     }
-
-    // ---------------- Network ----------------
-    Item {
-        id: netItem
+    IconButton {
+        visible: Settings.moduleEnabled("network")
         Layout.alignment: Qt.AlignHCenter
-        width: root.iconSize + 4
-        height: root.iconSize + 4
-
-        Item {
-            anchors.centerIn: parent
-            width: root.iconSize
-            height: root.iconSize
-            visible: NetworkBackend.ethernetOnline
-
-            Rectangle {
-                x: 6
-                y: 0
-                width: 4
-                height: 9
-                color: root.glowColor
-                antialiasing: false
-            }
-            Rectangle {
-                x: 2
-                y: 9
-                width: 12
-                height: 2
-                color: root.glowColor
-                antialiasing: false
-            }
-            Rectangle {
-                x: 0
-                y: 11
-                width: 2
-                height: 5
-                color: root.glowColor
-                antialiasing: false
-            }
-            Rectangle {
-                x: 7
-                y: 11
-                width: 2
-                height: 5
-                color: root.glowColor
-                antialiasing: false
-            }
-            Rectangle {
-                x: 14
-                y: 11
-                width: 2
-                height: 5
-                color: root.glowColor
-                antialiasing: false
-            }
-        }
-
-        ColoredIcon {
-            anchors.centerIn: parent
-            width: root.iconSize
-            height: root.iconSize
-            visible: !NetworkBackend.ethernetOnline
-            iconName: "wifi.svg"
-            tint: NetworkBackend.wifiConnected ? root.glowColor : root.dimColor
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: WifiPanel.toggle()
-        }
+        iconName: NetworkBackend.ethernetOnline ? "app-windows.svg" : "wifi.svg"
+        hint: NetworkBackend.ethernetOnline ? "Ethernet connected" : NetworkBackend.wifiConnected ? NetworkBackend.connectedSsid : "Network connections"
+        onClicked: WifiPanel.toggle()
     }
-    // ---------------- Bluetooth ----------------
-    Item {
+    IconButton {
+        visible: Settings.moduleEnabled("bluetooth") && Bluetooth.defaultAdapter !== null
         Layout.alignment: Qt.AlignHCenter
-        width: root.iconSize + 4
-        height: root.iconSize + 4
-        visible: Bluetooth.defaultAdapter !== null
-
-        readonly property bool powered: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled
-        readonly property bool anyConnected: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.devices.values.some(d => d.connected)
-
-        ColoredIcon {
-            anchors.centerIn: parent
-            width: root.iconSize
-            height: root.iconSize
-            iconName: !parent.powered ? "bluetooth-off.svg" : parent.anyConnected ? "bluetooth-connected.svg" : "bluetooth.svg"
-            tint: parent.powered ? root.glowColor : root.dimColor
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: BluetoothPanel.toggle()
-        }
+        iconName: !Bluetooth.defaultAdapter?.enabled ? "bluetooth-off.svg" : BluetoothPanel.connectedCount ? "bluetooth-connected.svg" : "bluetooth.svg"
+        hint: "Bluetooth · " + BluetoothPanel.connectedCount + " connected"
+        onClicked: BluetoothPanel.toggle()
     }
-
-    // ---------------- Extra app tray icons ----------------
     Repeater {
-        model: SystemTray.items.values.filter(item => !root.trayHidden.includes(item.id))
-        delegate: Item {
-            id: trayIconRoot
+        model: Settings.moduleEnabled("tray") ? root.extraItems : []
+        IconButton {
+            id: trayButton
             required property var modelData
             Layout.alignment: Qt.AlignHCenter
-            width: root.iconSize + 4
-            height: root.iconSize + 4
-
-            readonly property bool overridden: modelData.id in root.trayFallback
-
-            IconImage {
-                anchors.centerIn: parent
-                implicitSize: root.iconSize
-                asynchronous: true
-                source: modelData.icon
-                visible: !parent.overridden
+            hint: (modelData.title || modelData.id || "Application") + " · right-click for menu"
+            contentItem: Item {
+                ColoredIcon { anchors.fill: parent; iconName: "app-windows.svg"; tint: Colors.accent; visible: appIcon.status !== Image.Ready }
+                IconImage { id: appIcon; anchors.fill: parent; source: trayButton.modelData.icon; asynchronous: true }
             }
-            ColoredIcon {
-                anchors.centerIn: parent
-                width: root.iconSize
-                height: root.iconSize
-                visible: parent.overridden
-                iconName: root.trayFallback[modelData.id] || ""
-                tint: root.dimColor
+            onClicked: modelData.activate()
+            function openMenu() {
+                if (!modelData.hasMenu) return;
+                const position = mapToItem(null, width, height / 2);
+                TrayMenu.openFor(modelData, position.x, position.y);
             }
-
-            MouseArea {
-                id: trayArea
-                anchors.fill: parent
-                hoverEnabled: true
-                acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onClicked: mouse => {
-                    if (mouse.button === Qt.LeftButton) {
-                        modelData.activate();
-                    } else if (mouse.button === Qt.RightButton && modelData.hasMenu) {
-                        const pos = mapToItem(null, mouse.x, mouse.y);
-                        TrayMenu.openFor(modelData, pos.x, pos.y);
-                    }
-                }
-            }
-
-            Rectangle {
-                visible: trayArea.containsMouse && modelData.hasMenu
-                anchors.left: parent.right
-                anchors.leftMargin: 6
-                anchors.verticalCenter: parent.verticalCenter
-                width: trayTip.width + 12
-                height: trayTip.height + 8
-                color: Colors.background
-                border.color: Colors.outlineVariant
-                border.width: 1
-                z: 20
-                Text {
-                    id: trayTip
-                    anchors.centerIn: parent
-                    text: "right-click for options"
-                    color: Colors.textOnBackground
-                    font.family: "Cozette"
-                    font.pixelSize: 10
+            MouseArea { anchors.fill: parent; acceptedButtons: Qt.RightButton; onClicked: trayButton.openMenu() }
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Menu || (event.key === Qt.Key_F10 && (event.modifiers & Qt.ShiftModifier))) {
+                    openMenu(); event.accepted = true;
                 }
             }
         }
     }
-
-    // ---------------- Power button ----------------
-    Item {
+    IconButton {
+        visible: Settings.moduleEnabled("power")
         Layout.alignment: Qt.AlignHCenter
-        Layout.topMargin: 6
-        width: root.iconSize + 4
-        height: root.iconSize + 4
-
-        ColoredIcon {
-            anchors.centerIn: parent
-            width: root.iconSize
-            height: root.iconSize
-            iconName: "power.svg"
-            tint: root.glowColor
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: PowerMenu.toggle()
-        }
+        iconName: "power.svg"; hint: "Session · Super+Ctrl+P"
+        onClicked: PowerMenu.toggle()
     }
 }

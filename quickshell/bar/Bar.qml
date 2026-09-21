@@ -1,27 +1,22 @@
+pragma ComponentBehavior: Bound
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
-import QtQuick.Shapes
 import QtQuick.Layouts
-import QtQuick.Effects
-import "pathgen.js" as PathGen
-import "."
-import "../bar"
+import QtQuick.Controls
+import "../common"
 import "../wallpaper"
 import "../launcher"
+import "../settings"
+import "../wellbeing"
+import "../osd"
+import "../sysstats"
 
 Item {
     id: root
-    property int barWidth: 32
-
+    property int barWidth: Settings.barWidth
     width: barWidth
-
-    readonly property string iconBasePath: "file:///home/swami/.local/share/pixelarticons/svg/"
     readonly property string defaultWsIcon: "app-windows.svg"
-
-    // Ordered rules: first substring match on the window class wins.
-    // Run `hyprctl clients | grep class` to see your real class names
-    // and add more rows here for anything not covered.
     readonly property var classIconRules: [
         {
             match: ["firefox", "librewolf", "zen", "chromium", "chrome", "brave"],
@@ -75,308 +70,114 @@ Item {
         return root.defaultWsIcon;
     }
 
-    // lastIpcObject (used below for window class) doesn't update on its
-    // own -- Quickshell's docs are explicit about this. Refresh on window
-    // open/close immediately, and on an interval as a safety net for
-    // anything that changes the "current app" without an open/close event.
+
     Timer {
-        interval: 1500
-        running: true
-        repeat: true
+        interval: 2000; repeat: true
+        running: root.visible && Settings.moduleEnabled("workspaces")
         onTriggered: Hyprland.refreshToplevels()
     }
-
-    Connections {
-        target: Hyprland.toplevels
-        function onObjectInsertedPost() {
-            Hyprland.refreshToplevels();
-        }
-        function onObjectRemovedPost() {
-            Hyprland.refreshToplevels();
-        }
+    Timer {
+        id: clockTimer
+        property date now: new Date()
+        interval: 1000; running: Settings.moduleEnabled("clock"); repeat: true
+        onTriggered: now = new Date()
     }
-
-    BarShell {
-        id: shell
-        anchors.fill: parent
-    }
-
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.topMargin: 12
-        anchors.bottomMargin: 12
-        anchors.rightMargin: 4
-        spacing: 8
-
-        // --- NixOS logo / power button ---
-        Item {
-            Layout.alignment: Qt.AlignHCenter
-            width: 24
-            height: 24
-
-            Image {
-                anchors.centerIn: parent
-                width: 24
-                height: 24
-                source: "file:///home/swami/.nixos_dotfiles/quickshell/bar/assets/NixOS.svg"
-                smooth: false
-            }
-
-            MouseArea {
-                anchors.fill: parent
+    Rectangle { anchors.fill: parent; color: Colors.background }
+    // Scroll instead of overlapping when a short screen or a large tray runs out of space.
+    Flickable {
+        id: scroll
+        anchors.fill: parent; anchors.bottomMargin: 46
+        contentWidth: width
+        contentHeight: Math.max(height, rail.implicitHeight + 24)
+        clip: true; boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.VerticalFlick
+        ScrollBar.vertical: ScrollBar { width: 3; policy: scroll.contentHeight > scroll.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff }
+        ColumnLayout {
+            id: rail
+            y: 12; width: parent.width
+            height: Math.max(implicitHeight, scroll.height - 24)
+            spacing: 10
+            IconButton {
+                visible: Settings.moduleEnabled("launcher")
+                Layout.alignment: Qt.AlignHCenter
+                hint: "Launch apps"
+                iconName: "nixos.svg"
                 onClicked: AppLauncher.toggle()
             }
-        }
-
-        // --- Workspace indicators ---
-        ColumnLayout {
-            Layout.alignment: Qt.AlignHCenter
-            spacing: 4
-
-            Repeater {
-                model: 5
-
-                Item {
-                    id: wsPill
-                    required property int index
-                    property int wsId: index + 1
-                    property var wsData: Hyprland.workspaces.values.find(w => w.id === wsId)
-                    property bool isActive: Hyprland.focusedWorkspace?.id === wsId
-                    property bool isOccupied: !!wsData && wsData.toplevels.values.length > 0
-
-                    // Which window "represents" this workspace's icon: prefer the
-                    // globally focused window if it's in this workspace, else fall
-                    // back to the most recently opened one here.
-                    property var topWindow: {
-                        if (!wsPill.wsData || wsPill.wsData.toplevels.values.length === 0)
-                            return null;
-                        const tls = wsPill.wsData.toplevels.values;
-                        for (let i = 0; i < tls.length; i++) {
-                            if (tls[i].activated)
-                                return tls[i];
-                        }
-                        return tls[tls.length - 1];
-                    }
-
-                    readonly property string windowClass: (wsPill.topWindow && wsPill.topWindow.lastIpcObject) ? (wsPill.topWindow.lastIpcObject.class || "") : ""
-                    readonly property string wsIcon: root.iconForClass(wsPill.windowClass)
-
-                    width: 20
-                    height: 20
-
-                    readonly property var staticDots: [
-                        {
-                            x: 1,
-                            y: 2
-                        },
-                        {
-                            x: 14,
-                            y: 1
-                        },
-                        {
-                            x: 4,
-                            y: 15
-                        },
-                        {
-                            x: 16,
-                            y: 12
-                        },
-                        {
-                            x: 9,
-                            y: 8
-                        },
-                        {
-                            x: 2,
-                            y: 10
-                        }
-                    ]
-
-                    Repeater {
-                        model: (!wsPill.isActive && !wsPill.isOccupied) ? wsPill.staticDots : []
-                        delegate: Rectangle {
-                            required property var modelData
-                            x: wsPill.width / 2 - 9 + modelData.x
-                            y: wsPill.height / 2 - 9 + modelData.y
-                            width: 2
-                            height: 2
-                            color: Colors.warning
-                            opacity: 0.85
-                            antialiasing: false
-                        }
-                    }
-
-                    // Active pill background
-                    Shape {
-                        anchors.fill: parent
-                        antialiasing: false
-                        visible: wsPill.isActive
-                        preferredRendererType: Shape.CurveRenderer
-                        ShapePath {
-                            fillColor: Colors.accent
-                            strokeColor: "transparent"
-                            PathSvg {
-                                path: PathGen.chamferedRectPath(20, 20, 6)
+            ColumnLayout {
+                visible: Settings.moduleEnabled("workspaces")
+                Layout.alignment: Qt.AlignHCenter; spacing: 4
+                Repeater {
+                    model: Settings.workspaceCount
+                    PixelButton {
+                        id: ws
+                        required property int index
+                        readonly property int wsId: index + 1
+                        readonly property var dataForWorkspace: Hyprland.workspaces.values.find(w => w.id === wsId)
+                        readonly property bool isActive: Hyprland.focusedWorkspace?.id === wsId
+                        readonly property bool occupied: !!dataForWorkspace && dataForWorkspace.toplevels.values.length > 0
+                        readonly property var topWindow: occupied ? (dataForWorkspace.toplevels.values.find(w => w.activated) || dataForWorkspace.toplevels.values[0]) : null
+                        implicitWidth: 30; implicitHeight: 28; padding: 4
+                        primary: isActive
+                        Accessible.name: "Workspace " + wsId
+                        contentItem: Item {
+                            ColoredIcon { anchors.fill: parent; visible: ws.occupied || ws.isActive; iconName: root.iconForClass(ws.topWindow?.lastIpcObject?.class || ""); tint: ws.isActive ? Colors.textOnAccent : Colors.textOnBackground }
+                            Repeater {
+                                model: !ws.occupied && !ws.isActive ? [{x:2,y:2},{x:16,y:1},{x:6,y:14},{x:18,y:15},{x:10,y:7}] : []
+                                Rectangle { required property var modelData; x: modelData.x; y: modelData.y; width: 2; height: 2; color: Colors.accent; opacity: .65 }
                             }
                         }
-                    }
-
-                    // Colorized via the same ColoredIcon component your other tray
-                    // icons use -- reads the SVG text and swaps currentColor for the
-                    // tint, no MultiEffect/layer plumbing involved.
-                    ColoredIcon {
-                        anchors.centerIn: parent
-                        width: 13
-                        height: 13
-                        visible: wsPill.isActive || wsPill.isOccupied
-                        iconName: (wsPill.isActive || wsPill.isOccupied) ? wsPill.wsIcon : ""
-                        tint: wsPill.isActive ? Colors.textOnAccent : Colors.textOnBackground
-                        opacity: wsPill.isActive ? 1.0 : 0.9
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            Hyprland.dispatch('hl.dsp.focus({ workspace = "' + wsPill.wsId + '" })');
-                        }
+                        onClicked: Hyprland.dispatch('hl.dsp.focus({ workspace = "' + ws.wsId + '" })')
+                        ToolTip.visible: hovered || activeFocus
+                        ToolTip.text: Accessible.name
                     }
                 }
             }
-        }
-
-        BarDivider {
-            Layout.alignment: Qt.AlignHCenter
-            barWidth: 32
-        }
-
-        Item {
-            id: middleZone
-            Layout.alignment: Qt.AlignHCenter
-            Layout.fillHeight: true
-            width: 24
-
-            // Pinned to the actual top of the zone — depends on nothing else
-            ColumnLayout {
-                id: clockBlock
-                anchors.top: parent.top
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 8
-
-                ColumnLayout {
-                    Layout.alignment: Qt.AlignHCenter
-                    spacing: 1
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Qt.formatDateTime(clockTimer.now, "hh")
-                        color: Colors.textOnBackground
-                        font.family: "Pixel Operator"
-                        font.pixelSize: 14
-                        font.bold: true
-                        renderType: Text.NativeRendering
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Qt.formatDateTime(clockTimer.now, "mm")
-                        color: Colors.textOnBackground
-                        font.family: "Pixel Operator"
-                        font.pixelSize: 14
-                        font.bold: true
-                        renderType: Text.NativeRendering
-                        horizontalAlignment: Text.AlignHCenter
-                    }
+            PixelButton {
+                visible: Settings.moduleEnabled("clock")
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: 34; implicitHeight: root.height > 740 ? 82 : 52
+                padding: 3
+                Accessible.name: "Clock and Your day"
+                contentItem: Column {
+                    spacing: 4
+                    PixelText { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: Qt.formatTime(clockTimer.now, "hh\nmm"); font.family: "Pixel Operator"; font.pixelSize: 16 }
+                    PixelText { visible: root.height > 740; width: parent.width; horizontalAlignment: Text.AlignHCenter; text: Qt.formatDate(clockTimer.now, "dd\nMM"); color: Colors.textOnSurfaceVariant; font.pixelSize: 12 }
                 }
-
-                Rectangle {
-                    Layout.alignment: Qt.AlignHCenter
-                    width: 16
-                    height: 1
-                    color: Colors.outlineVariant
-                    antialiasing: false
-                }
-
-                ColumnLayout {
-                    Layout.alignment: Qt.AlignHCenter
-                    spacing: 2
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Qt.formatDateTime(clockTimer.now, "dd")
-                        color: Colors.textOnBackground
-                        font.family: "Cozette"
-                        font.pixelSize: 9
-                        renderType: Text.NativeRendering
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Qt.formatDateTime(clockTimer.now, "MM")
-                        color: Colors.textOnBackground
-                        font.family: "Cozette"
-                        font.pixelSize: 9
-                        renderType: Text.NativeRendering
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Qt.formatDateTime(clockTimer.now, "yy")
-                        color: Colors.textOnBackground
-                        font.family: "Cozette"
-                        font.pixelSize: 9
-                        renderType: Text.NativeRendering
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-                }
+                onClicked: WellbeingPanel.toggle()
             }
-
-            Timer {
-                id: clockTimer
-                property var now: new Date()
-                interval: 1000
-                running: true
-                repeat: true
-                onTriggered: now = new Date()
+            Item { Layout.fillHeight: true; Layout.minimumHeight: 8 }
+            PixelButton {
+                visible: Settings.moduleEnabled("wizard")
+                Layout.alignment: Qt.AlignHCenter
+                implicitWidth: 36; implicitHeight: 36; padding: 6
+                Accessible.name: "Wallpaper wizard"
+                contentItem: ReactiveImage { path: Settings.cacheDir + "/wizard-idle.png"; fallbackSource: Qt.resolvedUrl("assets/wizard-template.png") }
+                onClicked: WallpaperLauncher.toggle()
+                ToolTip.visible: hovered || activeFocus
+                ToolTip.text: "Choose wallpaper and palette"
             }
-
-            // Dead center of the WHOLE zone — independent of the clock's
-            // height. This is also the application launcher trigger.
-            Item {
-                id: launcherIcon
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 24
-                height: 24
-                z: 2
-
-                ReactiveImage {
-                    anchors.fill: parent
-                    path: "/home/swami/.cache/quickshell/wizard-idle.png"
-                }
-
-                MouseArea {
-                    id: launcherArea
-                    anchors.fill: parent
-                    anchors.margins: -4
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: WallpaperLauncher.toggle()
-                }
-            }
-
             MediaBarWidget {
-                anchors.top: launcherIcon.bottom
-                anchors.topMargin: 14
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
+                visible: Settings.moduleEnabled("media") && root.height > 920
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: 24; Layout.preferredHeight: 150
             }
+            IconButton {
+                visible: Settings.moduleEnabled("media") && root.height <= 920
+                Layout.alignment: Qt.AlignHCenter
+                iconName: "music.svg"; hint: "Now playing"
+                onClicked: MediaPanel.toggle()
+            }
+            Item { Layout.fillHeight: true; Layout.minimumHeight: 8 }
+            IconButton { visible: Settings.moduleEnabled("audio"); Layout.alignment: Qt.AlignHCenter; iconName: "volume-2.svg"; hint: "Sound & brightness"; onClicked: RightPanel.shown = !RightPanel.shown }
+            IconButton { visible: Settings.moduleEnabled("system"); Layout.alignment: Qt.AlignHCenter; iconName: "cpu.svg"; hint: "System readings"; onClicked: SysStatsPanel.toggle() }
+            SystemTray { Layout.alignment: Qt.AlignHCenter }
         }
-
-        BarDivider {
-            Layout.alignment: Qt.AlignHCenter
-            barWidth: 32
-        }
-
-        // --- System tray ---
-        SystemTray {
-            Layout.alignment: Qt.AlignHCenter
-        }
+    }
+    // Recovery access is always available even when every optional module is disabled.
+    IconButton {
+        anchors.bottom: parent.bottom; anchors.bottomMargin: 8; anchors.horizontalCenter: parent.horizontalCenter
+        iconName: "settings-2.svg"; hint: "Your corner · Super+Ctrl+S"
+        onClicked: SettingsPanel.toggle()
     }
 }

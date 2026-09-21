@@ -1,572 +1,125 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
-import "../bar" as Bar
+import QtQuick.Controls
+import "../bar"
+import "../common"
 
-Item {
-    id: content
-    property int topOffset: 4
-    property int cols: 4
-    property int rows: 3
-    property int cellSize: 108
-    property int cellSpacing: 14
-
-    readonly property int perPage: cols * rows
-    readonly property int pageWidth: cols * (cellSize + cellSpacing) - cellSpacing
-    readonly property int pageHeight: rows * (cellSize + cellSpacing) - cellSpacing
-    readonly property int pageCount: Math.max(1, Math.ceil(WallpaperBackend.wallpapers.length / perPage))
-    readonly property int currentPage: pageWidth > 0 ? Math.round(pager.contentX / pageWidth) : 0
-
-    // keyboard selection + pending delete-confirm state
-    property int selectedIndex: 0
-    property var pendingDelete: null   // {name, path} of a wallpaper awaiting delete confirmation
-
-    implicitWidth: WallpaperLauncher.shown ? bezel.width : 0
-    implicitHeight: WallpaperLauncher.shown ? bezel.height : 0
-    anchors.centerIn: parent
-    opacity: WallpaperLauncher.shown ? 1 : 0
-    scale: WallpaperLauncher.shown ? 1 : 0.97
-    visible: opacity > 0.01
-    z: 6
-    focus: true
-
-    Behavior on opacity {
-        NumberAnimation {
-            duration: 220
-            easing.type: Easing.OutCubic
-        }
+Sheet {
+    id: root
+    property int topOffset: 0
+    shown: WallpaperLauncher.shown
+    title: "Wallpapers"
+    subtitle: "Preview first. Apply when it feels right."
+    centered: true
+    initialFocusItem: search
+    preferredWidth: 860
+    preferredHeight: 660
+    onDismiss: WallpaperLauncher.hide()
+    property string selectedPath: ""
+    property string recipe: Settings.recipe
+    property real tone: Settings.tone
+    property real saturation: Settings.saturation
+    property string sourcePreference: Settings.sourcePreference
+    property bool confirmTrash: false
+    readonly property var filtered: WallpaperBackend.wallpapers.filter(w => w.name.toLowerCase().includes(search.text.toLowerCase()))
+    function preview() {
+        if (selectedPath) WallpaperBackend.preview(selectedPath, recipe, tone, saturation, sourcePreference, Settings.contrast);
     }
-    Behavior on scale {
-        NumberAnimation {
-            duration: 220
-            easing.type: Easing.OutCubic
-        }
+    onSelectedPathChanged: { confirmTrash = false; preview(); }
+    onRecipeChanged: preview()
+    onToneChanged: preview()
+    onSaturationChanged: preview()
+    onSourcePreferenceChanged: preview()
+    onShownChanged: if (shown) {
+        recipe = Settings.recipe; tone = Settings.tone; saturation = Settings.saturation; sourcePreference = Settings.sourcePreference;
+        if (!selectedPath) selectedPath = WallpaperBackend.currentPath;
+        preview();
+
     }
-
-    NumberAnimation {
-        id: snapAnim
-        target: pager
-        property: "contentX"
-        duration: 260
-        easing.type: Easing.OutCubic
-    }
-
-    function clampX(x) {
-        return Math.max(0, Math.min(pager.contentWidth - pager.width, x));
-    }
-    function pageBy(delta) {
-        snapAnim.stop();
-        snapAnim.to = content.clampX(pager.contentX + delta * content.pageWidth);
-        snapAnim.restart();
-    }
-    function snapToNearest() {
-        const target = Math.round(pager.contentX / content.pageWidth) * content.pageWidth;
-        snapAnim.stop();
-        snapAnim.to = content.clampX(target);
-        snapAnim.restart();
-    }
-    function ensureSelectionVisible() {
-        const page = Math.floor(content.selectedIndex / content.perPage);
-        if (page !== content.currentPage) {
-            snapAnim.stop();
-            snapAnim.to = content.clampX(page * content.pageWidth);
-            snapAnim.restart();
-        }
-    }
-    // moves the keyboard selection by (dx, dy) grid cells, wrapping across pages
-    function moveSelection(dx, dy) {
-        const total = WallpaperBackend.wallpapers.length;
-        if (total === 0)
-            return;
-
-        let col = content.selectedIndex % content.cols;
-        let row = Math.floor(content.selectedIndex / content.cols) % content.rows;
-        let page = Math.floor(content.selectedIndex / content.perPage);
-
-        col += dx;
-        row += dy;
-
-        if (col < 0) {
-            col = content.cols - 1;
-            page -= 1;
-        } else if (col >= content.cols) {
-            col = 0;
-            page += 1;
-        }
-        if (row < 0) {
-            row = content.rows - 1;
-            page -= 1;
-        } else if (row >= content.rows) {
-            row = 0;
-            page += 1;
-        }
-
-        page = Math.max(0, Math.min(content.pageCount - 1, page));
-        let next = page * content.perPage + row * content.cols + col;
-        next = Math.max(0, Math.min(total - 1, next));
-
-        content.selectedIndex = next;
-        content.ensureSelectionVisible();
-    }
-    function applySelection() {
-        const wp = WallpaperBackend.wallpapers[content.selectedIndex];
-        if (!wp)
-            return;
-        if (WallpaperBackend.isFailed(wp.path)) {
-            content.pendingDelete = wp;
-        } else {
-            WallpaperBackend.apply(wp.path);
-            WallpaperLauncher.hide();
-        }
-    }
-    function confirmDelete() {
-        if (content.pendingDelete) {
-            WallpaperBackend.deleteWallpaper(content.pendingDelete.path);
-            content.pendingDelete = null;
-        }
-    }
-    function cancelDelete() {
-        content.pendingDelete = null;
-    }
-
-    onVisibleChanged: {
-        if (visible) {
-            content.selectedIndex = 0;
-            content.pendingDelete = null;
-            content.forceActiveFocus();
-        }
-    }
-
-    Keys.onPressed: event => {
-        // while a delete confirmation is up, y/n/enter/esc are scoped to that dialog
-        if (content.pendingDelete !== null) {
-            switch (event.key) {
-            case Qt.Key_Y:
-            case Qt.Key_Return:
-            case Qt.Key_Enter:
-                content.confirmDelete();
-                event.accepted = true;
-                return;
-            case Qt.Key_N:
-            case Qt.Key_Escape:
-                content.cancelDelete();
-                event.accepted = true;
-                return;
-            }
-            return;
-        }
-
-        switch (event.key) {
-        case Qt.Key_Escape:
-            WallpaperLauncher.hide();
-            event.accepted = true;
-            break;
-        case Qt.Key_H:
-        case Qt.Key_Left:
-            content.moveSelection(-1, 0);
-            event.accepted = true;
-            break;
-        case Qt.Key_L:
-        case Qt.Key_Right:
-            content.moveSelection(1, 0);
-            event.accepted = true;
-            break;
-        case Qt.Key_K:
-        case Qt.Key_Up:
-            content.moveSelection(0, -1);
-            event.accepted = true;
-            break;
-        case Qt.Key_J:
-        case Qt.Key_Down:
-            content.moveSelection(0, 1);
-            event.accepted = true;
-            break;
-        case Qt.Key_Return:
-        case Qt.Key_Enter:
-            content.applySelection();
-            event.accepted = true;
-            break;
-        }
-    }
-
-    // soft backdrop stand-in for a drop shadow -- avoids depending on
-    // an unverified shadow component, cheap and reliable
-    Rectangle {
-        anchors.centerIn: parent
-        width: panelBox.width + 12
-        height: panelBox.height + 12
-        radius: 20
-        color: Bar.Colors.shadow
-        opacity: 0.4
-        antialiasing: true
-    }
-
-    Item {
-        id: bezel
-        anchors.centerIn: parent
-        width: panelBox.width + 2
-        height: panelBox.height + 2
-
-        Item {
-            id: panelBox
-            anchors.centerIn: parent
-            width: content.pageWidth + 64
-            height: content.pageHeight + 48
-            clip: true
-
-            PixelPanel {
-                anchors.fill: parent
-                fillColor: Bar.Colors.surfaceContainerLow
-                borderColor: Bar.Colors.outlineVariant
-                pixelSize: 4
-                cornerSteps: 3
-            }
-
-            Text {
-                anchors.centerIn: parent
-                visible: WallpaperBackend.scanning
-                text: "Loading wallpapers..."
-                font.family: "Cozette"
-                font.pixelSize: 11
-                color: Bar.Colors.mutedOnBackground
-            }
-
-            Text {
-                anchors.left: parent.left
-                anchors.verticalCenter: pager.verticalCenter
-                anchors.leftMargin: 14
-                text: "‹"
-                font.pixelSize: 22
-                font.weight: Font.Light
-                color: leftArrowArea.containsMouse ? Bar.Colors.accent : Bar.Colors.mutedOnBackground
-                opacity: content.currentPage > 0 ? 1 : 0.2
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 120
-                    }
-                }
-                MouseArea {
-                    id: leftArrowArea
-                    anchors.fill: parent
-                    anchors.margins: -10
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    enabled: content.currentPage > 0
-                    onClicked: content.pageBy(-1)
-                }
-            }
-
-            Text {
-                anchors.right: parent.right
-                anchors.verticalCenter: pager.verticalCenter
-                anchors.rightMargin: 14
-                text: "›"
-                font.pixelSize: 22
-                font.weight: Font.Light
-                color: rightArrowArea.containsMouse ? Bar.Colors.accent : Bar.Colors.mutedOnBackground
-                opacity: content.currentPage < content.pageCount - 1 ? 1 : 0.2
-                Behavior on color {
-                    ColorAnimation {
-                        duration: 120
-                    }
-                }
-                MouseArea {
-                    id: rightArrowArea
-                    anchors.fill: parent
-                    anchors.margins: -10
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    enabled: content.currentPage < content.pageCount - 1
-                    onClicked: content.pageBy(1)
-                }
-            }
-
-            Flickable {
-                id: pager
-                anchors.top: parent.top
-                anchors.topMargin: 16
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: content.pageWidth
-                height: content.pageHeight
-                contentWidth: content.pageWidth * content.pageCount
-                contentHeight: content.pageHeight
-                flickableDirection: Flickable.HorizontalFlick
-                boundsBehavior: Flickable.StopAtBounds
-                flickDeceleration: 4000
-                maximumFlickVelocity: 2500
+    PixelField { id: search; Layout.fillWidth: true; placeholderText: "Search your collection…" }
+    GridLayout {
+        Layout.fillWidth: true
+        columns: root.width > 660 ? 2 : 1
+        columnSpacing: 20; rowSpacing: 16
+        ColumnLayout {
+            Layout.fillWidth: true; Layout.preferredWidth: 440; Layout.alignment: Qt.AlignTop
+            GridView {
+                id: gallery
+                Layout.fillWidth: true
+                Layout.preferredHeight: root.width > 660 ? 400 : 240
                 clip: true
-
-                onMovementEnded: content.snapToNearest()
-                onFlickEnded: content.snapToNearest()
-
-                Row {
-                    Repeater {
-                        model: content.pageCount
-                        delegate: Item {
-                            id: pageItem
-                            width: content.pageWidth
-                            height: content.pageHeight
-                            property int pageIndex: index
-
-                            Grid {
-                                anchors.fill: parent
-                                columns: content.cols
-                                rowSpacing: content.cellSpacing
-                                columnSpacing: content.cellSpacing
-
-                                Repeater {
-                                    model: content.perPage
-                                    delegate: Item {
-                                        id: tile
-                                        width: content.cellSize
-                                        height: content.cellSize
-
-                                        property int wpIndex: pageItem.pageIndex * content.perPage + index
-                                        property var wp: wpIndex < WallpaperBackend.wallpapers.length ? WallpaperBackend.wallpapers[wpIndex] : null
-                                        property bool colorsFailed: wp !== null && WallpaperBackend.isFailed(wp.path)
-                                        property bool keyboardSelected: tile.wpIndex === content.selectedIndex
-                                        visible: wp !== null
-                                        scale: tileArea.containsMouse ? 1.03 : 1.0
-                                        Behavior on scale {
-                                            NumberAnimation {
-                                                duration: 140
-                                                easing.type: Easing.OutCubic
-                                            }
-                                        }
-
-                                        Rectangle {
-                                            id: tileFrame
-                                            anchors.fill: parent
-                                            radius: 10
-                                            color: Bar.Colors.surfaceContainer
-                                            antialiasing: true
-                                            border.width: (tileArea.containsMouse || tile.keyboardSelected) ? 2 : 0
-                                            border.color: tile.colorsFailed ? Bar.Colors.error : Bar.Colors.accent
-                                            Behavior on border.width {
-                                                NumberAnimation {
-                                                    duration: 140
-                                                }
-                                            }
-
-                                            // fixed inset keeps the image's square corners tucked
-                                            // safely behind the frame's rounded curve -- no per-image
-                                            // clip mask needed
-                                            Image {
-                                                anchors.fill: parent
-                                                anchors.margins: 3
-                                                source: tile.wp ? "file://" + tile.wp.path : ""
-                                                fillMode: Image.PreserveAspectCrop
-                                                smooth: true
-                                                asynchronous: true
-                                                sourceSize.width: content.cellSize
-                                                sourceSize.height: content.cellSize
-                                                opacity: tile.colorsFailed ? 0.45 : 1.0
-                                            }
-                                        }
-
-                                        // warning badge for wallpapers wallust couldn't palette
-                                        Rectangle {
-                                            visible: tile.colorsFailed
-                                            anchors.top: parent.top
-                                            anchors.right: parent.right
-                                            anchors.margins: 4
-                                            width: 18
-                                            height: 18
-                                            radius: 9
-                                            color: Bar.Colors.textOnError
-                                            antialiasing: true
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: "!"
-                                                font.family: "Cozette"
-                                                font.pixelSize: 11
-                                                font.bold: true
-                                                color: Bar.Colors.onError
-                                            }
-                                        }
-
-                                        Rectangle {
-                                            anchors.bottom: parent.bottom
-                                            anchors.left: parent.left
-                                            anchors.right: parent.right
-                                            anchors.margins: 4
-                                            height: 22
-                                            radius: 6
-                                            color: Bar.Colors.shadow
-                                            opacity: tileArea.containsMouse ? 0.85 : 0
-                                            visible: opacity > 0.01
-                                            Behavior on opacity {
-                                                NumberAnimation {
-                                                    duration: 140
-                                                }
-                                            }
-
-                                            Text {
-                                                anchors.centerIn: parent
-                                                text: tile.wp ? (tile.colorsFailed ? tile.wp.name + " (no colors)" : tile.wp.name) : ""
-                                                color: Bar.Colors.textOnBackground
-                                                font.family: "Cozette"
-                                                font.pixelSize: 9
-                                                elide: Text.ElideRight
-                                                width: parent.width - 10
-                                                horizontalAlignment: Text.AlignHCenter
-                                            }
-                                        }
-
-                                        MouseArea {
-                                            id: tileArea
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                content.selectedIndex = tile.wpIndex;
-                                                if (tile.colorsFailed) {
-                                                    content.pendingDelete = tile.wp;
-                                                } else {
-                                                    WallpaperBackend.apply(tile.wp.path);
-                                                    WallpaperLauncher.hide();
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                model: root.filtered
+                cellWidth: width / Math.max(2, Math.floor(width / 145))
+                cellHeight: cellWidth * .65 + 32
+                keyNavigationEnabled: true
+                activeFocusOnTab: true
+                highlightMoveDuration: Settings.motionMs
+                Keys.onReturnPressed: if (currentIndex >= 0 && currentIndex < root.filtered.length) root.selectedPath = root.filtered[currentIndex].path
+                ScrollBar.vertical: ScrollBar {}
+                delegate: Item {
+                    required property var modelData
+                    required property int index
+                    width: gallery.cellWidth; height: gallery.cellHeight
+                    Rectangle {
+                        anchors.fill: parent; anchors.margins: 5
+                        color: Colors.background
+                        border.width: root.selectedPath === modelData.path ? 2 : 1
+                        border.color: root.selectedPath === modelData.path || (gallery.activeFocus && gallery.currentIndex === index) ? Colors.accent : Colors.outlineVariant
+                        Image {
+                            anchors.fill: parent; anchors.margins: 3; anchors.bottomMargin: 28
+                            source: Settings.fileUrl(modelData.path)
+                            asynchronous: true; sourceSize.width: 320
+                            fillMode: Image.PreserveAspectCrop
                         }
+                        PixelText { anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: 7; text: modelData.name }
+                        MouseArea { anchors.fill: parent; onClicked: { gallery.currentIndex = index; root.selectedPath = modelData.path; } }
                     }
                 }
             }
-
-            MouseArea {
-                anchors.fill: pager
-                z: 5
-                acceptedButtons: Qt.NoButton
-                hoverEnabled: false
-                onWheel: event => {
-                    if (!wheelCooldown.running) {
-                        const delta = event.angleDelta.y !== 0 ? event.angleDelta.y : event.angleDelta.x;
-                        content.pageBy(delta < 0 ? 1 : -1);
-                        wheelCooldown.restart();
-                    }
-                    event.accepted = true;
-                }
+            PixelText { Layout.fillWidth: true; text: WallpaperBackend.scanning ? "Reading collection…" : root.filtered.length + " wallpapers · arrows + Enter to select"; color: Colors.textOnSurfaceVariant }
+            PixelButton { text: "Refresh collection"; onClicked: WallpaperBackend.refresh() }
+        }
+        ColumnLayout {
+            Layout.fillWidth: true; Layout.preferredWidth: 300; Layout.alignment: Qt.AlignTop; spacing: 10
+            Rectangle {
+                Layout.fillWidth: true; Layout.preferredHeight: 160; color: Colors.background
+                Image { anchors.fill: parent; source: Settings.fileUrl(root.selectedPath); asynchronous: true; sourceSize.width: 640; fillMode: Image.PreserveAspectFit }
+                PixelText { anchors.centerIn: parent; visible: !root.selectedPath; text: "Select a wallpaper" }
             }
-            Timer {
-                id: wheelCooldown
-                interval: 350
+            PixelText { Layout.fillWidth: true; text: root.selectedPath.split("/").pop() || "Nothing selected" }
+            RowLayout {
+                Rectangle { Layout.preferredWidth: 24; Layout.preferredHeight: 24; color: WallpaperBackend.previewColors.accent || Colors.accent; border.color: Colors.outlineVariant }
+                PixelText { text: WallpaperBackend.previewBusy ? "Generating preview…" : "One seed · " + (WallpaperBackend.previewColors._meta?.seed || "—"); Layout.fillWidth: true }
             }
-
-            Row {
-                anchors.bottom: parent.bottom
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottomMargin: 14
-                spacing: 6
+            Flow {
+                Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
                 Repeater {
-                    model: content.pageCount
-                    delegate: Rectangle {
-                        width: index === content.currentPage ? 16 : 5
-                        height: 5
-                        radius: 0
-                        antialiasing: false
-                        color: index === content.currentPage ? Bar.Colors.accent : Bar.Colors.outlineVariant
-                        Behavior on width {
-                            NumberAnimation {
-                                duration: 160
-                                easing.type: Easing.OutCubic
-                            }
-                        }
-                    }
+                    model: ["black", "neutral", "tonal", "expressive", "paper", "mono"]
+                    PixelButton { required property string modelData; text: modelData; checked: root.recipe === modelData; primary: checked; onClicked: root.recipe = modelData }
                 }
             }
-
-            // delete-confirmation overlay for wallpapers with no generated palette
-            Rectangle {
-                anchors.fill: parent
-                color: "black"
-                opacity: content.pendingDelete !== null ? 0.6 : 0
-                visible: opacity > 0.01
-                z: 10
-                Behavior on opacity {
-                    NumberAnimation {
-                        duration: 150
-                    }
-                }
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: content.cancelDelete()
-                }
+            PixelText { text: "Accent tone · " + Math.round(root.tone); color: Colors.textOnSurfaceVariant }
+            PixelSlider { Layout.fillWidth: true; from: -15; to: 15; stepSize: 1; value: root.tone; onMoved: root.tone = value }
+            PixelText { text: "Color intensity · " + Math.round(root.saturation * 100) + "%"; color: Colors.textOnSurfaceVariant }
+            PixelSlider { Layout.fillWidth: true; from: 0; to: 1.6; stepSize: .05; value: root.saturation; onMoved: root.saturation = value }
+            Flow {
+                Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+                Repeater { model: ["representative", "dominant", "colorful"]; PixelButton { required property string modelData; text: modelData; checked: root.sourcePreference === modelData; onClicked: root.sourcePreference = modelData } }
             }
             Rectangle {
-                anchors.centerIn: parent
-                width: 280
-                height: 120
-                radius: 12
-                color: Bar.Colors.surfaceContainerLow
-                border.width: 1
-                border.color: Bar.Colors.outlineVariant
-                visible: content.pendingDelete !== null
-                z: 11
-                antialiasing: true
-
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 14
-                    width: parent.width - 32
-
-                    Text {
-                        width: parent.width
-                        wrapMode: Text.WordWrap
-                        horizontalAlignment: Text.AlignHCenter
-                        text: content.pendingDelete ? "Couldn't generate colors for \"" + content.pendingDelete.name + "\". Delete it?" : ""
-                        font.family: "Cozette"
-                        font.pixelSize: 11
-                        color: Bar.Colors.textOnBackground
-                    }
-
-                    Row {
-                        spacing: 16
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        Rectangle {
-                            width: 80
-                            height: 28
-                            radius: 6
-                            color: Bar.Colors.error
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Delete (Y)"
-                                font.family: "Cozette"
-                                font.pixelSize: 10
-                                color: Bar.Colors.textOnError
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: content.confirmDelete()
-                            }
-                        }
-                        Rectangle {
-                            width: 80
-                            height: 28
-                            radius: 6
-                            color: Bar.Colors.surfaceContainer
-                            border.width: 1
-                            border.color: Bar.Colors.outlineVariant
-                            Text {
-                                anchors.centerIn: parent
-                                text: "Cancel (N)"
-                                font.family: "Cozette"
-                                font.pixelSize: 10
-                                color: Bar.Colors.textOnBackground
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: content.cancelDelete()
-                            }
-                        }
-                    }
-                }
+                Layout.fillWidth: true; implicitHeight: 46
+                color: WallpaperBackend.previewColors.background || Colors.background
+                border.color: WallpaperBackend.previewColors.outline_variant || Colors.outlineVariant
+                PixelText { anchors.centerIn: parent; text: "Aa  /  live palette preview"; color: WallpaperBackend.previewColors.accent || Colors.accent }
             }
+            PixelButton {
+                Layout.fillWidth: true; primary: true; enabled: !!root.selectedPath && !WallpaperBackend.applying
+                text: WallpaperBackend.applying ? "Applying…" : "Apply wallpaper & palette"
+                onClicked: WallpaperBackend.apply(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast)
+            }
+            PixelButton { Layout.fillWidth: true; text: root.confirmTrash ? "Confirm move to Trash" : "Move selected to Trash…"; danger: root.confirmTrash; enabled: !!root.selectedPath && !WallpaperBackend.applying; onClicked: { if (root.confirmTrash) { WallpaperBackend.trash(root.selectedPath); root.selectedPath = ""; } else root.confirmTrash = true; } }
+            PixelButton { visible: root.confirmTrash; text: "Cancel"; onClicked: root.confirmTrash = false }
         }
     }
+    PixelText { Layout.fillWidth: true; visible: text.length > 0; text: WallpaperBackend.lastError; color: Colors.error; wrapMode: Text.Wrap; elide: Text.ElideNone }
 }

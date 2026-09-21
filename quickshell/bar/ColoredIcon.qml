@@ -3,30 +3,26 @@ import Quickshell.Io
 
 Image {
     id: root
-    property string iconName: ""
+    property string iconName: "app-windows.svg"
     property color tint: Colors.textOnBackground
-
-    readonly property string primaryDir: "/home/swami/.local/share/pixelarticons/svg/"
-    readonly property string overrideDir: Qt.resolvedUrl("assets/")
-
-    // Icons that don't exist upstream and live in bar/assets/ instead.
-    // Add to this list any time you vendor a new custom icon.
-    readonly property var overrides: ["bluetooth.svg", "bluetooth-connected.svg", "bluetooth-off.svg"]
-
-    readonly property string activeDir: overrides.indexOf(iconName) !== -1 ? overrideDir : primaryDir
-
+    readonly property string iconDir: decodeURIComponent(Qt.resolvedUrl("assets/icons/").toString().replace("file://", ""))
+    // Geometric fallback: never an empty box or a missing-font glyph.
+    readonly property string fallback: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h18v18H3V3zm2 2v14h14V5H5zm3 3h8v2H8zm0 5h8v2H8z"/></svg>'
+    property int revision: 0
     smooth: false
-
+    fillMode: Image.PreserveAspectFit
     FileView {
-        id: fileLoader
-        path: root.iconName === "" ? "" : (root.activeDir + root.iconName)
+        id: file
+        path: root.iconName ? root.iconDir + root.iconName.replace(/[^a-zA-Z0-9_.-]/g, "") : ""
         blockLoading: true
+        onLoaded: root.revision++
+        onLoadFailed: root.revision++
     }
-
     source: {
-        if (root.iconName === "") return ""
-        var _dep = fileLoader.path   // keep this binding dependent on path so icon swaps re-trigger
-        var svgText = fileLoader.text().replace(/currentColor/g, root.tint)
-        return "data:image/svg+xml;utf8," + encodeURIComponent(svgText)
+        if (!root.iconName) return "";
+        const dependency = root.revision + file.path;
+        const data = file.text();
+        const svg = data.indexOf("<svg") >= 0 ? data : root.fallback;
+        return "data:image/svg+xml;utf8," + encodeURIComponent(svg.replace(/currentColor/g, root.tint));
     }
 }

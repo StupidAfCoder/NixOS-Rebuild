@@ -1,0 +1,2 @@
+singleton SettingsPanel 1.0 SettingsPanel.qml
+SettingsPanelContent 1.0 SettingsPanelContent.qml

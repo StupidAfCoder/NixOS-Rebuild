@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Services.Mpris
 import "."
+import "../common"
 
 Item {
     id: widget
@@ -42,7 +43,7 @@ Item {
                 y: (rotWrap.height - height) / 2
 
                 SequentialAnimation {
-                    running: marqueeBox.overflowing && widget.active
+                    running: marqueeBox.overflowing && widget.active && widget.visible && !Settings.reducedMotion
                     loops: Animation.Infinite
 
                     PauseAnimation { duration: 1200 }
@@ -88,7 +89,7 @@ Item {
                     anchors.bottom: parent.bottom
 
                     SequentialAnimation on height {
-                        running: widget.playing
+                        running: widget.playing && widget.visible && !Settings.reducedMotion
                         loops: Animation.Infinite
                         NumberAnimation { to: 4 + ((index * 2) % 7); duration: 260 + index * 70 }
                         NumberAnimation { to: 3; duration: 260 + index * 70 }

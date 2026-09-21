@@ -1,0 +1,3 @@
+singleton AppLauncher 1.0 AppLauncher.qml
+AppLauncherContent 1.0 AppLauncherContent.qml
+PixelAppIcon 1.0 PixelAppIcon.qml

@@ -2,110 +2,81 @@ pragma Singleton
 import Quickshell
 import Quickshell.Io
 import QtQuick
+import "../common"
 
 Item {
     id: root
-    property string homeDir: ""
-    property string wallpaperDir: homeDir + "/Pictures/Wallpapers"
-    property string applyScriptPath: homeDir + "/.nixos_dotfiles/scripts/apply-wallpaper.sh"
-    property string failedLogPath: homeDir + "/.cache/wallust/failed_wallpapers.json"
     property var wallpapers: []
-    property var failedPaths: []
     property bool applying: false
     property bool scanning: false
-
-    function refresh() {
-        scanning = true;
-        if (root.homeDir === "")
-            homeProc.running = true;
-        else
-            scanProc.running = true;
+    property string lastError: ""
+    property string currentPath: ""
+    property var previewColors: ({})
+    property var pendingPreview: null
+    property string previewResult: ""
+    readonly property bool previewBusy: previewProc.running || pendingPreview !== null
+    function refresh() { if (!scan.running) { scanning = true; scan.running = true; } }
+    function argumentsFor(path, recipe, tone, saturation, source, contrast) {
+        return ["python3", Settings.repo + "scripts/generate-theme.py", path, recipe === "paper" ? "light" : "dark", String(contrast), "--recipe", recipe, "--tone", String(tone), "--saturation", String(saturation), "--source", source];
     }
-
-    function apply(path) {
-        root.applying = true;
-        applyProc.command = ["bash", root.applyScriptPath, path];
+    function preview(path, recipe, tone, saturation, source, contrast) {
+        pendingPreview = argumentsFor(path, recipe, tone, saturation, source, contrast).concat(["--preview"]);
+        previewDelay.restart();
+    }
+    function runPreview() {
+        if (previewProc.running || !pendingPreview) return;
+        previewProc.command = pendingPreview;
+        pendingPreview = null;
+        previewResult = "";
+        previewProc.running = true;
+    }
+    function apply(path, recipe, tone, saturation, source, contrast) {
+        if (Settings.previewMode) { lastError = "Native preview: wallpaper application is disabled; palette previews still work."; return; }
+        if (applying || !path) return;
+        lastError = "";
+        applying = true;
+        applyProc.command = ["bash", Settings.repo + "scripts/apply-wallpaper.sh", path, recipe, String(tone), String(saturation), source, String(contrast)];
         applyProc.running = true;
+        Settings.patch({recipe: recipe, tone: tone, saturation: saturation, source: source, contrast: contrast});
     }
-
-    function isFailed(path) {
-        return root.failedPaths.indexOf(path) !== -1;
+    function trash(path) {
+        if (Settings.previewMode) { lastError = "Native preview: moving files to Trash is disabled."; return; }
+        if (trashProc.running) return;
+        trashProc.command = ["gio", "trash", "--", path];
+        trashProc.running = true;
     }
-
-    function deleteWallpaper(path) {
-        deleteProc.command = ["rm", "--", path];
-        deleteProc.running = true;
-    }
-
     Component.onCompleted: refresh()
-
-    Process {
-        id: homeProc
-        command: ["sh", "-c", "printf %s \"$HOME\""]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.homeDir = this.text.trim();
-                failedLogFile.reload();
-                scanProc.running = true;
-            }
-        }
-    }
-
-    Process {
-        id: scanProc
-        command: ["find", root.wallpaperDir, "-maxdepth", "1", "-type", "f", "(", "-iname", "*.png", "-o", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.webp", ")", "-print0"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const found = [];
-                for (const p of this.text.split("\u0000")) {
-                    if (!p)
-                        continue;
-                    const name = p.substring(p.lastIndexOf("/") + 1).replace(/\.[^.]+$/, "");
-                    found.push({
-                        name: name,
-                        path: p
-                    });
-                }
-                found.sort((a, b) => a.name.localeCompare(b.name));
-                root.wallpapers = found;
-                root.scanning = false;
-            }
-        }
-    }
-
-    Process {
-        id: applyProc
-        stdout: StdioCollector {
-            onStreamFinished: root.applying = false
-        }
-        stderr: StdioCollector {
-            onStreamFinished: console.log("[wallpaper apply stderr]", this.text)
-        }
-    }
-
-    Process {
-        id: deleteProc
-        stdout: StdioCollector {
-            onStreamFinished: root.refresh()
-        }
-        stderr: StdioCollector {
-            onStreamFinished: console.log("[wallpaper delete stderr]", this.text)
-        }
-    }
-
-    // Written by prime-wallust-cache.sh; tells us which wallpapers have no palette.
+    Connections { target: Settings; function onWallpaperDirChanged() { root.refresh(); } }
     FileView {
-        id: failedLogFile
-        path: root.failedLogPath
+        path: (Quickshell.env("XDG_STATE_HOME") || Settings.home + "/.local/state") + "/wallpaper/current"
         watchChanges: true
         onFileChanged: reload()
-        onLoaded: {
-            try {
-                root.failedPaths = JSON.parse(text());
-            } catch (e) {
-                root.failedPaths = [];
-            }
-        }
-        onLoadFailed: root.failedPaths = []  // fine before the first run creates the file
+        onLoaded: root.currentPath = text().trim()
     }
+    Process {
+        id: scan
+        command: ["find", Settings.wallpaperDir, "-maxdepth", "1", "-type", "f", "(", "-iname", "*.png", "-o", "-iname", "*.jpg", "-o", "-iname", "*.jpeg", "-o", "-iname", "*.webp", ")", "-print0"]
+        stdout: StdioCollector {
+            onStreamFinished: root.wallpapers = text.split("\u0000").filter(p => p.length > 0).map(p => ({name: p.substring(p.lastIndexOf("/") + 1), path: p})).sort((a,b) => a.name.localeCompare(b.name))
+        }
+        stderr: StdioCollector { onStreamFinished: { if (text.trim()) root.lastError = text.trim(); } }
+        onExited: root.scanning = false
+    }
+    Process {
+        id: applyProc
+        stderr: StdioCollector { onStreamFinished: { if (text.trim()) console.warn("[wallpaper]", text); } }
+        onExited: (code, status) => { root.applying = false; if (code !== 0) root.lastError = "Wallpaper could not be applied. Check the shell journal."; }
+    }
+    Timer { id: previewDelay; interval: 220; onTriggered: root.runPreview() }
+    Process {
+        id: previewProc
+        stdout: StdioCollector { onStreamFinished: root.previewResult = text }
+        onExited: (code, status) => {
+            if (!root.pendingPreview && code === 0) {
+                try { root.previewColors = JSON.parse(root.previewResult); root.lastError = ""; } catch(e) { root.lastError = "Preview was not valid"; }
+            } else if (!root.pendingPreview && code !== 0) root.lastError = "No preview available for this image";
+            root.runPreview();
+        }
+    }
+    Process { id: trashProc; onExited: (code, status) => { if (code !== 0) root.lastError = "Could not move wallpaper to Trash"; root.refresh(); } }
 }

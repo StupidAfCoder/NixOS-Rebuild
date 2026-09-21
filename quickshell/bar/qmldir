@@ -1,0 +1,30 @@
+Bar 1.0 Bar.qml
+BarDivider 1.0 BarDivider.qml
+BarShell 1.0 BarShell.qml
+singleton BatteryPanel 1.0 BatteryPanel.qml
+BatteryPanelContent 1.0 BatteryPanelContent.qml
+BluetoothDeviceRow 1.0 BluetoothDeviceRow.qml
+singleton BluetoothPanel 1.0 BluetoothPanel.qml
+BluetoothPanelContent 1.0 BluetoothPanelContent.qml
+ColoredIcon 1.0 ColoredIcon.qml
+ColoredSprite 1.0 ColoredSprite.qml
+singleton Colors 1.0 Colors.qml
+CornerAccent 1.0 CornerAccent.qml
+MediaBarWidget 1.0 MediaBarWidget.qml
+singleton MediaPanel 1.0 MediaPanel.qml
+MediaPanelContent 1.0 MediaPanelContent.qml
+singleton MprisActive 1.0 MprisActive.qml
+singleton NetworkBackend 1.0 NetworkBackend.qml
+singleton PowerMenu 1.0 PowerMenu.qml
+PowerMenuContent 1.0 PowerMenuContent.qml
+PowerMenuRow 1.0 PowerMenuRow.qml
+singleton PowerProfileBackend 1.0 PowerProfileBackend.qml
+ReactiveImage 1.0 ReactiveImage.qml
+ShellFrame 1.0 ShellFrame.qml
+SystemTray 1.0 SystemTray.qml
+singleton TrayMenu 1.0 TrayMenu.qml
+TrayMenuContent 1.0 TrayMenuContent.qml
+TrayMenuLevel 1.0 TrayMenuLevel.qml
+WifiNetworkRow 1.0 WifiNetworkRow.qml
+singleton WifiPanel 1.0 WifiPanel.qml
+WifiPanelContent 1.0 WifiPanelContent.qml

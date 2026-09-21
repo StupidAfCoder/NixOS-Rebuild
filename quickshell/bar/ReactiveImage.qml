@@ -1,33 +1,31 @@
 import QtQuick
 import Quickshell.Io
+import "../common"
 
-// Displays whatever PNG currently exists at `path`, and reloads it
-// automatically whenever that file changes on disk (e.g. after
-// generate-theme-assets.sh reruns following a theme change).
 Item {
     id: root
     property string path: ""
-    width: 24
-    height: 24
-
+    property url fallbackSource: ""
+    implicitWidth: 24
+    implicitHeight: 24
+    function reload() { image.source = ""; image.source = Settings.fileUrl(path); }
     Image {
-        id: img
         anchors.fill: parent
+        source: root.fallbackSource
+        visible: image.status !== Image.Ready
+        fillMode: Image.PreserveAspectFit
         smooth: false
-        cache: false
-        source: root.path === "" ? "" : "file://" + root.path
     }
-
+    Image {
+        id: image
+        anchors.fill: parent
+        source: Settings.fileUrl(root.path)
+        fillMode: Image.PreserveAspectFit
+        smooth: false; cache: false
+        visible: status === Image.Ready
+    }
     FileView {
-        id: watcher
-        path: root.path
-        watchChanges: true
-        onFileChanged: {
-            // cache is off, so clearing then restoring source guarantees
-            // a fresh decode from disk rather than reusing a stale result
-            // for the same URL.
-            img.source = ""
-            img.source = "file://" + root.path
-        }
+        path: root.path; watchChanges: true
+        onFileChanged: root.reload()
     }
 }

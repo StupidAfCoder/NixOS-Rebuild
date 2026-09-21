@@ -1,37 +1,38 @@
 pragma Singleton
 import Quickshell.Io
 import QtQuick
+import "../common"
 
 Item {
     id: root
 
-    property real minMutedContrast: 7.5
+    property real minMutedContrast: Settings.contrast >= 0.5 ? 7 : 4.5
 
     FileView {
-        path: "/home/swami/.nixos_dotfiles/quickshell/bar/theme/colors.json"
+        path: Settings.repo + "quickshell/bar/theme/colors.json"
         watchChanges: true
         onFileChanged: reload()
 
         JsonAdapter {
             id: adapter
-            property string accent: "#7aa2f7"
-            property string on_accent: "#1a1b26"
-            property string error: "#f7768e"
-            property string on_error: "#1a1b26"
-            property string background: "#1a1b26"
-            property string on_background: "#c0caf5"
-            property string surface: "#1f2335"
-            property string on_surface: "#c0caf5"
-            property string surface_variant: "#292e42"
-            property string on_surface_variant: "#a9b1d6"
-            property string surface_container_low: "#16161e"
-            property string surface_container: "#1f2335"
-            property string surface_container_high: "#292e42"
-            property string outline: "#565f89"
-            property string outline_variant: "#414868"
-            property string shadow: "#0f0f16"
-            property string accent_secondary: "#7aa2f7"
-            property string on_accent_secondary: "#1a1b26"
+            property string accent: "#bbbbbb"
+            property string on_accent: "#000000"
+            property string error: "#ffb4ab"
+            property string on_error: "#380000"
+            property string background: "#000000"
+            property string on_background: "#f1f1ec"
+            property string surface: "#0b0b0b"
+            property string on_surface: "#f1f1ec"
+            property string surface_variant: "#282828"
+            property string on_surface_variant: "#bcbcb7"
+            property string surface_container_low: "#111111"
+            property string surface_container: "#181818"
+            property string surface_container_high: "#1f1f1f"
+            property string outline: "#777777"
+            property string outline_variant: "#303030"
+            property string shadow: "#000000"
+            property string accent_secondary: "#bbbbbb"
+            property string on_accent_secondary: "#000000"
         }
     }
 
@@ -80,8 +81,8 @@ Item {
     readonly property color shadow: Qt.color(adapter.shadow)
     readonly property color error: ensureContrast(Qt.color(adapter.error), background, minMutedContrast)
     readonly property color textOnError: Qt.color(adapter.on_error)
-    readonly property color outline: ensureContrast(Qt.color(adapter.outline), background, minMutedContrast)
-    readonly property color accentSecondary: ensureContrast(Qt.color(adapter.accent_secondary), background, minMutedContrast)
+    readonly property color outline: Qt.color(adapter.outline)
+    readonly property color accentSecondary: accent
     readonly property color textOnAccentSecondary: Qt.color(adapter.on_accent_secondary)
 
     readonly property bool isLight: relLum(background) > 0.5

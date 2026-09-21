@@ -48,96 +48,54 @@
         eval "$(direnv hook zsh)"
       }
       TRAPUSR1() {
-        zle reset-prompt
+        [[ -o zle ]] && zle reset-prompt
       }
     '';
   };
 
+  # ANSI colors intentionally follow the Wallust terminal palette. No second theme file.
   programs.starship = {
     enable = true;
     enableZshIntegration = true;
     settings = {
       add_newline = true;
-      format = "[ $username@$hostname ](bg:blue fg:black bold) [$directory](bold cyan)$git_branch$git_status$nodejs$rust$python$golang$c$character";
-      right_format = "[$time](bold purple)";
-
+      command_timeout = 800;
+      scan_timeout = 30;
+      format = "[┌─](bright-black) $username$hostname$directory$git_branch$git_status$nix_shell$cmd_duration$line_break[└─](bright-black)$character";
+      right_format = "$status";
       username = {
-        show_always = true;
-        format = "$user";
-        style_user = "bg:blue fg:black bold";
-        style_root = "bg:red fg:black bold";
+        show_always = false;
+        format = "[$user]($style) ";
+        style_user = "cyan";
+        style_root = "bold red";
       };
-
-      hostname = {
-        ssh_only = false;
-        format = "$hostname";
-        style = "bg:blue fg:black bold";
-      };
-
+      hostname = { ssh_only = true; format = "[@$hostname](cyan) "; };
       directory = {
-        format = "[$path]($style) ";
+        format = "[$path]($style)[$read_only](red) ";
+        style = "bold blue";
         truncation_length = 3;
         truncate_to_repo = true;
-        read_only = "[RO]";
-        style = "bold cyan";
+        truncation_symbol = "../";
+        read_only = " [RO]";
       };
-
       character = {
-        success_symbol = "[_](bold green)";
-        error_symbol = "[X](bold red)";
-        vimcmd_symbol = "[<](bold green)";
+        success_symbol = "[>](bold green)";
+        error_symbol = "[>](bold red)";
+        vimcmd_symbol = "[=](bold cyan)";
       };
-
-      git_branch = {
-        symbol = "";
-        style = "bold yellow";
-        format = "[\\[$branch\\]]($style) ";
-      };
-
+      git_branch = { symbol = ""; format = "[git:$branch](yellow) "; };
       git_status = {
-        style = "bold red";
-        format = "[\\[$all_status$ahead_behind\\]]($style) ";
+        format = "([$all_status$ahead_behind](red) )";
+        conflicted = "!";
+        modified = "~";
+        untracked = "?";
+        staged = "+";
+        ahead = "↑";
+        behind = "↓";
       };
-
-      nodejs = {
-        symbol = "JS";
-        style = "bold green";
-        format = "[\\[$symbol:$version\\]]($style) ";
-      };
-
-      rust = {
-        symbol = "RS";
-        style = "bold yellow";
-        format = "[\\[$symbol:$version\\]]($style) ";
-      };
-
-      python = {
-        symbol = "PY";
-        style = "bold blue";
-        format = "[\\[$symbol:$version\\]]($style) ";
-      };
-
-      golang = {
-        symbol = "GO";
-        style = "bold cyan";
-        format = "[\\[$symbol:$version\\]]($style) ";
-      };
-
-      c = {
-        symbol = "C";
-        style = "bold purple";
-        format = "[\\[$symbol:$version\\]]($style) ";
-      };
-
-      fill = {
-        disabled = true;
-      };
-
-      time = {
-        disabled = false;
-        format = "[$time]($style)";
-        style = "bold purple";
-      };
+      nix_shell = { format = "[nix:$state](cyan) "; pure_msg = "pure"; impure_msg = "dev"; };
+      cmd_duration = { min_time = 2000; format = "[took $duration](bright-black) "; };
+      status = { disabled = false; symbol = "exit:"; format = "[$symbol$status](red)"; };
     };
   };
 
