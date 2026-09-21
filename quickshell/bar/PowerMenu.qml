@@ -1,10 +1,14 @@
 pragma Singleton
-import Quickshell
+import Quickshell.Io
 import QtQuick
 
-QtObject {
+Item {
     id: root
     property bool shown: false
-    function toggle() { shown = !shown }
-    function hide() { shown = false }
+    function toggle() { shown = !shown; }
+    function hide() { shown = false; }
+    IpcHandler {
+        target: "power"
+        function toggle(): void { root.toggle(); }
+    }
 }

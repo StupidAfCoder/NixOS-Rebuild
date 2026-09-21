@@ -1,379 +1,176 @@
 #!/usr/bin/env python3
-"""
-Same generation backend Caelestia itself uses (materialyoucolor -- the
-real Google material-color-utilities port, driven through the actual
-MaterialDynamicColors role system), not matugen's CLI wrapper around it.
+"""Single-seed wallpaper themes. Preview is pure; only the CLI publishes files.
 
-Usage: generate-theme.py <image> <dark|light> [contrast_level 0.0-1.0]
-Writes colors.json (bar), colors.lua (Hyprland) from one shared scheme.
+Compatible: generate-theme.py IMAGE dark|light [CONTRAST]
+New: --recipe balanced|wallpaper|black|neutral|tonal|expressive|paper|mono --tone -15..15
+     --saturation 0..1.6 --source representative|dominant|colorful --preview
 """
-import hashlib
+import argparse
 import json
 import math
 import os
-import sys
 import tempfile
 from pathlib import Path
 
-from PIL import Image
-from materialyoucolor.dislike.dislike_analyzer import DislikeAnalyzer
-from materialyoucolor.dynamiccolor.material_dynamic_colors import MaterialDynamicColors
+from PIL import Image, ImageOps
 from materialyoucolor.hct import Hct
-from materialyoucolor.quantize import ImageQuantizeCelebi
-from materialyoucolor.scheme.scheme_vibrant import SchemeVibrant
-from materialyoucolor.scheme.scheme_monochrome import SchemeMonochrome
 
-OUT_PATH = Path.home() / ".nixos_dotfiles/quickshell/bar/theme/colors.json"
-HYPR_OUT = Path.home() / ".nixos_dotfiles/hypr/colors.lua"
-
-ROLE_MAP = {
-    "primary": "accent", "onPrimary": "on_accent",
-    "error": "error", "onError": "on_error",
-    "background": "background", "onBackground": "on_background",
-    "surface": "surface", "onSurface": "on_surface",
-    "surfaceVariant": "surface_variant", "onSurfaceVariant": "on_surface_variant",
-    "surfaceContainerLow": "surface_container_low",
-    "surfaceContainer": "surface_container",
-    "surfaceContainerHigh": "surface_container_high",
-    "outline": "outline", "outlineVariant": "outline_variant",
-    "shadow": "shadow",
-}
-
-MIN_DARK_TONE = 16
-SURFACE_ROLES = {
-    "background", "surface", "surfaceContainerLow",
-    "surfaceContainer", "surfaceContainerHigh", "surfaceVariant",
-}
-
-# Checked against the RAW candidates, before DislikeAnalyzer runs -- Dislike
-# fixup can inflate a near-zero-chroma color just enough to dodge this check,
-# which is why the first version of this fix silently never fired.
-GRAYSCALE_CHROMA_THRESHOLD = 8.0
-GRAYSCALE_BOOST_CHROMA = 36.0
-GRAYSCALE_BOOST_CHROMA_SECONDARY = 28.0
-GRAYSCALE_HUE_SPLIT = 40.0
-
-# Below this chroma, a pixel's HCT hue is essentially rounding noise, not
-# real color. sRGB values near pure black/white don't map to one exact hue
-# in HCT -- tiny compression/antialiasing residue in the R/G/B channels
-# (e.g. (2,3,6) instead of (0,0,0)) gets amplified into a hue angle by the
-# conversion even though a human would call the pixel "black". This is the
-# actual root cause of the blue-tinted fallback: black-and-white images are
-# MOSTLY near-black and near-white pixels, so weighting the hue average by
-# population let this noise dominate and consistently drag the average
-# toward whatever hue black-ish rounding artifacts happen to land on
-# (blue, in practice, for most JPEG/PNG encoders).
-MIN_TRUSTED_CHROMA = 4.0
-
-# SchemeVibrant is designed to always force a saturated palette regardless
-# of how little chroma the source color carries -- it will NOT pass a
-# chroma-0 gray through as gray. So a true-neutral source (nothing in the
-# image cleared the trust threshold) needs to route through SchemeMonochrome
-# instead, which is the library's dedicated tone-only scheme.
-#
-# Earlier version of this detected "neutral" by re-checking the resulting
-# Hct's chroma against a threshold -- fragile, because Hct.from_hct(hue,
-# 0.0, tone) does NOT round-trip back to chroma=0 (HCT has to gamut-map
-# through 8-bit sRGB and recompute chroma from that quantized int, leaving
-# residual chroma as high as ~2.8 depending on tone). Rather than chase
-# that noise floor with a threshold, grayscale_fallback now hands back an
-# explicit `is_true_neutral` flag alongside the colors, so the caller never
-# has to reverse-engineer intent from a lossy round-tripped number.
-
-# SchemeMonochrome hardcodes chroma=0 into every single role it computes,
-# regardless of the hue/chroma fed in as the source color -- confirmed by
-# reading the library source directly. That means once the *scheme* is
-# monochrome, no amount of tinting the input changes the output, and every
-# true-grayscale wallpaper collapses to the exact same palette family.
-# To let different B&W wallpapers still feel distinct, we keep the base
-# UI (background/surface/etc, still generated via SchemeMonochrome) fully
-# neutral, but hand-compute a small, deterministic tint for just the
-# accent role -- seeded from a hash of the image's own pixel data, so the
-# same wallpaper always gets the same tint and different wallpapers land
-# on different hues. Set ENABLE_NEUTRAL_TINT = False to go back to pure
-# gray-on-gray for every grayscale wallpaper.
-ENABLE_NEUTRAL_TINT = True
-NEUTRAL_TINT_CHROMA = 24.0
-NEUTRAL_TINT_CHROMA_SECONDARY = 16.0
-
-# Set via env var (THEME_DEBUG=1 python generate-theme.py ...) or the
-# --debug-candidates CLI flag. Dumps the actual candidate hues that
-# score_image considered -- their hue/chroma/tone AND what fraction of
-# the image's pixels shared that hue -- before any of it gets collapsed
-# into a single "primary"/"secondary" pair and baked into roles. Useful
-# for seeing *why* a given wallpaper landed on the palette it did.
-DEBUG_CANDIDATES = os.environ.get("THEME_DEBUG") == "1"
+ROOT = Path(__file__).resolve().parents[1]
+RECIPES = ("balanced", "wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono")
 
 
-def make_thumbnail(image_path: str) -> str:
-    img = Image.open(image_path).convert("RGB")
-    img.thumbnail((128, 128), Image.Resampling.NEAREST)
-    tmp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
-    img.save(tmp.name, "JPEG", quality=90)
-    return tmp.name
+def atomic_write(path, text):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    name = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False) as f:
+            name = f.name
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(name, path)
+    finally:
+        if name and os.path.exists(name):
+            os.unlink(name)
 
 
-def weighted_average_hue(pixels: dict, min_chroma: float = MIN_TRUSTED_CHROMA):
-    """Population-weighted average hue and chroma, computed ONLY from
-    pixels that carry real chroma. Returns None if nothing in the image
-    clears the trust threshold -- i.e. the image has no actual color
-    signal to theme from at all, as opposed to just being dark/light.
-    """
-    sx = sy = total = chroma_total = 0.0
-    for rgb, population in pixels.items():
-        hct = Hct.from_int(rgb)
-        if hct.chroma < min_chroma:
-            continue
-        rad = math.radians(hct.hue)
-        sx += math.cos(rad) * population
-        sy += math.sin(rad) * population
-        chroma_total += hct.chroma * population
-        total += population
-    if total == 0:
-        return None
-    avg_hue = math.degrees(math.atan2(sy, sx)) % 360
-    avg_chroma = chroma_total / total
-    return avg_hue, avg_chroma
+def luminance(color):
+    rgb = [int(color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    rgb = [v / 12.92 if v <= .04045 else ((v + .055) / 1.055) ** 2.4 for v in rgb]
+    return sum(v * w for v, w in zip(rgb, (.2126, .7152, .0722)))
 
 
-def seeded_neutral_hue(pixels: dict) -> float:
-    """Deterministic pseudo-random hue in [0, 360) derived from the image's
-    own quantized pixel data. Same wallpaper -> same hue every run (no
-    randomness, no dependence on system clock/PID). Different wallpapers
-    -> essentially uncorrelated hues, even if both are pure grayscale and
-    therefore carry zero real chroma signal of their own to seed from.
-    """
-    key = ",".join(f"{rgb}:{pop}" for rgb, pop in sorted(pixels.items()))
-    digest = hashlib.sha256(key.encode()).digest()
-    return (int.from_bytes(digest[:4], "big") % 3600) / 10.0
+def contrast(a, b):
+    x, y = sorted((luminance(a), luminance(b)))
+    return (y + .05) / (x + .05)
 
 
-def grayscale_fallback(pixels: dict, hues: list[Hct]) -> tuple[list[Hct], bool]:
-    tone_a = hues[0].tone
-    tone_b = min(100, tone_a + 15) if len(hues) < 2 else hues[-1].tone
-
-    trusted = weighted_average_hue(pixels)
-
-    if trusted is None:
-        # No pixel in the whole image cleared the chroma trust threshold --
-        # this is a genuinely monochrome image (like a black-and-white
-        # manga panel), not just a dark or desaturated photo. There is no
-        # real color to theme from. The base UI (background/surface/etc)
-        # stays properly neutral either way -- that part is non-negotiable
-        # for readability -- but if ENABLE_NEUTRAL_TINT is on, we still
-        # hand back a small, image-seeded hue so this wallpaper's accent
-        # doesn't look identical to every other B&W wallpaper's accent.
-        print("[theme] no trusted chroma found, using neutral (non-color) scheme", file=sys.stderr)
-        if not ENABLE_NEUTRAL_TINT:
-            return [
-                Hct.from_hct(0.0, 0.0, tone_a),
-                Hct.from_hct(0.0, 0.0, tone_b),
-            ], True
-
-        seed_hue = seeded_neutral_hue(pixels)
-        print(f"[theme] neutral tint seed_hue={seed_hue:.1f}", file=sys.stderr)
-        return [
-            Hct.from_hct(seed_hue, NEUTRAL_TINT_CHROMA, tone_a),
-            Hct.from_hct((seed_hue + GRAYSCALE_HUE_SPLIT) % 360, NEUTRAL_TINT_CHROMA_SECONDARY, tone_b),
-        ], True
-
-    avg_hue, avg_chroma = trusted
-    # Scale the boost to how much real color was actually found instead of
-    # always slamming to a fixed high chroma -- a wallpaper with a faint
-    # tint should end up with a faint accent, not a loud, unrelated one.
-    boost = min(GRAYSCALE_BOOST_CHROMA, max(avg_chroma * 2.5, 12.0))
-    boost_secondary = min(GRAYSCALE_BOOST_CHROMA_SECONDARY, boost * 0.78)
-
-    print(f"[theme] trusted hue={avg_hue:.1f} avg_chroma={avg_chroma:.1f} boost={boost:.1f}", file=sys.stderr)
-
-    return [
-        Hct.from_hct(avg_hue, boost, tone_a),
-        Hct.from_hct((avg_hue + GRAYSCALE_HUE_SPLIT) % 360, boost_secondary, tone_b),
-    ], False
+def hct_hex(hue, chroma, tone):
+    return f"#{Hct.from_hct(hue, chroma, tone).to_int() & 0xffffff:06x}"
 
 
-def score_image(image_path: str) -> tuple[list[Hct], bool]:
-    thumb = make_thumbnail(image_path)
-    pixels = ImageQuantizeCelebi(thumb, 1, 128)
+def hue_distance(a, b):
+    return abs((a - b + 180) % 360 - 180)
 
-    hue_population = [0] * 360
-    population_sum = 0
-    colors_hct = []
-    for rgb, population in pixels.items():
-        hct = Hct.from_int(rgb)
-        colors_hct.append(hct)
-        hue_population[int(hct.hue)] += population
-        population_sum += population
 
-    hue_excited = [0.0] * 360
-    for hue in range(360):
-        proportion = hue_population[hue] / population_sum
-        for i in range(hue - 14, hue + 16):
-            hue_excited[i % 360] += proportion
-
-    TARGET_CHROMA, W_PROP, W_ABOVE, W_BELOW = 48.0, 0.7, 0.3, 0.1
-    scored = []
-    for hct in colors_hct:
-        hue = round(hct.hue) % 360
-        proportion_score = hue_excited[hue] * 100.0 * W_PROP
-        w = W_BELOW if hct.chroma < TARGET_CHROMA else W_ABOVE
-        chroma_score = (hct.chroma - TARGET_CHROMA) * w
-        scored.append((proportion_score + chroma_score, hct, hue_excited[hue]))
-    scored.sort(key=lambda x: x[0], reverse=True)
-
-    if DEBUG_CANDIDATES:
-        print("[theme:debug] top 10 scored candidates (score, hue, chroma, tone, coverage%):", file=sys.stderr)
-        for score, hct, coverage in scored[:10]:
-            print(
-                f"[theme:debug]   score={score:7.2f}  hue={hct.hue:6.1f}  "
-                f"chroma={hct.chroma:5.1f}  tone={hct.tone:5.1f}  coverage={coverage * 100:5.1f}%",
-                file=sys.stderr,
-            )
-
+def extract_seed(path, preference="representative"):
+    # Lossless samples, with transparent pixels excluded (not flattened to black).
+    with Image.open(path) as original:
+        image = ImageOps.exif_transpose(original).convert("RGBA")
+        image.thumbnail((160, 160), Image.Resampling.LANCZOS)
+        pixels = image.get_flattened_data() if hasattr(image, "get_flattened_data") else image.getdata()
+        samples = [(r, g, b) for r, g, b, a in pixels if a >= 128]
+    if not samples:
+        raise ValueError("Image has no opaque pixels to extract")
+    strip = Image.new("RGB", (len(samples), 1))
+    strip.putdata(samples)
+    quantized = strip.quantize(colors=48, method=Image.Quantize.MEDIANCUT).convert("RGB")
+    counts = quantized.getcolors(len(samples))
     candidates = []
-    for cutoff in range(20, -1, -1):
-        for score, hct, coverage in scored:
-            if hct.chroma > cutoff and hct.tone > cutoff * 3:
-                candidates.append(hct)
-        if len(candidates) >= 5:
+    for count, rgb in counts:
+        h = Hct.from_int(0xff000000 | rgb[0] << 16 | rgb[1] << 8 | rgb[2])
+        candidates.append((count / len(samples), h, rgb))
+    # Require a meaningful colored area, not a single bright/compression pixel.
+    colored = [(p, h, rgb) for p, h, rgb in candidates if h.chroma >= 8 and 5 < h.tone < 96]
+    if sum(p for p, _, _ in colored) < .025:
+        return {"hue": 0., "chroma": 0., "neutral": True, "seed": "#808080"}
+
+    def score(candidate):
+        p, h, _ = candidate
+        family = sum(pop for pop, other, _ in colored if hue_distance(h.hue, other.hue) < 20)
+        # Dominant favors area; colorful favors chroma but still penalizes tiny accents.
+        if preference == "dominant":
+            return family + p * .3
+        weight = .7 if preference == "colorful" else .3
+        return math.sqrt(family) + weight * min(h.chroma, 90) / 90 + p * .15
+
+    _, winner, rgb = max(colored, key=score)
+    return {"hue": winner.hue, "chroma": winner.chroma, "neutral": False,
+            "seed": "#" + "".join(f"{c:02x}" for c in rgb)}
+
+
+def generate(path, mode="dark", contrast_level=0., recipe="black", tone=0., saturation=1., source="representative"):
+    if mode not in ("dark", "light") or recipe not in RECIPES:
+        raise ValueError("Invalid mode or recipe")
+    for value, lo, hi, name in ((contrast_level, 0, 1, "contrast"), (tone, -15, 15, "tone"), (saturation, 0, 1.6, "saturation")):
+        if not math.isfinite(value) or not lo <= value <= hi:
+            raise ValueError(f"{name} must be between {lo} and {hi}")
+    if source not in ("representative", "dominant", "colorful"):
+        raise ValueError("Invalid source preference")
+    seed = extract_seed(path, source)
+    neutral = seed["neutral"] or recipe == "mono" or saturation == 0
+    hue = seed["hue"]
+    chroma = 0 if neutral else min(90, seed["chroma"] * saturation * (1.3 if recipe == "expressive" else 1))
+    light = mode == "light" or recipe == "paper"
+    tinted = recipe in ("balanced", "wallpaper", "tonal", "expressive", "paper") and not neutral
+    surface_chroma = min(chroma * (.55 if recipe == "wallpaper" else .25), 36 if recipe == "wallpaper" else 16) if tinted else 0
+    # Balanced keeps a trace of the seed in charcoal surfaces. Intensity changes
+    # the keys more than the furniture; the vivid wallpaper recipe is untouched.
+    if recipe == "balanced":
+        surface_chroma = min(6, chroma * .10) if not neutral else 0
+    levels = [96, 98, 94, 91, 87, 83] if light else ([0, 3, 5, 8, 12, 16] if recipe == "black" else [5, 7, 9, 12, 16, 20])
+    if recipe == "wallpaper" and not light:
+        levels = [12, 14, 16, 19, 22, 26]
+    keys = ("background", "surface", "surface_container_low", "surface_container", "surface_container_high", "surface_variant")
+    colors = {key: hct_hex(hue, surface_chroma, level) for key, level in zip(keys, levels)}
+    colors["background"] = "#000000" if recipe == "black" and not light else colors["background"]
+    target = 7 if contrast_level >= .5 else 4.5
+    text = "#111111" if light else "#f1f1ec"
+    muted = "#484848" if light else "#bcbcb7"
+    backgrounds = [colors[k] for k in keys]
+    if min(contrast(muted, bg) for bg in backgrounds) < target:
+        muted = text
+    colors.update(on_background=text, on_surface=text, on_surface_variant=muted)
+    acc_tone = max(22, min(92, (36 if light else 76) + tone))
+    # Validate the final gamut-mapped color against ALL interactive surfaces.
+    for _ in range(101):
+        accent = hct_hex(hue, chroma, acc_tone)
+        if min(contrast(accent, bg) for bg in backgrounds) >= target:
             break
-    if not candidates:
-        candidates = [scored[0][1]]
-
-    distinct = []
-    for hct in candidates:
-        if all(abs(hct.hue - d.hue) > 25 for d in distinct):
-            distinct.append(hct)
-        if len(distinct) >= 4:
-            break
-    if not distinct:
-        distinct = [scored[0][1]]
-
-    # `distinct` up to here is still in population-score order (coverage-
-    # weighted), inherited from `candidates`/`scored`. That's fine for
-    # deciding WHICH hues are even in the running (the chroma/tone cutoff
-    # above already did that job), but leaving it in that order means the
-    # hue with the most pixel coverage becomes `hues[0]` (-> primary ->
-    # the accent role) even when a shortlisted rival is far more vivid --
-    # e.g. large-area foliage beating a small saturated robe/subject that
-    # a human eye would actually call "the color" of the image. Re-sort
-    # by chroma so the most saturated shortlisted hue wins the primary
-    # slot; coverage still decided the shortlist, saliency now decides
-    # the winner within it.
-    distinct.sort(key=lambda h: h.chroma, reverse=True)
-
-    if DEBUG_CANDIDATES:
-        print("[theme:debug] final distinct hues chosen (before grayscale check):", file=sys.stderr)
-        for hct in distinct:
-            print(f"[theme:debug]   hue={hct.hue:6.1f}  chroma={hct.chroma:5.1f}  tone={hct.tone:5.1f}", file=sys.stderr)
-
-    raw_max_chroma = max(h.chroma for h in distinct)
-    is_true_neutral = False
-    if raw_max_chroma < GRAYSCALE_CHROMA_THRESHOLD:
-        print(f"[theme] grayscale detected, raw max chroma={raw_max_chroma:.1f}", file=sys.stderr)
-        distinct, is_true_neutral = grayscale_fallback(pixels, distinct)
-    else:
-        print(f"[theme] not grayscale, raw max chroma={raw_max_chroma:.1f}", file=sys.stderr)
-
-    result = [DislikeAnalyzer.fix_if_disliked(h) for h in distinct]
-    return result, is_true_neutral
-
-
-def write_hypr_colors(by_name, scheme, primary_hex_override: str | None = None):
-    def hex6(role):
-        return f"{by_name[role].get_hct(scheme).to_int() & 0xFFFFFF:06x}"
-
-    active_border_hex = primary_hex_override or hex6("primary")
-
-    HYPR_OUT.parent.mkdir(parents=True, exist_ok=True)
-    HYPR_OUT.write_text(
-        "return {\n"
-        f'    active_border = "rgba({active_border_hex}cc)",\n'
-        f'    inactive_border = "rgba({hex6("outlineVariant")}40)",\n'
-        f'    background = "0x{hex6("shadow")}",\n'
-        "}\n"
-    )
-
-
-def gen_colors(image_path: str, mode: str, contrast_level: float) -> dict:
-    is_dark = mode == "dark"
-    hues, is_true_neutral = score_image(image_path)
-    primary = hues[0]
-    secondary = hues[1] if len(hues) > 1 else primary
-
-    # SchemeVibrant forces saturation onto whatever it's given, so a true
-    # neutral source (produced by grayscale_fallback's no-trusted-chroma
-    # branch) comes out re-colored via hue rounding noise instead of
-    # staying gray. SchemeMonochrome is materialyoucolor's dedicated
-    # tone-only scheme and is what actually keeps the base UI neutral.
-    scheme_cls = SchemeMonochrome if is_true_neutral else SchemeVibrant
-    scheme = scheme_cls(source_color_hct=primary, is_dark=is_dark, contrast_level=contrast_level)
-
-    if is_true_neutral:
-        print("[theme] using SchemeMonochrome (neutral source)", file=sys.stderr)
-
-    dyn = MaterialDynamicColors()
-    by_name = {c.name: c for c in dyn.all_colors}
-
-    out = {}
-    for role, key in ROLE_MAP.items():
-        hct = by_name[role].get_hct(scheme)
-        if is_dark and role in SURFACE_ROLES and hct.tone < MIN_DARK_TONE:
-            hct = Hct.from_hct(hct.hue, hct.chroma, MIN_DARK_TONE)
-        out[key] = f"#{hct.to_int() & 0xFFFFFF:06x}"
-
-    # SchemeMonochrome hardcodes chroma=0 into EVERY role, including
-    # primary/onPrimary -- it discards whatever hue/chroma `primary`
-    # carries. So on a true-neutral image the loop above just wrote gray
-    # into "accent"/"on_accent" no matter what. If tinting is enabled,
-    # override just those two here with the seeded tint computed in
-    # grayscale_fallback (carried through as `primary`), so the rest of
-    # the UI stays cleanly neutral but the accent still has personality.
-    accent_override_hex = None
-    if is_true_neutral and ENABLE_NEUTRAL_TINT:
-        acc_tone = 80 if is_dark else 40
-        acc_hct = Hct.from_hct(primary.hue, primary.chroma, acc_tone)
-        accent_override_hex = f"{acc_hct.to_int() & 0xFFFFFF:06x}"
-        out["accent"] = f"#{accent_override_hex}"
-
-        acc_on_tone = 20 if is_dark else 100
-        acc_on_hct = Hct.from_hct(primary.hue, min(primary.chroma, 12), acc_on_tone)
-        out["on_accent"] = f"#{acc_on_hct.to_int() & 0xFFFFFF:06x}"
-
-    sec_tone = 80 if is_dark else 40
-    sec_hct = Hct.from_hct(secondary.hue, secondary.chroma, sec_tone)
-    out["accent_secondary"] = f"#{sec_hct.to_int() & 0xFFFFFF:06x}"
-
-    sec_on_tone = 20 if is_dark else 100
-    sec_on_hct = Hct.from_hct(secondary.hue, min(secondary.chroma, 12), sec_on_tone)
-    out["on_accent_secondary"] = f"#{sec_on_hct.to_int() & 0xFFFFFF:06x}"
-
-    write_hypr_colors(by_name, scheme, primary_hex_override=accent_override_hex)
-    return out
+        acc_tone = max(0, min(100, acc_tone + (-1 if light else 1)))
+    on_accent = max(("#000000", "#ffffff"), key=lambda c: contrast(c, accent))
+    colors.update(accent=accent, on_accent=on_accent,
+                  accent_secondary=accent, on_accent_secondary=on_accent,
+                  outline="#707070" if light else "#777777",
+                  outline_variant="#b8b8b1" if light else "#303030", shadow="#000000",
+                  error="#a51c25" if light else "#ffb4ab",
+                  on_error="#ffffff" if light else "#380000")
+    if tinted:
+        colors["outline_variant"] = hct_hex(hue, surface_chroma, 72 if light else 32)
+        colors["outline"] = hct_hex(hue, surface_chroma, 44 if light else 54)
+    return {**colors, "_meta": {**seed, "recipe": recipe, "tone": tone, "saturation": saturation,
+                                "source": source, "mode": "light" if light else "dark"}}
 
 
 def main():
-    if len(sys.argv) < 3:
-        print("usage: generate-theme.py <image> <dark|light> [contrast_level] [--debug-candidates]", file=sys.stderr)
-        sys.exit(1)
-
-    args = sys.argv[1:]
-    global DEBUG_CANDIDATES
-    if "--debug-candidates" in args:
-        DEBUG_CANDIDATES = True
-        args.remove("--debug-candidates")
-
-    image_path, mode = args[0], args[1]
-    contrast_level = float(args[2]) if len(args) > 2 else 0.0
-    if mode not in ("dark", "light"):
-        print("mode must be 'dark' or 'light'", file=sys.stderr)
-        sys.exit(1)
-
-    colors = gen_colors(image_path, mode, contrast_level)
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps(colors, indent=2))
-    print(f"wrote {OUT_PATH}")
-    print(f"wrote {HYPR_OUT}")
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("image")
+    p.add_argument("mode", choices=("dark", "light"))
+    p.add_argument("contrast", nargs="?", type=float, default=0)
+    p.add_argument("--recipe", choices=RECIPES, default="black")
+    p.add_argument("--tone", type=float, default=0)
+    p.add_argument("--saturation", type=float, default=1)
+    p.add_argument("--source", choices=("representative", "dominant", "colorful"), default="representative")
+    p.add_argument("--preview", action="store_true")
+    p.add_argument("--debug-candidates", action="store_true", help="Print seed diagnostics to stderr")
+    p.add_argument("--output-dir", type=Path, default=ROOT)
+    a = p.parse_args()
+    try:
+        result = generate(a.image, a.mode, a.contrast, a.recipe, a.tone, a.saturation, a.source)
+        if a.preview:
+            print(json.dumps(result))
+            return
+        # Compute both complete files before publishing. Each replacement is atomic.
+        lua = ('return {\n    active_border = "rgba(%scc)",\n    inactive_border = "rgba(%s60)",\n'
+               '    background = "0x000000",\n}\n') % (result["accent"][1:], result["outline_variant"][1:])
+        atomic_write(a.output_dir / "hypr/colors.lua", lua)
+        atomic_write(a.output_dir / "quickshell/bar/theme/colors.json", json.dumps(result, indent=2) + "\n")
+        if a.debug_candidates:
+            import sys
+            print(json.dumps(result["_meta"]), file=sys.stderr)
+    except (OSError, ValueError, Image.DecompressionBombError) as exc:
+        p.exit(1, f"theme: {exc}\n")
 
 
 if __name__ == "__main__":

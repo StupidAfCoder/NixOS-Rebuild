@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Services.Mpris
 import "."
+import "../common"
 
 Item {
     id: widget
@@ -42,7 +43,7 @@ Item {
                 y: (rotWrap.height - height) / 2
 
                 SequentialAnimation {
-                    running: marqueeBox.overflowing && widget.active
+                    running: marqueeBox.overflowing && widget.active && widget.visible && !Settings.reducedMotion
                     loops: Animation.Infinite
 
                     PauseAnimation { duration: 1200 }
@@ -88,7 +89,7 @@ Item {
                     anchors.bottom: parent.bottom
 
                     SequentialAnimation on height {
-                        running: widget.playing
+                        running: widget.playing && widget.visible && !Settings.reducedMotion
                         loops: Animation.Infinite
                         NumberAnimation { to: 4 + ((index * 2) % 7); duration: 260 + index * 70 }
                         NumberAnimation { to: 3; duration: 260 + index * 70 }
@@ -98,72 +99,4 @@ Item {
         }
     }
 
-    MouseArea {
-        id: mediaArea
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: MediaPanel.toggle()
-    }
-
-    Rectangle {
-        id: hoverPreview
-        visible: mediaArea.containsMouse && widget.active
-        anchors.left: parent.right
-        anchors.leftMargin: 6
-        anchors.verticalCenter: parent.verticalCenter
-        width: 140
-        height: previewCol.implicitHeight + 18
-        color: Colors.background
-        border.color: Colors.outlineVariant
-        border.width: 1
-        antialiasing: false
-        z: 30
-
-        Repeater {
-            model: [
-                { x: -1, y: -1, hFlip: false, vFlip: false },
-                { x: hoverPreview.width - 9, y: -1, hFlip: true, vFlip: false },
-                { x: -1, y: hoverPreview.height - 9, hFlip: false, vFlip: true },
-                { x: hoverPreview.width - 9, y: hoverPreview.height - 9, hFlip: true, vFlip: true }
-            ]
-            delegate: Item {
-                x: modelData.x; y: modelData.y
-                width: 10; height: 10
-                Rectangle {
-                    width: 3; height: 10; antialiasing: false; color: Colors.outline
-                    x: modelData.hFlip ? 7 : 0
-                }
-                Rectangle {
-                    width: 10; height: 3; antialiasing: false; color: Colors.outline
-                    y: modelData.vFlip ? 7 : 0
-                }
-            }
-        }
-
-        Column {
-            id: previewCol
-            anchors.centerIn: parent
-            width: parent.width - 20
-            spacing: 4
-
-            Text {
-                width: parent.width
-                text: widget.active ? (widget.player.trackTitle || "Unknown Title") : ""
-                color: Colors.textOnBackground; font.family: "Cozette"; font.pixelSize: 10; font.bold: true
-                elide: Text.ElideRight
-            }
-            Text {
-                width: parent.width
-                text: widget.active ? (widget.player.trackArtist || "Unknown Artist") : ""
-                color: Colors.mutedOnBackground; font.family: "Cozette"; font.pixelSize: 9
-                elide: Text.ElideRight
-            }
-            Text {
-                width: parent.width
-                text: widget.active ? (widget.playing ? "( Playing )" : "( Paused )") : ""
-                color: Colors.mutedOnBackground; font.family: "Cozette"; font.pixelSize: 8
-            }
-        }
-    }
 }

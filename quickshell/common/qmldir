@@ -1,0 +1,24 @@
+IconButton 1.0 IconButton.qml
+PixelButton 1.0 PixelButton.qml
+PixelField 1.0 PixelField.qml
+PixelGroup 1.0 PixelGroup.qml
+PixelSlider 1.0 PixelSlider.qml
+PixelText 1.0 PixelText.qml
+PreferenceRow 1.0 PreferenceRow.qml
+ProfileAvatar 1.0 ProfileAvatar.qml
+singleton Settings 1.0 Settings.qml
+Sheet 1.0 Sheet.qml
+MenuRow 1.0 MenuRow.qml
+TabButton 1.0 TabButton.qml
+SignalMeter 1.0 SignalMeter.qml
+ConnectionScreen 1.0 ConnectionScreen.qml
+
+PathPicker 1.0 PathPicker.qml
+
+singleton AppIdentity 1.0 AppIdentity.qml
+
+ConsoleSurface 1.0 ConsoleSurface.qml
+
+WorkspaceMark 1.0 WorkspaceMark.qml
+
+CollectionScrollBar 1.0 CollectionScrollBar.qml

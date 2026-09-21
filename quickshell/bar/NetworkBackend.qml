@@ -5,7 +5,7 @@ import QtQuick
 
 // All nmcli interaction lives here -- nothing else in the shell talks
 // to nmcli directly. Root is Item (not QtObject) so Process/Timer
-// children can nest directly, same convention as SystemTray.qml's
+// children can nest directly, same convention as the shell's
 // netCheck block.
 Item {
     id: root
@@ -35,6 +35,7 @@ Item {
     property bool scanning: false
     property bool busy: false
     property string lastError: ""
+    property string pendingPassword: ""
 
     // nmcli -t escapes literal ':' inside a field as '\:' -- split on
     // real field separators only, not escaped ones
@@ -42,8 +43,8 @@ Item {
         let fields = []
         let cur = ""
         for (let i = 0; i < line.length; i++) {
-            if (line[i] === "\\" && line[i + 1] === ":") {
-                cur += ":"
+            if (line[i] === "\\" && i + 1 < line.length) {
+                cur += line[i + 1]
                 i++
             } else if (line[i] === ":") {
                 fields.push(cur)
@@ -62,7 +63,9 @@ Item {
     }
 
     function scan(rescan) {
+        if (wifiListProc.running) return;
         scanning = true
+        if (rescan) lastError = ""
         wifiListProc.command = rescan
             ? ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,IN-USE", "dev", "wifi", "list", "--rescan", "yes"]
             : ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,IN-USE", "dev", "wifi", "list"]
@@ -70,28 +73,41 @@ Item {
     }
 
     function connectToNetwork(ssid, password) {
-        busy = true
-        lastError = ""
+        if (busy) return;
+        if (password.indexOf("\n") >= 0 || password.indexOf("\r") >= 0) {
+            lastError = "Password must be on a single line";
+            return;
+        }
+        busy = true;
+        lastError = "";
+        pendingPassword = password;
+        // Keep credentials off the process command line and out of shell history.
+        connectProc.stdinEnabled = true;
         connectProc.command = password.length > 0
-            ? ["nmcli", "device", "wifi", "connect", ssid, "password", password]
-            : ["nmcli", "device", "wifi", "connect", ssid]
-        connectProc.running = true
+            ? ["nmcli", "--ask", "--wait", "30", "device", "wifi", "connect", ssid]
+            : ["nmcli", "--wait", "30", "device", "wifi", "connect", ssid];
+        connectProc.running = true;
     }
 
     function forgetNetwork(ssid) {
+        if (busy) return;
+        lastError = "";
         busy = true
         forgetProc.command = ["nmcli", "connection", "delete", ssid]
         forgetProc.running = true
     }
 
     function disconnectWifi() {
-        if (wifiIface === "") return
+        if (busy || wifiIface === "") return
+        lastError = "";
         busy = true
         disconnectProc.command = ["nmcli", "device", "disconnect", wifiIface]
         disconnectProc.running = true
     }
 
     function setRadio(enabled) {
+        if (busy) return;
+        lastError = "";
         busy = true
         radioProc.command = ["nmcli", "--wait", "0", "radio", "wifi", enabled ? "on" : "off"]
         radioProc.running = true
@@ -183,10 +199,11 @@ Item {
 
     Process {
         id: wifiListProc
+        onExited: (code, status) => { root.scanning = false; if (code !== 0) root.lastError = "Wi-Fi scan failed"; }
         command: ["nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY,IN-USE", "dev", "wifi", "list"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const seen = {}
+                const seen = Object.create(null)
                 const list = []
                 for (const line of this.text.split("\n")) {
                     if (!line) continue
@@ -214,25 +231,22 @@ Item {
 
     Process {
         id: connectProc
-        stdout: StdioCollector { onStreamFinished: { root.busy = false; root.refreshStatus() } }
-        stderr: StdioCollector {
-            onStreamFinished: { if (this.text.trim().length > 0) root.lastError = this.text.trim() }
-        }
+        stdinEnabled: true
+        onStarted: { if (root.pendingPassword) write(root.pendingPassword + "\n"); root.pendingPassword = ""; stdinEnabled = false; }
+        onExited: (code, status) => { root.pendingPassword = ""; root.busy = false; if (code !== 0 && !root.lastError) root.lastError = "Connection failed"; root.refreshStatus(); if (code === 0) root.scan(false); }
+        stderr: StdioCollector { onStreamFinished: { if (text.trim()) root.lastError = text.trim(); } }
     }
-
     Process {
         id: forgetProc
-        stdout: StdioCollector { onStreamFinished: { root.busy = false; root.refreshStatus(); root.scan(false) } }
+        onExited: (code, status) => { root.busy = false; if (code !== 0) root.lastError = "Could not forget this connection"; root.refreshStatus(); root.scan(false); }
     }
-
     Process {
         id: disconnectProc
-        stdout: StdioCollector { onStreamFinished: { root.busy = false; root.refreshStatus() } }
+        onExited: (code, status) => { root.busy = false; if (code !== 0) root.lastError = "Could not disconnect"; root.refreshStatus(); }
     }
-
     Process {
         id: radioProc
-        stdout: StdioCollector { onStreamFinished: { root.busy = false; root.refreshStatus() } }
+        onExited: (code, status) => { root.busy = false; if (code !== 0) root.lastError = "Could not change Wi-Fi radio"; root.refreshStatus(); }
     }
 
     Timer {

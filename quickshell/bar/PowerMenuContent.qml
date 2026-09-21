@@ -1,211 +1,90 @@
+pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import QtMultimedia
-import "."
+import Quickshell
+import Quickshell.Io
+import "../common"
 
-Item {
-    id: content
-    implicitWidth: 200
-    implicitHeight: bezel.height
-    width: implicitWidth
-    height: implicitHeight
-    anchors.verticalCenter: parent.verticalCenter
-    visible: true
-    z: 6
-
-    x: PowerMenu.shown ? (parent.width - width + 2) : parent.width
-
-    Behavior on x {
-        NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+Sheet {
+    id: root
+    shown: PowerMenu.shown
+    title: "Session"
+    preferredWidth: 330
+    preferredHeight: 560
+    edge: "right"
+    property string pending: ""
+    property string actionMessage: ""
+    property string clipError: ""
+    function cancel() { if (pending) pending = ""; else PowerMenu.hide(); }
+    Timer { id: confirmFocus; interval: 0; onTriggered: if (root.shown) cancelButton.forceActiveFocus() }
+    function confirm(action) { pending = action; confirmFocus.restart(); }
+    function execute(action) {
+        if (Settings.previewMode) { pending = ""; actionMessage = "Preview only · " + action + " was not executed."; return; }
+        PowerMenu.hide();
+        if (action === "Lock") Quickshell.execDetached(["hyprlock"]);
+        else if (action === "Sleep") Quickshell.execDetached(["systemctl", "suspend"]);
+        else if (action === "Log out") Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exit()"]);
+        else if (action === "Restart") Quickshell.execDetached(["systemctl", "reboot"]);
+        else if (action === "Shut down") Quickshell.execDetached(["systemctl", "poweroff"]);
     }
-
+    onDismiss: cancel()
+    onShownChanged: { pending = ""; actionMessage = ""; clipError = ""; }
     Rectangle {
-        id: bezel
-        width: content.implicitWidth
-        height: panelBox.height + 12
-        color: Colors.shadow
-        antialiasing: false
-        z: 0
-
-        Repeater {
-            model: [
-                { x: 3, y: 3 }, { x: bezel.width - 5, y: 3 },
-                { x: 3, y: bezel.height - 5 }, { x: bezel.width - 5, y: bezel.height - 5 }
-            ]
-            delegate: Rectangle {
-                x: modelData.x; y: modelData.y
-                width: 2; height: 2
-                color: Colors.outline
-                antialiasing: false
+        Layout.fillWidth: true; Layout.preferredHeight: 155
+        color: Colors.background
+        border.color: Colors.outlineVariant
+        PixelText { anchors.centerIn: parent; text: root.clipError ? "Video unavailable" : Settings.reducedMotion ? "Motion paused" : "Session"; color: Colors.textOnSurfaceVariant }
+        Loader {
+            id: sessionClip
+            anchors.fill: parent; anchors.margins: 6
+            // No decoder, GPU surfaces or audio output survive a closed drawer.
+            active: root.shown && !Settings.reducedMotion
+            sourceComponent: Component {
+                Item {
+                    function reloadClip() { player.stop(); player.source = ""; player.source = Settings.fileUrl(Settings.videoPath); }
+                    VideoOutput { id: output; anchors.fill: parent; fillMode: VideoOutput.PreserveAspectCrop }
+                    MediaPlayer {
+                        id: player
+                        source: Settings.fileUrl(Settings.videoPath)
+                        videoOutput: output
+                        audioOutput: null
+                        loops: MediaPlayer.Infinite
+                        property bool initialized: false
+                        Component.onCompleted: { initialized = true; play(); }
+                        onSourceChanged: if (initialized && source.toString()) play()
+                        onErrorOccurred: (error, errorString) => { root.clipError = errorString; }
+                    }
+                }
             }
         }
-
-        Rectangle {
-            id: panelBox
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 6
-            width: bezel.width - 12
-            height: mainColumn.implicitHeight + 20
-            color: Colors.background
-            Behavior on color { ColorAnimation { duration: 350; easing.type: Easing.OutCubic } }
-            antialiasing: false
-            z: 0
-            clip: true
-
-            Rectangle { anchors.top: parent.top; width: parent.width; height: 1; color: Colors.outlineVariant; z: 2 }
-            Rectangle { anchors.left: parent.left; height: parent.height; width: 1; color: Colors.outlineVariant; z: 2 }
-            Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Colors.outlineVariant; z: 2 }
-
-            Column {
-                anchors.fill: parent
-                spacing: 2
-                z: 1
-                Repeater {
-                    model: Math.ceil(panelBox.height / 3)
-                    delegate: Rectangle {
-                        width: panelBox.width
-                        height: 1
-                        color: Colors.textOnBackground
-                        opacity: 0.02
-                    }
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                z: -1
-                onClicked: {}
-            }
-
-            Repeater {
-                model: [
-                    { x: -1, y: -1, vFlip: false },
-                    { x: -1, y: panelBox.height - 9, vFlip: true }
-                ]
-                delegate: Item {
-                    x: modelData.x; y: modelData.y
-                    width: 10; height: 10
-                    z: 3
-                    Rectangle { width: 3; height: 10; antialiasing: false; color: Colors.outline }
-                    Rectangle {
-                        width: 10; height: 3; antialiasing: false; color: Colors.outline
-                        y: modelData.vFlip ? 7 : 0
-                    }
-                }
-            }
-
-            ColumnLayout {
-                id: mainColumn
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 6
-                z: 4
-
-                Rectangle {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 120
-                    color: Colors.shadow
-                    antialiasing: false
-
-                    Repeater {
-                        model: [
-                            { x: -1, y: -1, vFlip: false, hFlip: false },
-                            { x: parent.width - 9, y: -1, vFlip: false, hFlip: true },
-                            { x: -1, y: parent.height - 9, vFlip: true, hFlip: false },
-                            { x: parent.width - 9, y: parent.height - 9, vFlip: true, hFlip: true }
-                        ]
-                        delegate: Item {
-                            x: modelData.x; y: modelData.y
-                            width: 10; height: 10
-                            Rectangle {
-                                width: 3; height: 10; antialiasing: false; color: Colors.outlineVariant
-                                x: modelData.hFlip ? 7 : 0
-                            }
-                            Rectangle {
-                                width: 10; height: 3; antialiasing: false; color: Colors.outlineVariant
-                                y: modelData.vFlip ? 7 : 0
-                            }
-                        }
-                    }
-
-                    Video {
-                        id: powerMenuVideo
-                        anchors.fill: parent
-                        anchors.margins: 1   // keep the 1px rivet corners visible over the edge
-                        source: "file:///home/swami/Videos/pixel-traffic.mp4"  // point at whatever clip you want
-                        fillMode: VideoOutput.PreserveAspectCrop
-                        smooth: false   // keep it crunchy/pixel, matches antialiasing:false everywhere else in this file
-                        muted: true
-                        loops: MediaPlayer.Infinite
-
-                        Connections {
-                            target: PowerMenu
-                            function onShownChanged() {
-                                if (PowerMenu.shown) powerMenuVideo.play()
-                                else powerMenuVideo.stop()
-                            }
-                        }
-                    }
-
-                    Rectangle {
-                        width: 2; height: 2
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
-                        anchors.margins: 4
-                        color: Colors.success
-                        antialiasing: false
-
-                        SequentialAnimation on opacity {
-                            loops: Animation.Infinite
-                            NumberAnimation { to: 0.15; duration: 700 }
-                            NumberAnimation { to: 1.0; duration: 700 }
-                        }
-                    }
-                }
-
-                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
-
-                PowerMenuRow { label: "LOCK"; iconName: "lock.svg"; Layout.fillWidth: true
-                    onClicked: {
-                        PowerMenu.hide()
-                        Quickshell.execDetached(["hyprlock"])
-                    }
-                }
-                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
-
-                PowerMenuRow { label: "LOGOUT"; iconName: "logout.svg"; Layout.fillWidth: true
-                    onClicked: {
-                        PowerMenu.hide()
-                        Quickshell.execDetached(["hyprctl", "dispatch", "hl.dsp.exit()"])
-                    }
-                }
-                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
-
-                PowerMenuRow { label: "SLEEP"; iconName: "moon.svg"; Layout.fillWidth: true
-                    onClicked: {
-                        PowerMenu.hide()
-                        Quickshell.execDetached(["systemctl", "suspend"])
-                    }
-                }
-                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
-
-                PowerMenuRow { label: "REBOOT"; iconName: "reload.svg"; Layout.fillWidth: true
-                    onClicked: {
-                        PowerMenu.hide()
-                        Quickshell.execDetached(["systemctl", "reboot"])
-                    }
-                }
-                Rectangle { Layout.fillWidth: true; height: 1; color: Colors.surfaceContainerHigh; antialiasing: false }
-
-                PowerMenuRow { label: "SHUTDOWN"; iconName: "power.svg"; accent: Colors.error; Layout.fillWidth: true
-                    onClicked: {
-                        PowerMenu.hide()
-                        Quickshell.execDetached(["systemctl", "poweroff"])
-                    }
-                }
+        FileView {
+            path: Settings.videoPath; watchChanges: true; preload: false
+            onFileChanged: if (sessionClip.item) sessionClip.item.reloadClip()
+        }
+    }
+    ColumnLayout {
+        visible: !root.pending; Layout.fillWidth: true; spacing: 6
+        Repeater {
+            model: [{name:"Lock",icon:"lock.svg"},{name:"Sleep",icon:"clock.svg"},{name:"Log out",icon:"app-windows.svg"},{name:"Restart",icon:"power.svg"},{name:"Shut down",icon:"power.svg"}]
+            MenuRow {
+                required property var modelData
+                Layout.fillWidth: true; implicitHeight: 38; padding: 8
+                label: modelData.name; iconName: modelData.icon; raised: true
+                danger: modelData.name === "Shut down"
+                onClicked: modelData.name === "Lock" || modelData.name === "Sleep" ? root.execute(modelData.name) : root.confirm(modelData.name)
             }
         }
     }
+    ColumnLayout {
+        visible: !!root.pending; Layout.fillWidth: true; spacing: 18
+        PixelText { text: root.pending + "?"; font.family: "Silkscreen"; font.pixelSize: 14 }
+        PixelText { text: "Save your progress before ending this session."; Layout.fillWidth: true; wrapMode: Text.Wrap }
+        RowLayout {
+            Layout.fillWidth: true
+            PixelButton { id: cancelButton; text: "Keep playing"; Layout.fillWidth: true; onClicked: root.pending = "" }
+            PixelButton { text: root.pending; danger: true; Layout.fillWidth: true; onClicked: root.execute(root.pending) }
+        }
+    }
+    PixelText { text: root.actionMessage; visible: !!text; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.accent }
 }

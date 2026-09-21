@@ -5,6 +5,7 @@ palette = "saliencedarkbalanced"
 check_contrast = true  
 
 [templates]
+kitty = { template = "kitty-colors.conf", target = "~/.config/kitty/wallust-colors.conf" }
 foot = { template = 'foot-colors.ini', target = '~/.config/foot/wallust-colors.ini' }
 pywalfox = { template = 'pywalfox-colors.json', target = '~/.cache/wal/colors.json'}
 vscode = { template = 'vscode.json', target = '~/.cache/wallust/colors.json' }

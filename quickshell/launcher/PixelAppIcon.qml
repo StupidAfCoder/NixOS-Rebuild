@@ -1,19 +1,17 @@
 import QtQuick
+import "../bar"
 
-Image {
+Item {
     id: root
-    property alias iconSource: root.source
-    // Number of "pixels" along the longest edge before blow-up.
-    // 12-16 = strong pixel-art look, still identifiable.
-    // 20-28 = subtler, closer to the source icon.
+    property url iconSource: ""
     property int pixelResolution: 28
-
-    fillMode: Image.PreserveAspectFit
-    smooth: false
-    mipmap: false
-    cache: true
-    asynchronous: true
-
-    sourceSize.width: pixelResolution
-    sourceSize.height: pixelResolution
+    ColoredIcon { anchors.fill: parent; iconName: "app-windows.svg"; tint: Colors.accent; visible: image.status !== Image.Ready }
+    Image {
+        id: image
+        anchors.fill: parent
+        source: root.iconSource
+        fillMode: Image.PreserveAspectFit
+        smooth: false; mipmap: false; cache: true; asynchronous: true
+        sourceSize.width: root.pixelResolution; sourceSize.height: root.pixelResolution
+    }
 }

@@ -1,263 +1,33 @@
+import Quickshell
 import QtQuick
+import QtQuick.Layouts
 import "../bar"
+import "../common"
 
-Item {
+Sheet {
     id: root
-    anchors.top: parent.top
-    anchors.bottom: parent.bottom
-    anchors.right: parent.right
-
-    property int stripWidth: 4       // pass manager.borderThickness in from ShellFrame
-    readonly property int panelWidth: 96
-    readonly property int panelHeight: 220
-    readonly property int hoverBandHeight: panelHeight + 40   // generous target around center
-
-    property alias hoverStripItem: hoverStrip
-    property alias panelBezelItem: maskArea
-
-    Connections {
-        target: RightPanel
-        function onShownChanged() {
-            if (RightPanel.shown)
-                BrightnessBackend.refresh();
-        }
+    shown: RightPanel.shown
+    title: "Sound & light"
+    preferredWidth: 310; preferredHeight: BrightnessBackend.available ? 330 : 240
+    onDismiss: RightPanel.shown = false
+    onShownChanged: if (shown) BrightnessBackend.refresh()
+    RowLayout {
+        Layout.fillWidth: true; spacing: 12
+        IconButton { iconName: "volume-2.svg"; hint: AudioBackend.muted ? "Unmute" : "Mute"; checked: AudioBackend.muted; enabled: AudioBackend.sink?.ready ?? false; onClicked: AudioBackend.toggleMute() }
+        PixelSlider { Layout.fillWidth: true; from: 0; to: 1; value: AudioBackend.volume; enabled: AudioBackend.sink?.ready ?? false; onMoved: AudioBackend.setVolume(value) }
+        PixelText { text: AudioBackend.muted ? "Off" : Math.round(AudioBackend.volume * 100) + "%" }
     }
-
-    // hover-in strip — centered band only, not the full border
-    Item {
-        id: hoverStrip
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        width: root.stripWidth
-        height: root.hoverBandHeight
-
-        HoverHandler {
-            onHoveredChanged: RightPanel.hoverZone = hovered
-        }
+    MenuRow {
+        Layout.fillWidth: true
+        label: AudioBackend.sink?.description || "No audio output"
+        detail: "Output devices"
+        onClicked: Quickshell.execDetached(["pavucontrol"])
     }
-
-    // ---- mask-only hitbox ----
-    // Deliberately NOT animated, unlike `panelBezel` below. This is the item
-    // registered in the window's `mask`, so it must snap discretely between
-    // 0x0 and full size on the same frame `RightPanel.shown` changes.
-    // Never put a Behavior on this item.
-    Item {
-        id: maskArea
-        anchors.right: hoverStrip.left
-        anchors.rightMargin: 6
-        anchors.verticalCenter: parent.verticalCenter
-        width: RightPanel.shown ? root.panelWidth : 0
-        height: root.panelHeight
+    RowLayout {
+        visible: BrightnessBackend.available; Layout.fillWidth: true; spacing: 12
+        PixelText { text: "Light" }
+        PixelSlider { Layout.fillWidth: true; from: .02; to: 1; value: BrightnessBackend.percent; onMoved: BrightnessBackend.setBrightness(value) }
+        PixelText { text: Math.round(BrightnessBackend.percent * 100) + "%" }
     }
-
-    Rectangle {
-        id: panelBezel
-        anchors.right: hoverStrip.left
-        anchors.rightMargin: 6
-        anchors.verticalCenter: parent.verticalCenter
-
-        width: RightPanel.shown ? root.panelWidth : 0
-        height: root.panelHeight
-        clip: true
-        color: Colors.shadow
-        antialiasing: false
-
-        Behavior on width {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        opacity: RightPanel.shown ? 1 : 0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 150
-            }
-        }
-
-        HoverHandler {
-            onHoveredChanged: RightPanel.hoverPanel = hovered
-        }
-
-        Repeater {
-            model: RightPanel.shown ? [
-                {
-                    x: 3,
-                    y: 3
-                },
-                {
-                    x: panelBezel.width - 5,
-                    y: 3
-                },
-                {
-                    x: 3,
-                    y: panelBezel.height - 5
-                },
-                {
-                    x: panelBezel.width - 5,
-                    y: panelBezel.height - 5
-                }
-            ] : []
-            delegate: Rectangle {
-                x: modelData.x
-                y: modelData.y
-                width: 2
-                height: 2
-                color: Colors.outline
-                antialiasing: false
-            }
-        }
-
-        Rectangle {
-            id: panelBox
-            anchors.centerIn: parent
-            width: Math.max(0, panelBezel.width - 12)
-            height: Math.max(0, panelBezel.height - 12)
-            color: Colors.background
-            border.color: Colors.outlineVariant
-            border.width: 1
-            antialiasing: false
-
-            Row {
-                anchors.fill: parent
-                anchors.margins: 10
-                spacing: 14
-
-                // ---- volume slider ----
-                Column {
-                    width: 30
-                    spacing: 6
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: AudioBackend.muted ? "MUTE" : Math.round(AudioBackend.volume * 100) + "%"
-                        color: AudioBackend.muted ? Colors.error : Colors.textOnBackground
-                        font.family: "Cozette"
-                        font.pixelSize: 8
-                    }
-
-                    Rectangle {
-                        id: volTrack
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 16
-                        height: Math.max(0, panelBox.height - 58)
-                        color: Colors.surfaceContainer
-                        border.color: Colors.outlineVariant
-                        border.width: 1
-                        antialiasing: false
-
-                        Rectangle {
-                            anchors.bottom: parent.bottom
-                            width: parent.width
-                            height: parent.height * (AudioBackend.muted ? 0 : AudioBackend.volume)
-                            color: Colors.accent
-                            antialiasing: false
-                            Behavior on height {
-                                NumberAnimation {
-                                    duration: 90
-                                }
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            preventStealing: true
-                            function apply(my) {
-                                const pct = 1 - Math.max(0, Math.min(1, my / height));
-                                AudioBackend.setVolume(pct);
-                            }
-                            onPressed: mouse => apply(mouse.y)
-                            onPositionChanged: mouse => {
-                                if (pressed)
-                                    apply(mouse.y);
-                            }
-                        }
-                    }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "VOL"
-                        color: Colors.mutedOnBackground
-                        font.family: "Cozette"
-                        font.pixelSize: 7
-                    }
-
-                    MouseArea {
-                        width: 30
-                        height: 12
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        onClicked: AudioBackend.toggleMute()
-                        Text {
-                            anchors.centerIn: parent
-                            text: AudioBackend.muted ? "UNMUTE" : "MUTE"
-                            color: Colors.mutedOnBackground
-                            font.family: "Cozette"
-                            font.pixelSize: 6
-                        }
-                    }
-                }
-
-                // ---- brightness slider ----
-                Column {
-                    width: 30
-                    spacing: 6
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: Math.round(BrightnessBackend.percent * 100) + "%"
-                        color: Colors.textOnBackground
-                        font.family: "Cozette"
-                        font.pixelSize: 8
-                    }
-
-                    Rectangle {
-                        id: briTrack
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 16
-                        height: Math.max(0, panelBox.height - 58)
-                        color: Colors.surfaceContainer
-                        border.color: Colors.outlineVariant
-                        border.width: 1
-                        antialiasing: false
-
-                        Rectangle {
-                            anchors.bottom: parent.bottom
-                            width: parent.width
-                            height: parent.height * BrightnessBackend.percent
-                            color: Colors.accent
-                            antialiasing: false
-                            Behavior on height {
-                                NumberAnimation {
-                                    duration: 90
-                                }
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            preventStealing: true
-                            function apply(my) {
-                                const pct = 1 - Math.max(0, Math.min(1, my / height));
-                                BrightnessBackend.setBrightness(pct);
-                            }
-                            onPressed: mouse => apply(mouse.y)
-                            onPositionChanged: mouse => {
-                                if (pressed)
-                                    apply(mouse.y);
-                            }
-                        }
-                    }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: "BRI"
-                        color: Colors.mutedOnBackground
-                        font.family: "Cozette"
-                        font.pixelSize: 7
-                    }
-                }
-            }
-        }
-    }
+    PixelText { visible: !BrightnessBackend.available; text: "No adjustable display detected."; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant }
 }

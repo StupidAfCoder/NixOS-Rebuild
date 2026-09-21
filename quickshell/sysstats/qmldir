@@ -1,0 +1,4 @@
+singleton SysStatsBackend 1.0 SysStatsBackend.qml
+singleton SysStatsPanel 1.0 SysStatsPanel.qml
+SysStatsPanelContent 1.0 SysStatsPanelContent.qml
+SysStatsWidget 1.0 SysStatsWidget.qml

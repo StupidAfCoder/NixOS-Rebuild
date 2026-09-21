@@ -1,0 +1,5 @@
+singleton AudioBackend 1.0 AudioBackend.qml
+singleton BrightnessBackend 1.0 BrightnessBackend.qml
+FeedbackOsd 1.0 FeedbackOsd.qml
+RightEdgePanel 1.0 RightEdgePanel.qml
+singleton RightPanel 1.0 RightPanel.qml
