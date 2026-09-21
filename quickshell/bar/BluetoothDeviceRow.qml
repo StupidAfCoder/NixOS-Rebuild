@@ -18,7 +18,7 @@ ColumnLayout {
         }
     }
     Flow {
-        Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+        Layout.fillWidth: true; spacing: 6
         PixelButton { visible: root.device.paired; text: root.device.connected ? "Disconnect" : "Connect"; onClicked: root.device.connected ? root.device.disconnect() : root.device.connect() }
         PixelButton { visible: !root.device.paired; text: "Pair…"; onClicked: Quickshell.execDetached(["blueman-manager"]) }
         PixelButton { visible: root.device.paired; text: root.device.trusted ? "Trusted" : "Trust"; checked: root.device.trusted; onClicked: root.device.trusted = !root.device.trusted }

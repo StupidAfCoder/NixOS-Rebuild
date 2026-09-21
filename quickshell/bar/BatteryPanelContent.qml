@@ -21,7 +21,7 @@ Sheet {
     }
     PixelText { text: "Power profile"; color: Colors.textOnSurfaceVariant }
     Flow {
-        Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+        Layout.fillWidth: true; spacing: 6
         Repeater { model: PowerProfileBackend.availableProfiles; PixelButton { required property string modelData; text: modelData; primary: PowerProfileBackend.activeProfile === modelData; onClicked: PowerProfileBackend.setProfile(modelData) } }
     }
     PixelText { Layout.fillWidth: true; visible: !PowerProfileBackend.daemonAvailable; text: "Power profiles are unavailable on this system."; wrapMode: Text.Wrap; elide: Text.ElideNone }

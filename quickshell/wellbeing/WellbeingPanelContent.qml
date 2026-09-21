@@ -59,7 +59,7 @@ Sheet {
     PixelGroup {
         Layout.fillWidth: true; title: "Time in view"; detail: Usage.duration(root.rangeTotal); iconName: "chart.svg"
         Flow {
-            Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+            Layout.fillWidth: true; spacing: 6
             Repeater { model: [7, 14, 30]; PixelButton { required property int modelData; text: modelData + " days"; checked: root.period === modelData; onClicked: root.period = modelData } }
         }
         PixelText {
@@ -177,7 +177,7 @@ Sheet {
     PixelGroup {
         Layout.fillWidth: true; title: "Where time went"; iconName: "app-windows.svg"
         Flow {
-            Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+            Layout.fillWidth: true; spacing: 6
             PixelButton { text: "Selected day"; checked: root.appScope === "day"; onClicked: root.appScope = "day" }
             PixelButton { text: root.period + "-day range"; checked: root.appScope === "range"; onClicked: root.appScope = "range" }
             PixelButton { text: root.descending ? "Most used first" : "Least used first"; onClicked: root.descending = !root.descending }

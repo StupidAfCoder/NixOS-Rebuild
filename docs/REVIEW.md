@@ -232,7 +232,8 @@ To stop collection/audio automation without discarding data, disable both contro
 
 ## Validation performed here
 
-- **22 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, duplicate refusal, and service restoration after successful and failed shell exits.
+- **26 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, duplicate refusal, and service restoration after successful and failed shell exits.
+- Four source-guard tests prevent assigning `implicitHeight`/`implicitWidth` on Qt positioners (`Flow`, `Row`, `Column`, `Grid`). This catches the native startup failure reported during the first review; grammar parsing alone did not catch it.
 - **7 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers and module catalog. Repeated in Asia/Kolkata and America/New_York timezones.
 - **64 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
 - `qmllint` inspected; corrected a SystemTray type-name collision and a Button `action` name collision. Full type validation is limited by missing native Quickshell modules.
@@ -248,6 +249,17 @@ Run Python tests locally with Pillow and materialyoucolor installed:
 python3 -m unittest discover -s tests -v
 node --test tests/test_usage_math.cjs
 ```
+
+## First native review: startup fix
+
+The first local run of review commit `d23141a` stopped at
+`NotificationCard.qml: Invalid property assignment: "implicitHeight" is a read-only property`.
+The `NotificationManager unavailable` messages were cascading failures, not missing packages.
+
+The fix removes eleven manual `implicitHeight: childrenRect.height` assignments from
+`Flow` containers in eight components. Qt computes Flow's implicit size itself, including
+wrapped action buttons. A source regression guard covers the other Qt positioner types too.
+This fix does not establish that the remaining native startup or hardware checks pass.
 
 ## Native QA still required before merge or activation
 

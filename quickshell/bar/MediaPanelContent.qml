@@ -37,7 +37,7 @@ Sheet {
     PixelSlider { Layout.fillWidth: true; from: 0; to: Math.max(1, root.player?.length || 0); value: root.player?.position || 0; enabled: (root.player?.canSeek ?? false) && (root.player?.length || 0) > 0; onMoved: root.player.position = value }
     PixelText { text: root.formatTime(root.player?.position || 0) + " / " + root.formatTime(root.player?.length || 0); color: Colors.textOnSurfaceVariant }
     Flow {
-        Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+        Layout.fillWidth: true; spacing: 6
         PixelButton { text: "Auto"; checked: MprisActive.selectedIndex === -1; onClicked: MprisActive.selectPlayer(-1) }
         Repeater { model: MprisActive.players ? MprisActive.players.values : []; PixelButton { required property var modelData; required property int index; text: modelData.identity; checked: MprisActive.selectedIndex === index; onClicked: MprisActive.selectPlayer(index) } }
     }

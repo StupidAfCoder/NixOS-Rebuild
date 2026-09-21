@@ -246,9 +246,9 @@ Item {
                         elide: root.expanded ? Text.ElideNone : Text.ElideRight
                     }
 
+                    // Flow computes its own implicit height as actions wrap.
                     Flow {
                         Layout.fillWidth: true
-                        implicitHeight: childrenRect.height
                         spacing: 6
                         Repeater {
                             model: root.notif ? root.notif.actions : []

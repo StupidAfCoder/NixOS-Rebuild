@@ -92,7 +92,7 @@ Sheet {
                 PixelText { text: WallpaperBackend.previewBusy ? "Generating preview…" : "One seed · " + (WallpaperBackend.previewColors._meta?.seed || "—"); Layout.fillWidth: true }
             }
             Flow {
-                Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+                Layout.fillWidth: true; spacing: 6
                 Repeater {
                     model: ["black", "neutral", "tonal", "expressive", "paper", "mono"]
                     PixelButton { required property string modelData; text: modelData; checked: root.recipe === modelData; primary: checked; onClicked: root.recipe = modelData }
@@ -103,7 +103,7 @@ Sheet {
             PixelText { text: "Color intensity · " + Math.round(root.saturation * 100) + "%"; color: Colors.textOnSurfaceVariant }
             PixelSlider { Layout.fillWidth: true; from: 0; to: 1.6; stepSize: .05; value: root.saturation; onMoved: root.saturation = value }
             Flow {
-                Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+                Layout.fillWidth: true; spacing: 6
                 Repeater { model: ["representative", "dominant", "colorful"]; PixelButton { required property string modelData; text: modelData; checked: root.sourcePreference === modelData; onClicked: root.sourcePreference = modelData } }
             }
             Rectangle {

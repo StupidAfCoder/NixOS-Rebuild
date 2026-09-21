@@ -41,7 +41,7 @@ Sheet {
         }
     }
     Flow {
-        Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+        Layout.fillWidth: true; spacing: 6
         Repeater {
             model: [{id:"Profile",label:"Profile"},{id:"Bar",label:"Bar"},{id:"Appearance",label:"Look"},{id:"Audio",label:"Audio"},{id:"Privacy",label:"Data"}]
             PixelButton {
@@ -138,7 +138,7 @@ Sheet {
         title: "Workspace audio"; iconName: "volume-2.svg"
         PreferenceRow { Layout.fillWidth: true; label: "Enable workspace muting"; description: "Opt in before choosing workspaces below."; iconName: "volume-2.svg"; selected: Settings.workspaceAudioEnabled; onToggled: Settings.patch({workspaceAudioEnabled: !Settings.workspaceAudioEnabled}) }
         Flow {
-            Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+            Layout.fillWidth: true; spacing: 6
             Repeater {
                 model: Hyprland.workspaces.values.filter(w => w.id > 0)
                 PixelButton {

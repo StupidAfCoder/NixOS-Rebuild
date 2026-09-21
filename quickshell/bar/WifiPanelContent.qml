@@ -57,7 +57,7 @@ Sheet {
         }
     }
     Flow {
-        Layout.fillWidth: true; implicitHeight: childrenRect.height; spacing: 6
+        Layout.fillWidth: true; spacing: 6
         PixelButton { text: "Disconnect"; visible: NetworkBackend.wifiConnected; enabled: !NetworkBackend.busy; onClicked: NetworkBackend.disconnectWifi() }
         PixelButton { text: root.forgetConfirm ? "Confirm forget" : "Forget connection…"; danger: root.forgetConfirm; visible: NetworkBackend.wifiConnected; enabled: !NetworkBackend.busy; onClicked: { if (root.forgetConfirm) { NetworkBackend.forgetNetwork(NetworkBackend.connectedSsid); root.forgetConfirm = false; } else root.forgetConfirm = true; } }
         PixelButton { text: "Advanced…"; onClicked: Quickshell.execDetached(["nm-connection-editor"]) }
