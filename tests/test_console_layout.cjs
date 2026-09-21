@@ -158,3 +158,21 @@ test('actual workspace move rejects vanished windows and preview mode',()=>{
  ctx.movingAddress='abc';ctx.Settings.previewMode=true;ctx.select(3);assert.equal(dispatched.length,1);
  ctx.movingAddress='abc';ctx.Settings.previewMode=false;ctx.Hyprland.toplevels.values=[];ctx.select(4);assert.equal(dispatched.length,1);assert.equal(ctx.movingAddress,'');
 });
+
+test('actual wallpaper navigation handlers handle Home/End/Page keys without applying',()=>{
+ const Qt={Key_PageUp:1,Key_PageDown:2,Key_Home:3,Key_End:4,Key_Tab:5,Key_Escape:6};
+ for(const [file,expected] of [
+  ['QuickWallpapersContent.qml', [['scrubTo',40],['scrubTo',60],['scrubTo',0],['scrubTo',999]]],
+  ['WallpaperLauncherContent.qml', [['move',-8],['move',8],['select',0],['select',999]]],
+ ]) {
+  const calls=[];const ctx=vm.createContext({Qt,carousel:{currentIndex:50,count:1000},gallery:{columns:4,count:1000},root:{scrubTo(i){calls.push(['scrubTo',i])},move(i){calls.push(['move',i])},select(i){calls.push(['select',i])}}});
+  const source=fs.readFileSync(path.join(__dirname,'../quickshell/wallpaper',file),'utf8');
+  const handler=source.match(/        Keys\.onPressed: (event => \{[^]*?\n        \})/);assert.ok(handler,file);
+  vm.runInContext('var handle = '+handler[1],ctx);
+  for(const key of [Qt.Key_PageUp,Qt.Key_PageDown,Qt.Key_Home,Qt.Key_End]) {const event={key,accepted:false};ctx.handle(event);assert.equal(event.accepted,true)}
+  assert.deepEqual(calls,expected);
+  for(const key of [Qt.Key_Tab,Qt.Key_Escape,999]) {const event={key,accepted:true};ctx.handle(event);assert.equal(event.accepted,false)}
+  assert.equal(calls.length,4);
+  ctx.carousel.count=0;ctx.gallery.count=0;ctx.handle({key:Qt.Key_End});assert.equal(calls.at(-1)[1],-1);
+ }
+});

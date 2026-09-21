@@ -78,10 +78,15 @@ Sheet {
         Keys.onRightPressed: root.move(1)
         Keys.onUpPressed: root.move(-columns)
         Keys.onDownPressed: root.move(columns)
-        Keys.onPageUpPressed: root.move(-columns * 2)
-        Keys.onPageDownPressed: root.move(columns * 2)
-        Keys.onHomePressed: root.select(0)
-        Keys.onEndPressed: root.select(count - 1)
+        // Home/End/Page keys have no dedicated Keys signals in Qt Quick.
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_PageUp) root.move(-gallery.columns * 2);
+            else if (event.key === Qt.Key_PageDown) root.move(gallery.columns * 2);
+            else if (event.key === Qt.Key_Home) root.select(0);
+            else if (event.key === Qt.Key_End) root.select(gallery.count - 1);
+            else { event.accepted = false; return; }
+            event.accepted = true;
+        }
         Keys.onReturnPressed: root.select(currentIndex)
         Keys.onEnterPressed: root.select(currentIndex)
         ScrollBar.vertical: CollectionScrollBar { Accessible.name: "Wallpaper collection" }

@@ -75,10 +75,15 @@ FocusScope {
         Keys.onRightPressed: root.move(1)
         Keys.onUpPressed: root.move(-1)
         Keys.onDownPressed: root.move(1)
-        Keys.onPageUpPressed: root.scrubTo(currentIndex - 10)
-        Keys.onPageDownPressed: root.scrubTo(currentIndex + 10)
-        Keys.onHomePressed: root.scrubTo(0)
-        Keys.onEndPressed: root.scrubTo(count - 1)
+        // Home/End/Page keys have no dedicated Keys signals in Qt Quick.
+        Keys.onPressed: event => {
+            if (event.key === Qt.Key_PageUp) root.scrubTo(carousel.currentIndex - 10);
+            else if (event.key === Qt.Key_PageDown) root.scrubTo(carousel.currentIndex + 10);
+            else if (event.key === Qt.Key_Home) root.scrubTo(0);
+            else if (event.key === Qt.Key_End) root.scrubTo(carousel.count - 1);
+            else { event.accepted = false; return; }
+            event.accepted = true;
+        }
         Keys.onReturnPressed: root.choose(currentIndex)
         Keys.onEnterPressed: root.choose(currentIndex)
         delegate: Item {

@@ -291,9 +291,9 @@ To stop collection/audio automation without discarding data, disable both contro
 
 ## Validation performed here
 
-- **62 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Apply integration tests run the real apply script and generator in a copied fixture, with all desktop commands stubbed, covering pre-apply failure preservation and partial-success reporting. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
+- **65 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Apply integration tests run the real apply script and generator in a copied fixture, with all desktop commands stubbed, covering pre-apply failure preservation and partial-success reporting. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
 - Four source-guard tests prevent assigning `implicitHeight`/`implicitWidth` on Qt positioners (`Flow`, `Row`, `Column`, `Grid`). This catches the native startup failure reported during the first review; grammar parsing alone did not catch it.
-- **37 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers, selection/scan/apply logic, rail placement, library filtering and actual popup-manager routing. Popup geometry is tested on all four edges, landscape/portrait/small screens and varied frame/rail widths. Additional checks cover 1,000-image scrubbing, overflow/named/special workspaces, escaped Lua selectors, preview move guards and vanished windows. Repeated in Asia/Kolkata and America/New_York timezones.
+- **38 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers, selection/scan/apply logic, rail placement, library filtering and actual popup-manager routing. Popup geometry is tested on all four edges, landscape/portrait/small screens and varied frame/rail widths. Additional checks cover 1,000-image scrubbing, overflow/named/special workspaces, escaped Lua selectors, preview move guards and vanished windows. Repeated in Asia/Kolkata and America/New_York timezones.
 - **80 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
 - `qmllint` inspected; corrected a SystemTray type-name collision and a Button `action` name collision. Full type validation is limited by missing native Quickshell modules.
 - **11 Nix files** parse with the Nix tree-sitter grammar. **No full Nix module evaluation or build** in this sandbox.
@@ -321,6 +321,26 @@ The fix removes eleven manual `implicitHeight: childrenRect.height` assignments 
 `Flow` containers in eight components. Qt computes Flow's implicit size itself, including
 wrapped action buttons. A source regression guard covers the other Qt positioner types too.
 This fix does not establish that the remaining native startup or hardware checks pass.
+
+## Native startup hotfix: wallpaper navigation
+
+Review `f4de6da` failed to load at `QuickWallpapersContent.qml` with
+`Cannot assign to non-existent property "onEndPressed"`. The enclosing
+`QuickWallpapersContent` / `FrameWindow` / `ShellFrame unavailable` messages were
+cascading type-load errors, not missing packages or an extraction problem.
+
+Qt Quick does not provide dedicated Home, End, Page Up or Page Down signals on
+`Keys`. Both wallpaper views now handle those keys through `Keys.onPressed` and
+`Qt.Key_*`, explicitly accepting handled navigation and leaving other events
+unaccepted. Browsing still does not apply a wallpaper.
+
+The original eight invalid bindings were reproduced as warnings using Qt's
+`qmllint` on isolated Qt Quick items containing the actual handlers; the corrected
+handlers produce no diagnostics there. A portable repository-wide source guard
+checks handler names against the Qt Quick signal API (verified against installed
+`QQuickKeysAttached` metadata), and JS tests exercise all four keys, unhandled
+Tab/Escape events and empty collections. QML grammar parsing alone missed this
+error. This targeted type check is **not** a full native Quickshell startup test.
 
 ## Native log issues addressed in the console revision
 
