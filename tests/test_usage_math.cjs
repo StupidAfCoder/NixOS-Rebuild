@@ -51,13 +51,13 @@ test('ranking aggregates range, reverses order, computes shares, handles prototy
 });
 test('every module has a unique key and a real bundled icon; defaults match Python', () => {
     const entries = modules.entries();
-    assert.equal(entries.length, 12);
-    assert.equal(new Set(entries.map(x => x.key)).size, 12);
+    assert.equal(entries.length, 13);
+    assert.equal(new Set(entries.map(x => x.key)).size, 13);
     const source = fs.readFileSync(path.join(root, 'scripts/shell-state.py'),'utf8');
     const pythonKeys = source.match(/BAR_MODULES = \(([^\n]+)\)/)[1].match(/"[^"]+"/g).map(x => JSON.parse(x));
     assert.deepEqual(plain(entries.map(x=>x.key)), pythonKeys);
     for (const entry of entries) {
-        assert.equal(modules.defaults()[entry.key], true);
+        assert.equal(modules.defaults()[entry.key], !["settings", "system"].includes(entry.key));
         assert.ok(fs.existsSync(path.join(root, 'quickshell/bar/assets/icons',entry.icon)), entry.icon);
     }
 });
@@ -72,4 +72,15 @@ test('actual settings merge overlays optimistic patches without dropping sibling
     assert.deepEqual(plain(ctx.merge(ctx.merge(persisted,inFlight),pending)),{barModules:{wizard:false,clock:false},frameWidth:10});
     assert.equal(persisted.barModules.clock,true);
     assert.equal(inFlight.frameWidth,8);
+});
+
+test('app detail series keeps recorded zero distinct from missing days', () => {
+    const days={'2026-09-19':{firefox:120,foot:80},'2026-09-20':{foot:60}};
+    const series=m.appSeries(days,'firefox','2026-09-21',7);
+    assert.deepEqual(plain(series.slice(-3)),[
+        {day:'2026-09-19',seconds:120,recorded:true},
+        {day:'2026-09-20',seconds:0,recorded:true},
+        {day:'2026-09-21',seconds:0,recorded:false}
+    ]);
+    assert.equal(series.reduce((n,d)=>n+d.seconds,0),120);
 });

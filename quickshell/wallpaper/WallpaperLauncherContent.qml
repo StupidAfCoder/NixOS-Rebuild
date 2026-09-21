@@ -20,17 +20,18 @@ Sheet {
     property real tone: Settings.tone
     property real saturation: Settings.saturation
     property string sourcePreference: Settings.sourcePreference
+    property bool confirmAppSync: false
     property bool confirmTrash: false
     readonly property var filtered: WallpaperBackend.wallpapers.filter(w => w.name.toLowerCase().includes(search.text.toLowerCase()))
     function preview() {
         if (selectedPath) WallpaperBackend.preview(selectedPath, recipe, tone, saturation, sourcePreference, Settings.contrast);
     }
-    onSelectedPathChanged: { confirmTrash = false; preview(); }
+    onSelectedPathChanged: { confirmAppSync = false; confirmTrash = false; preview(); }
     onRecipeChanged: preview()
     onToneChanged: preview()
     onSaturationChanged: preview()
     onSourcePreferenceChanged: preview()
-    onShownChanged: if (shown) {
+    onShownChanged: if (!shown) confirmAppSync = false; else {
         recipe = Settings.recipe; tone = Settings.tone; saturation = Settings.saturation; sourcePreference = Settings.sourcePreference;
         if (!selectedPath) selectedPath = WallpaperBackend.currentPath;
         preview();
@@ -94,10 +95,11 @@ Sheet {
             Flow {
                 Layout.fillWidth: true; spacing: 6
                 Repeater {
-                    model: ["black", "neutral", "tonal", "expressive", "paper", "mono"]
+                    model: ["wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"]
                     PixelButton { required property string modelData; text: modelData; checked: root.recipe === modelData; primary: checked; onClicked: root.recipe = modelData }
                 }
             }
+            PixelText { Layout.fillWidth: true; wrapMode: Text.Wrap; color: Colors.textOnSurfaceVariant; text: root.recipe === "black" ? "True-black surfaces; wallpaper-colored highlights." : root.recipe === "wallpaper" ? "Wallpaper hue colors the rail, frame, panels and icons." : "A quieter variation of this wallpaper's palette." }
             PixelText { text: "Accent tone · " + Math.round(root.tone); color: Colors.textOnSurfaceVariant }
             PixelSlider { Layout.fillWidth: true; from: -15; to: 15; stepSize: 1; value: root.tone; onMoved: root.tone = value }
             PixelText { text: "Color intensity · " + Math.round(root.saturation * 100) + "%"; color: Colors.textOnSurfaceVariant }
@@ -117,6 +119,15 @@ Sheet {
                 text: Settings.previewMode ? (WallpaperBackend.tryingColors ? "Trying colors…" : "Try colors on this preview") : WallpaperBackend.applying ? "Applying…" : "Apply wallpaper & palette"
                 onClicked: Settings.previewMode ? WallpaperBackend.tryColors(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast) : WallpaperBackend.apply(root.selectedPath, root.recipe, root.tone, root.saturation, root.sourcePreference, Settings.contrast)
             }
+            PixelButton {
+                Layout.fillWidth: true
+                text: WallpaperBackend.syncingApps ? "Syncing apps…" : root.confirmAppSync ? "Confirm live app recoloring" : "Sync live app colors…"
+                enabled: !!root.selectedPath && !WallpaperBackend.syncingApps && !WallpaperBackend.applying && !WallpaperBackend.tryingColors
+                onClicked: { if (root.confirmAppSync) { WallpaperBackend.syncLiveApps(root.selectedPath); root.confirmAppSync = false; } else root.confirmAppSync = true; }
+            }
+            PixelText { visible: root.confirmAppSync; Layout.fillWidth: true; text: "This writes your LIVE Wallust templates and recolors Firefox / terminals, even in preview. It does not change the wallpaper."; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.warning }
+            PixelButton { visible: root.confirmAppSync; text: "Cancel app sync"; onClicked: root.confirmAppSync = false }
+            PixelText { visible: !!WallpaperBackend.appSyncMessage; Layout.fillWidth: true; text: WallpaperBackend.appSyncMessage; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
             PixelButton { Layout.fillWidth: true; text: root.confirmTrash ? "Confirm move to Trash" : "Move selected to Trash…"; danger: root.confirmTrash; enabled: !!root.selectedPath && !WallpaperBackend.applying; onClicked: { if (root.confirmTrash) { WallpaperBackend.trash(root.selectedPath); root.selectedPath = ""; } else root.confirmTrash = true; } }
             PixelButton { visible: root.confirmTrash; text: "Cancel"; onClicked: root.confirmTrash = false }
         }

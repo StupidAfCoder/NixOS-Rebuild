@@ -22,8 +22,8 @@ Button {
     }
     background: Rectangle {
         color: (root.primary || root.checked) ? Colors.accent : root.down || root.hovered ? Colors.surfaceContainerHigh : "transparent"
-        border.width: root.activeFocus ? 1 : 0
-        border.color: root.activeFocus || root.hovered || root.checked ? Colors.accent : Colors.outlineVariant
+        border.width: root.visualFocus ? 1 : 0
+        border.color: root.visualFocus || root.hovered || root.checked ? Colors.accent : Colors.outlineVariant
         antialiasing: false
     }
 }

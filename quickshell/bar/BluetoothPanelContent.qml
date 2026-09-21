@@ -11,7 +11,7 @@ Sheet {
     shown: BluetoothPanel.shown
     title: "Link cable"
     subtitle: "Bluetooth"
-    preferredWidth: 410
+    preferredWidth: 360
     preferredHeight: mode === "scan" ? 600 : 520
     onDismiss: BluetoothPanel.hide()
     property string mode: "link"

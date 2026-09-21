@@ -448,21 +448,12 @@ in
     Unit.Description = "Regenerate Pywalfox native messaging manifest";
     Service = {
       Type = "oneshot";
-      ExecStart = "${pkgs.pywalfox-native}/bin/pywalfox install";
+      ExecStart = "${pkgs.pywalfox-native}/bin/pywalfox install --executable ${pkgs.pywalfox-native}/bin/pywalfox";
     };
     Install.WantedBy = [ "graphical-session.target" ];
   };
-  systemd.user.services.pywalfox = {
-    Unit = {
-      Description = "Pywalfox native daemon";
-      After = [ "pywalfox-install-manifest.service" ];
-    };
-    Service = {
-      Type = "forking";
-      ExecStart = "${pkgs.pywalfox-native}/bin/pywalfox start";
-      Restart = "on-failure";
-    };
-  };
+  # Firefox launches the native messaging host itself over stdin/stdout.
+  # A standalone Type=forking service cannot establish that browser connection.
   systemd.user.services.wallust-cache-prime = {
     Unit.Description = "Prime wallust color-cache for all wallpapers";
     Service = {

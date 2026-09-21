@@ -39,8 +39,9 @@ Item {
     readonly property int bodySize: bounded("bodySize", 13, 12, 18)
     readonly property bool reducedMotion: values.reducedMotion === true
     readonly property int motionMs: reducedMotion ? 0 : bounded("motionMs", 180, 80, 350)
+    readonly property bool quickWallpaperEdgeEnabled: values.quickWallpaperEdgeEnabled !== false
     readonly property string launcherEdge: ["top", "bottom", "center"].indexOf(values.launcherEdge) >= 0 ? values.launcherEdge : "top"
-    readonly property string recipe: ["black", "neutral", "tonal", "expressive", "paper", "mono"].indexOf(values.recipe) >= 0 ? values.recipe : "black"
+    readonly property string recipe: ["wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"].indexOf(values.recipe) >= 0 ? values.recipe : "wallpaper"
     readonly property real tone: bounded("tone", 0, -15, 15)
     readonly property real saturation: bounded("saturation", 1, 0, 1.6)
     readonly property string sourcePreference: ["representative", "dominant", "colorful"].indexOf(values.source) >= 0 ? values.source : "representative"

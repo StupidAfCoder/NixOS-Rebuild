@@ -5,6 +5,9 @@ import QtQuick.Controls
 import Quickshell
 import "../bar"
 import "../common"
+import "../settings"
+import "../sysstats"
+import "../wallpaper"
 
 Sheet {
     id: root
@@ -13,16 +16,26 @@ Sheet {
     centered: true
     edge: Settings.launcherEdge === "center" ? "" : Settings.launcherEdge
     initialFocusItem: search
-    preferredWidth: 560
-    preferredHeight: 560
+    fitContent: false
+    preferredWidth: 480
+    preferredHeight: 480
     onDismiss: AppLauncher.hide()
     property var applications: {
         const q = search.text.trim().toLowerCase();
-        return [...DesktopEntries.applications.values].filter(e => e && !e.noDisplay && e.name &&
+        const shortcuts = [
+            {name: "Settings", genericName: "Your corner preferences", icon: "preferences-system", shellAction: "settings"},
+            {name: "System readings", genericName: "CPU memory sensors", icon: "utilities-system-monitor", shellAction: "system"},
+            {name: "Quick wallpapers", genericName: "Browse wallpaper carousel", icon: "preferences-desktop-wallpaper", shellAction: "wallpapers"}
+        ];
+        return shortcuts.concat([...DesktopEntries.applications.values]).filter(e => e && !e.noDisplay && e.name &&
             (!q || (e.name + " " + (e.genericName || "") + " " + (e.comment || "")).toLowerCase().includes(q)))
             .sort((a,b) => Number(!a.name.toLowerCase().startsWith(q)) - Number(!b.name.toLowerCase().startsWith(q)) || a.name.localeCompare(b.name));
     }
-    function launch(index) { const app = applications[index]; if (app) { app.execute(); AppLauncher.hide(); } }
+    function launch(index) { const app = applications[index]; if (app) { AppLauncher.hide();
+        if (app.shellAction === "settings") SettingsPanel.toggle();
+        else if (app.shellAction === "system") SysStatsPanel.toggle();
+        else if (app.shellAction === "wallpapers") QuickWallpapers.toggle();
+        else app.execute(); } }
     function move(delta) {
         results.currentIndex = Math.max(0, Math.min(applications.length - 1, results.currentIndex + delta));
         results.positionViewAtIndex(results.currentIndex, ListView.Contain);

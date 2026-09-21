@@ -16,6 +16,7 @@ Item {
     function total(day) { return MathUtils.total(days, day); }
     function duration(seconds) { return MathUtils.duration(seconds); }
     function hasDay(day) { return Object.prototype.hasOwnProperty.call(days, day); }
+    function appSeries(app, end, count) { return MathUtils.appSeries(days, app, end, count); }
     function series(end, count) { return MathUtils.series(days, end, count); }
     function ranking(keys, descending) { return MathUtils.ranking(days, keys, descending); }
     function level(seconds) { return MathUtils.heatLevel(seconds, Settings.dailyGoalMinutes); }

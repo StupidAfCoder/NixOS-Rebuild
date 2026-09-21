@@ -10,8 +10,8 @@ Sheet {
     id: root
     shown: PowerMenu.shown
     title: "Session"
-    preferredWidth: 390
-    preferredHeight: pending ? 480 : 690
+    preferredWidth: 330
+    preferredHeight: 560
     edge: "right"
     property string pending: ""
     property string actionMessage: ""
@@ -30,7 +30,7 @@ Sheet {
     onDismiss: cancel()
     onShownChanged: { pending = ""; actionMessage = ""; clipError = ""; }
     Rectangle {
-        Layout.fillWidth: true; Layout.preferredHeight: 190
+        Layout.fillWidth: true; Layout.preferredHeight: 155
         color: Colors.background
         border.color: Colors.outlineVariant
         PixelText { anchors.centerIn: parent; text: root.clipError ? "Video unavailable" : Settings.reducedMotion ? "Motion paused" : "Session"; color: Colors.textOnSurfaceVariant }
@@ -41,7 +41,7 @@ Sheet {
             active: root.shown && !Settings.reducedMotion
             sourceComponent: Component {
                 Item {
-                    function reloadClip() { player.stop(); player.source = ""; player.source = Settings.fileUrl(Settings.videoPath); player.play(); }
+                    function reloadClip() { player.stop(); player.source = ""; player.source = Settings.fileUrl(Settings.videoPath); }
                     VideoOutput { id: output; anchors.fill: parent; fillMode: VideoOutput.PreserveAspectCrop }
                     MediaPlayer {
                         id: player
@@ -49,8 +49,9 @@ Sheet {
                         videoOutput: output
                         audioOutput: null
                         loops: MediaPlayer.Infinite
-                        Component.onCompleted: play()
-                        onSourceChanged: if (source.toString()) play()
+                        property bool initialized: false
+                        Component.onCompleted: { initialized = true; play(); }
+                        onSourceChanged: if (initialized && source.toString()) play()
                         onErrorOccurred: (error, errorString) => { root.clipError = errorString; }
                     }
                 }
@@ -63,7 +64,7 @@ Sheet {
     }
     RowLayout {
         Layout.fillWidth: true; spacing: 14
-        ProfileAvatar { Layout.preferredWidth: 36; Layout.preferredHeight: 36 }
+        ProfileAvatar { Layout.preferredWidth: 28; Layout.preferredHeight: 28 }
         PixelText { text: Settings.displayName; Layout.fillWidth: true; font.pixelSize: 20; font.family: "Pixel Operator" }
         Rectangle { implicitWidth: 5; implicitHeight: 5; color: Colors.accent }
     }
@@ -73,7 +74,7 @@ Sheet {
             model: [{name:"Lock",icon:"lock.svg"},{name:"Sleep",icon:"clock.svg"},{name:"Log out",icon:"app-windows.svg"},{name:"Restart",icon:"power.svg"},{name:"Shut down",icon:"power.svg"}]
             MenuRow {
                 required property var modelData
-                Layout.fillWidth: true
+                Layout.fillWidth: true; implicitHeight: 38; padding: 8
                 label: modelData.name; iconName: modelData.icon
                 danger: modelData.name === "Shut down"
                 onClicked: modelData.name === "Lock" || modelData.name === "Sleep" ? root.execute(modelData.name) : root.confirm(modelData.name)

@@ -8,9 +8,23 @@ Item {
     id: root
     property var wallpapers: []
     property bool applying: false
+    readonly property bool syncingApps: appColors.running
+    property string appSyncMessage: ""
+    function syncLiveApps(path) {
+        if (!path || syncingApps || applying || tryingColors) return;
+        appSyncMessage = "";
+        appColors.command = ["bash", Settings.repo + "scripts/sync-wallust.sh", path].concat(Settings.previewMode ? ["--live-from-preview"] : []);
+        appColors.running = true;
+    }
+    Process {
+        id: appColors
+        stderr: StdioCollector { onStreamFinished: if (text.trim()) console.warn("[app colors]", text) }
+        onExited: (code, status) => { root.appSyncMessage = code === 0 ? "Wallust written; Firefox refresh requested. Pywalfox must be enabled in Firefox." : "App colors could not be synchronized. Check the terminal log and Pywalfox connection."; }
+    }
     property bool scanning: false
     readonly property bool tryingColors: previewApply.running || mascot.running
     property string lastError: ""
+    property string previewPath: ""
     property string currentPath: ""
     property var previewColors: ({})
     property var pendingPreview: null
@@ -33,17 +47,20 @@ Item {
     }
     function tryColors(path, recipe, tone, saturation, source, contrast) {
         if (!Settings.previewMode || !path || tryingColors) return;
+        previewApply.wallpaperPath = path;
         previewApply.settingsPatch = {recipe: recipe, tone: tone, saturation: saturation, source: source, contrast: contrast};
         previewApply.command = argumentsFor(path, recipe, tone, saturation, source, contrast).concat(["--output-dir", Settings.themeRoot]);
         previewApply.running = true;
     }
     Process {
         id: previewApply
+        property string wallpaperPath: ""
         property var settingsPatch: ({})
         onExited: (code, status) => {
             if (code === 0) {
                 root.lastError = "";
                 Settings.patch(settingsPatch);
+                root.previewPath = wallpaperPath;
                 mascot.running = true;
             } else root.lastError = "Could not try this palette. No live wallpaper was changed.";
         }
@@ -84,7 +101,7 @@ Item {
     Process {
         id: applyProc
         stderr: StdioCollector { onStreamFinished: { if (text.trim()) console.warn("[wallpaper]", text); } }
-        onExited: (code, status) => { root.applying = false; if (code !== 0) root.lastError = "Wallpaper could not be applied. Check the shell journal."; }
+        onExited: (code, status) => { root.applying = false; if (code !== 0) root.lastError = code === 2 ? "Wallpaper applied; app color sync failed. Check Wallust / Pywalfox in the shell log." : "Wallpaper could not be applied. Check the shell journal."; }
     }
     Timer { id: previewDelay; interval: 220; onTriggered: root.runPreview() }
     Process {

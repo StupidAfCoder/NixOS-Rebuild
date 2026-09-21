@@ -64,3 +64,9 @@ function ranking(days, keys, descending) {
         return {app: entry[0], seconds: entry[1], share: all ? entry[1] / all : 0};
     }).sort(function(a, b) { return (descending ? b.seconds - a.seconds : a.seconds - b.seconds) || a.app.localeCompare(b.app); });
 }
+
+function appSeries(days, app, end, count) {
+    return series(days, end, count).map(function(day) {
+        return {day: day.day, recorded: day.recorded, seconds: (days[day.day] || {})[app] || 0};
+    });
+}

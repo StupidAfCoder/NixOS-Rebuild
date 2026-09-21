@@ -7,6 +7,7 @@ if [[ "${1:-}" == --help ]]; then
     echo 'Temporarily stops the quickshell user service; restores it when preview exits.'
     echo 'Uses private temporary settings/history/cache. Power, wallpaper apply and Trash are disabled.'
     echo 'App launches, network, Bluetooth and audio controls still use the real session.'
+    echo 'Sync live app colors requires separate confirmation and writes real Wallust templates.'
     exit 0
 fi
 sample=0
@@ -31,6 +32,9 @@ original_state="${XDG_STATE_HOME:-$HOME/.local/state}"
 original_config="${XDG_CONFIG_HOME:-$HOME/.config}/pixel-shell/settings.json"
 mkdir -p "$preview/config/pixel-shell" "$preview/state/pixel-shell" "$preview/cache"
 [[ ! -f "$original_config" ]] || cp -- "$original_config" "$preview/config/pixel-shell/settings.json"
+export PIXEL_SHELL_LIVE_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
+export PIXEL_SHELL_LIVE_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}"
+export PIXEL_SHELL_LIVE_STATE="$original_state"
 export XDG_CONFIG_HOME="$preview/config" XDG_STATE_HOME="$preview/state" XDG_CACHE_HOME="$preview/cache"
 export PIXEL_SHELL_PREVIEW=1 PIXEL_SHELL_ROOT="$ROOT"
 if [[ "$software_video" == 1 ]]; then

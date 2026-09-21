@@ -11,20 +11,29 @@ import "../wellbeing"
 Sheet {
     id: root
     shown: SettingsPanel.shown
-    title: "Your corner"
+    title: picking ? "Choose " + (pickKey === "wallpaperDir" ? "folder" : "file") : "Your corner"
     subtitle: Settings.error ? "Changes could not be saved" : Settings.saving ? "Saving…" : Settings.previewMode ? "Preview settings" : ""
     edge: "right"
-    preferredWidth: 500
+    preferredWidth: 460
     preferredHeight: parent.height
-    onDismiss: SettingsPanel.hide()
+    onDismiss: { if (picking) picking = false; else SettingsPanel.hide(); }
+    property bool picking: false
+    property string pickKey: ""
+    function pick(key, value, directory, filters) { pickKey = key; picking = true; pathPicker.start(value, directory, filters); resetScroll(); }
     property string tab: "Profile"
     property bool clearConfirm: false
     property bool resetConfirm: false
-    onShownChanged: if (!shown) { clearConfirm = false; resetConfirm = false; }
+    onShownChanged: if (!shown) { clearConfirm = false; resetConfirm = false; picking = false; }
 
+    PathPicker {
+        id: pathPicker; visible: root.picking; Layout.fillWidth: true
+        onChosen: path => { const patch = {}; patch[root.pickKey] = path; Settings.patch(patch); root.picking = false; root.resetScroll(); root.forceActiveFocus(); }
+        onCancelled: { root.picking = false; root.resetScroll(); root.forceActiveFocus(); }
+    }
     PixelText { text: Settings.error; visible: text.length > 0; color: Colors.error; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone }
     Rectangle {
         Layout.fillWidth: true
+        visible: !root.picking
         implicitHeight: identity.implicitHeight + 32
         color: Colors.surfaceContainer
         border.width: 0
@@ -42,6 +51,7 @@ Sheet {
         }
     }
     Flow {
+        visible: !root.picking
         Layout.fillWidth: true; spacing: 6
         Repeater {
             model: [{id:"Profile",label:"Profile"},{id:"Bar",label:"Bar"},{id:"Appearance",label:"Look"},{id:"Audio",label:"Audio"},{id:"Privacy",label:"Data"}]
@@ -55,7 +65,7 @@ Sheet {
         }
     }
     ColumnLayout {
-        visible: root.tab === "Profile"; Layout.fillWidth: true; spacing: 16
+        visible: !root.picking && root.tab === "Profile"; Layout.fillWidth: true; spacing: 16
         PixelGroup {
             title: "Identity"; detail: "01"; iconName: "user.svg"; Layout.fillWidth: true
             PixelText { text: "Display name" }
@@ -63,20 +73,21 @@ Sheet {
             PixelText { text: "A short note" }
             PixelField { Layout.fillWidth: true; text: Settings.bio; onEditingFinished: Settings.patch({bio: text}) }
             PixelText { text: "Avatar / local file" }
-            PixelField { Layout.fillWidth: true; text: Settings.avatarPath; placeholderText: Settings.home + "/Pictures/avatar.png"; onEditingFinished: Settings.patch({avatarPath: text}) }
+            MenuRow { Layout.fillWidth: true; label: Settings.avatarPath || "Choose a portrait…"; iconName: "folder.svg"; onClicked: root.pick("avatarPath", Settings.avatarPath, false, ["*.png", "*.jpg", "*.jpeg", "*.webp"]) }
+            PixelButton { text: "Use initials"; visible: !!Settings.avatarPath; onClicked: Settings.patch({avatarPath: ""}) }
             PixelText { text: "The square portrait is shared with your power drawer. Nothing is uploaded."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
         }
         PixelGroup {
             title: "Your collection"; detail: "02"; iconName: "folder.svg"; Layout.fillWidth: true
             PixelText { text: "Power drawer video / local file" }
-            PixelField { Layout.fillWidth: true; text: Settings.videoPath; onEditingFinished: Settings.patch({videoPath: text}) }
+            MenuRow { Layout.fillWidth: true; label: Settings.videoPath; iconName: "folder.svg"; onClicked: root.pick("videoPath", Settings.videoPath, false, ["*.mp4", "*.mkv", "*.webm", "*.mov"]) }
             PixelText { text: "Wallpaper directory" }
-            PixelField { Layout.fillWidth: true; text: Settings.wallpaperDir; onEditingFinished: Settings.patch({wallpaperDir: text}) }
-            PixelText { text: "Use absolute paths. Enter or leave a field to save; images and video reload when replaced."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+            MenuRow { Layout.fillWidth: true; label: Settings.wallpaperDir; iconName: "folder.svg"; onClicked: root.pick("wallpaperDir", Settings.wallpaperDir, true, ["*"]) }
+            PixelText { text: "Click a path to browse. Nothing changes until you select a file or folder."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
         }
     }
     ColumnLayout {
-        visible: root.tab === "Bar"; Layout.fillWidth: true; spacing: 16
+        visible: !root.picking && root.tab === "Bar"; Layout.fillWidth: true; spacing: 16
         PixelGroup {
             title: "Build your rail"; iconName: "settings-2.svg"; Layout.fillWidth: true
             PixelText { text: "Keep what you reach for. Hide what you don't. Changes are live, including open panels."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
@@ -94,7 +105,7 @@ Sheet {
                     Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Colors.outlineVariant }
                 }
             }
-            PixelText { text: "Settings stays pinned so you cannot hide your way out. Hidden modules keep their keyboard shortcuts. The rail scrolls on short screens rather than overlapping."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
+            PixelText { text: "Settings is always reachable from the bottom of the rail, Library search or Super+Ctrl+S. Hidden modules keep their keyboard shortcuts. The rail scrolls on short screens rather than overlapping."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
         }
         PixelGroup {
             title: "Room to breathe"; iconName: "app-windows.svg"; Layout.fillWidth: true
@@ -107,7 +118,7 @@ Sheet {
                 text: root.resetConfirm ? "Confirm restore all modules" : "Restore module defaults…"
                 onClicked: {
                     if (root.resetConfirm) {
-                        const defaults = {}; Settings.moduleCatalog.forEach(m => defaults[m.key] = true);
+                        const defaults = {}; Settings.moduleCatalog.forEach(m => defaults[m.key] = m.key !== "system" && m.key !== "settings");
                         Settings.patch({barModules: defaults, workspaceCount: 5}); root.resetConfirm = false;
                     } else root.resetConfirm = true;
                 }
@@ -116,7 +127,7 @@ Sheet {
         }
     }
     ColumnLayout {
-        visible: root.tab === "Appearance"; Layout.fillWidth: true; spacing: 16
+        visible: !root.picking && root.tab === "Appearance"; Layout.fillWidth: true; spacing: 16
         PixelGroup {
             title: "App library"; iconName: "app-windows.svg"; Layout.fillWidth: true
             PixelText { text: "Open from"; color: Colors.textOnSurfaceVariant }
@@ -134,6 +145,7 @@ Sheet {
         }
         PixelGroup {
             title: "Edges & type"; iconName: "brush.svg"; Layout.fillWidth: true
+            PreferenceRow { Layout.fillWidth: true; label: "Quick wallpaper edge"; description: "Hover the middle of the right frame, or use Super+Ctrl+W."; selected: Settings.quickWallpaperEdgeEnabled; onToggled: Settings.patch({quickWallpaperEdgeEnabled: !Settings.quickWallpaperEdgeEnabled}) }
             PixelText { text: "Frame / " + Settings.frameWidth + "px" }
             PixelSlider { Layout.fillWidth: true; from: 4; to: 10; stepSize: 1; value: Settings.frameWidth; onMoved: Settings.patch({frameWidth: value}) }
             PixelText { text: "Body text / " + Settings.bodySize + "px" }
@@ -150,7 +162,7 @@ Sheet {
         }
     }
     PixelGroup {
-        visible: root.tab === "Audio"; Layout.fillWidth: true
+        visible: !root.picking && root.tab === "Audio"; Layout.fillWidth: true
         title: "Workspace audio"; iconName: "volume-2.svg"
         PreferenceRow { Layout.fillWidth: true; label: "Enable workspace muting"; description: "Opt in before choosing workspaces below."; iconName: "volume-2.svg"; selected: Settings.workspaceAudioEnabled; onToggled: Settings.patch({workspaceAudioEnabled: !Settings.workspaceAudioEnabled}) }
         Flow {
@@ -170,7 +182,7 @@ Sheet {
         PixelText { text: "Shared browser processes, remote and unidentified streams are skipped. Only mutes owned by this feature are restored; your existing mutes stay untouched."; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.textOnSurfaceVariant }
     }
     PixelGroup {
-        visible: root.tab === "Privacy"; Layout.fillWidth: true
+        visible: !root.picking && root.tab === "Privacy"; Layout.fillWidth: true
         title: "Time, kept locally"; iconName: "chart.svg"
         PreferenceRow { Layout.fillWidth: true; label: "Focused-app history"; description: "App classes and focused time. No titles, URLs or keystrokes."; iconName: "chart.svg"; selected: Settings.trackingEnabled; onToggled: Settings.patch({trackingEnabled: !Settings.trackingEnabled}) }
         PixelText { text: "Keep history / " + (Settings.values.retentionDays || 30) + " days" }

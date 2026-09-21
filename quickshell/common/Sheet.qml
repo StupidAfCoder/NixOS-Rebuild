@@ -12,6 +12,8 @@ FocusScope {
     property int preferredWidth: 380
     property int preferredHeight: 500
     property bool centered: false
+    property bool fitContent: true
+    property int contentPadding: 16
     property Item initialFocusItem: root
     function resetScroll() { scroller.contentItem.contentY = 0; }
     // Empty = popup. Four edge directions translate without scaling pixel text.
@@ -20,7 +22,7 @@ FocusScope {
     default property alias content: body.data
     signal dismiss()
     width: Math.max(1, Math.min(preferredWidth, parent.width - Settings.barWidth - 36))
-    height: Math.max(1, Math.min(preferredHeight, parent.height - Settings.frameWidth * 2 - 32))
+    height: Math.max(1, Math.min(preferredHeight, fitContent ? body.implicitHeight + heading.implicitHeight + 1 + 24 + contentPadding * 2 : preferredHeight, parent.height - Settings.frameWidth * 2 - 24))
     x: edge === "right" ? parent.width - (width + Settings.frameWidth + 12) * reveal
        : edge === "left" ? Settings.barWidth + 12 - (width + Settings.barWidth + 12) * (1 - reveal)
        : centered ? Settings.barWidth + (parent.width - Settings.barWidth - width) / 2 : Settings.barWidth + 12
@@ -41,8 +43,9 @@ FocusScope {
     Rectangle { x: 0; y: 0; width: 18; height: 2; color: Colors.accent }
     MouseArea { anchors.fill: parent; onClicked: {} }
     ColumnLayout {
-        anchors.fill: parent; anchors.margins: 20; spacing: 16
+        anchors.fill: parent; anchors.margins: root.contentPadding; spacing: 12
         RowLayout {
+            id: heading
             Layout.fillWidth: true
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 4

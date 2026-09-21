@@ -16,7 +16,7 @@ class StateTests(unittest.TestCase):
         c = state.validate({})
         self.assertFalse(c["trackingEnabled"])
         self.assertFalse(c["workspaceAudioEnabled"])
-        self.assertEqual(c["recipe"], "black")
+        self.assertEqual(c["recipe"], "wallpaper")
         self.assertEqual(c["frameWidth"], 6)
 
     def test_reject_invalid_settings(self):
@@ -76,8 +76,10 @@ class StateTests(unittest.TestCase):
 class ModuleTests(unittest.TestCase):
     def test_defaults_are_complete_and_independent(self):
         first, second = state.validate({}), state.validate({})
-        self.assertEqual(len(first['barModules']), 12)
-        self.assertTrue(all(first['barModules'].values()))
+        self.assertEqual(len(first['barModules']), 13)
+        self.assertFalse(first['barModules']['settings'])
+        self.assertFalse(first['barModules']['system'])
+        self.assertTrue(all(v for k,v in first['barModules'].items() if k not in ('settings','system')))
         first['barModules']['clock'] = False
         self.assertTrue(second['barModules']['clock'])
         self.assertEqual(second['workspaceCount'], 5)

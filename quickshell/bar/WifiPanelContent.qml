@@ -9,7 +9,7 @@ Sheet {
     id: root
     shown: WifiPanel.shown
     title: "Wireless"
-    preferredWidth: 410
+    preferredWidth: 360
     preferredHeight: mode === "scan" ? 600 : mode === "join" ? 550 : 470
     onDismiss: WifiPanel.hide()
     property string mode: "link"

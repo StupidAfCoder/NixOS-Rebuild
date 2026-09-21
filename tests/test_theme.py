@@ -52,6 +52,15 @@ class ThemeTests(unittest.TestCase):
         self.assertNotEqual(c["accent"], theme.generate(self.path, saturation=.2)["accent"])
         self.assertNotEqual(c["surface"], theme.generate(self.path, recipe="tonal")["surface"])
 
+    def test_wallpaper_recipe_colors_surfaces_not_only_accents(self):
+        red = theme.generate(self.path, recipe='wallpaper')
+        Image.new('RGB', (32, 32), (20, 80, 210)).save(self.path)
+        blue = theme.generate(self.path, recipe='wallpaper')
+        for key in ('background', 'surface', 'surface_container_low', 'surface_container_high', 'outline_variant'):
+            self.assertNotEqual(red[key], blue[key], key)
+        self.assertGreater(theme.Hct.from_int(int(blue['background'][1:], 16) | 0xff000000).chroma, 12)
+        self.assertEqual(theme.generate(self.path, recipe='black')['background'], '#000000')
+
     def test_population_not_tiny_bright_patch(self):
         image = Image.new("RGB", (100, 100), (170, 35, 45))
         image.paste((255, 240, 0), (0, 0, 10, 10))

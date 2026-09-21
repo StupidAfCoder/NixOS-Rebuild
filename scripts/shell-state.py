@@ -17,14 +17,14 @@ from pathlib import Path
 HOME = Path.home()
 CONFIG = Path(os.environ.get("XDG_CONFIG_HOME", HOME / ".config")) / "pixel-shell/settings.json"
 STATE = Path(os.environ.get("XDG_STATE_HOME", HOME / ".local/state")) / "pixel-shell"
-BAR_MODULES = ("launcher", "workspaces", "clock", "wizard", "media", "audio", "system", "battery", "network", "bluetooth", "tray", "power")
+BAR_MODULES = ("launcher", "workspaces", "clock", "wizard", "media", "audio", "system", "battery", "network", "bluetooth", "tray", "settings", "power")
 DEFAULTS = dict(displayName=os.environ.get("USER", "User"), avatarPath="", bio="A little magic, every day.",
                 videoPath=str(HOME / "Videos/pixel-traffic.mp4"), wallpaperDir=str(HOME / "Pictures/Wallpapers"),
                 frameWidth=6, barWidth=44, motionMs=180, reducedMotion=False, bodySize=13,
-                recipe="black", tone=0, saturation=1., source="representative", contrast=0.,
+                recipe="wallpaper", tone=0, saturation=1., source="representative", contrast=0.,
                 trackingEnabled=False, retentionDays=30, workspaceAudioEnabled=False,
                 mutedWorkspaces=[], dailyGoalMinutes=240,
-                barModules={key: True for key in BAR_MODULES}, workspaceCount=5, launcherEdge="top")
+                barModules={key: key not in ("system", "settings") for key in BAR_MODULES}, workspaceCount=5, launcherEdge="top", quickWallpaperEdgeEnabled=True)
 
 
 def load(path, fallback):
@@ -54,7 +54,7 @@ def validate(values):
     result = {**DEFAULTS, "barModules": DEFAULTS["barModules"].copy()}
     if not isinstance(values, dict):
         raise ValueError("Settings must be an object")
-    enums = {"recipe": ("black", "neutral", "tonal", "expressive", "paper", "mono"),
+    enums = {"recipe": ("wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono"),
              "source": ("representative", "dominant", "colorful"),
              "launcherEdge": ("top", "bottom", "center")}
     limits = {"frameWidth": (4, 10), "barWidth": (36, 64), "motionMs": (80, 350), "bodySize": (12, 18),

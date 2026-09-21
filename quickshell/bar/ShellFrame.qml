@@ -17,8 +17,8 @@ Scope {
     property color frameColor: Colors.background
     property color accentColor: Colors.accent
     property string popupScreen: ""
-    readonly property var panels: [WallpaperLauncher, AppLauncher, PowerMenu, WifiPanel, BatteryPanel, TrayApps, TrayMenu, MediaPanel, BluetoothPanel, SysStatsPanel, SettingsPanel, WellbeingPanel, RightPanel]
-    readonly property bool anyPanelShown: WallpaperLauncher.shown || AppLauncher.shown || PowerMenu.shown || WifiPanel.shown || BatteryPanel.shown || TrayApps.shown || TrayMenu.shown || MediaPanel.shown || BluetoothPanel.shown || SysStatsPanel.shown || SettingsPanel.shown || WellbeingPanel.shown || RightPanel.shown
+    readonly property var panels: [QuickWallpapers, WallpaperLauncher, AppLauncher, PowerMenu, WifiPanel, BatteryPanel, TrayApps, TrayMenu, MediaPanel, BluetoothPanel, SysStatsPanel, SettingsPanel, WellbeingPanel, RightPanel]
+    readonly property bool anyPanelShown: QuickWallpapers.shown || WallpaperLauncher.shown || AppLauncher.shown || PowerMenu.shown || WifiPanel.shown || BatteryPanel.shown || TrayApps.shown || TrayMenu.shown || MediaPanel.shown || BluetoothPanel.shown || SysStatsPanel.shown || SettingsPanel.shown || WellbeingPanel.shown || RightPanel.shown
     function closeAll(except) {
         for (const panel of panels) if (panel !== except && panel.shown) {
             if (typeof panel.hide === "function") panel.hide(); else panel.shown = false;
@@ -29,6 +29,7 @@ Scope {
         popupScreen = Hyprland.focusedMonitor?.name || Quickshell.screens[0]?.name || "";
         closeAll(panel);
     }
+    Connections { target: QuickWallpapers; function onShownChanged() { manager.activate(QuickWallpapers); } }
     Connections { target: WallpaperLauncher; function onShownChanged() { manager.activate(WallpaperLauncher); } }
     Connections { target: AppLauncher; function onShownChanged() { manager.activate(AppLauncher); } }
     Connections { target: PowerMenu; function onShownChanged() { manager.activate(PowerMenu); } }
@@ -86,6 +87,7 @@ Scope {
                     WlrLayershell.keyboardFocus: openHere ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
                     mask: Region {
                         Region { item: barArea }
+                        Region { item: wallpaperEdge }
                         Region { item: catchArea }
                     }
                     Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; height: manager.borderThickness; color: manager.frameColor }
@@ -100,6 +102,20 @@ Scope {
                         MouseArea { anchors.fill: parent; onClicked: manager.closeAll(null) }
                     }
                     Item {
+                        id: wallpaperEdge
+                        anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                        width: Settings.quickWallpaperEdgeEnabled ? Math.max(4, manager.borderThickness) : 0
+                        height: Math.min(160, parent.height / 3); z: 15
+                        property bool latched: false
+                        Rectangle { anchors.fill: parent; color: edgeMouse.containsMouse ? Colors.accent : "transparent" }
+                        MouseArea { id: edgeMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton; onExited: wallpaperEdge.latched = false }
+                        Timer {
+                            interval: 650
+                            running: edgeMouse.containsMouse && !wallpaperEdge.latched && !manager.anyPanelShown && Settings.quickWallpaperEdgeEnabled && !(Hyprland.focusedWorkspace?.lastIpcObject?.hasfullscreen ?? false)
+                            onTriggered: { wallpaperEdge.latched = true; QuickWallpapers.open(); manager.popupScreen = screenRoot.modelData.name; }
+                        }
+                    }
+                    Item {
                         id: popups
                         anchors.fill: parent; z: 20
                         visible: frame.onScreen
@@ -109,6 +125,7 @@ Scope {
                         WifiPanelContent { shown: WifiPanel.shown && frame.onScreen }
                         BatteryPanelContent { shown: BatteryPanel.shown && frame.onScreen }
                         MediaPanelContent { shown: MediaPanel.shown && frame.onScreen }
+                        QuickWallpapersContent { shown: QuickWallpapers.shown && frame.onScreen }
                         WallpaperLauncherContent { shown: WallpaperLauncher.shown && frame.onScreen }
                         AppLauncherContent { shown: AppLauncher.shown && frame.onScreen }
                         SysStatsPanelContent { shown: SysStatsPanel.shown && frame.onScreen }

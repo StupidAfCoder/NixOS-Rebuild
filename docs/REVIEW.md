@@ -1,4 +1,4 @@
-# Pixel shell — console revision
+# Pixel shell — compact, wallpaper-led revision
 
 **Review branch: `arena/01a0c316-nixos-rebuild`. Submitted for review only; do not merge or activate until native QA is complete.**
 
@@ -6,16 +6,15 @@ This is the revised implementation for review, **not a claim of completed native
 
 ## What changed in this pass
 
-- **Less framing:** slim rail without hover labels or permanent button boxes; open sections, underline navigation and quiet selection marks. Caelestia/Serpantinum inform the grouping and restraint, not rounded styling.
-- **Native settings fix:** filesystem paths now use `Quickshell.shellPath` / `PIXEL_SHELL_ROOT`, never virtual `Qt.resolvedUrl` paths. Python helpers run from the actual checkout. The installed service also gets an explicit repository root.
-- **Icons:** asynchronous SVG loading no longer performs I/O or changes dependencies inside the image-source binding. The media timer now explicitly guards a missing player. System metrics use this checkout, not a hard-coded dotfiles directory.
-- **Library:** searchable flat rows, keyboard navigation and saved **top / bottom / center** placement. Top/bottom slide; center fades.
-- **Wireless / Link cable:** one console-like inset with focused link, nearby and connection views. Bluetooth discovery started here stops when this panel closes; externally initiated discovery is left alone.
-- **Background apps:** third-party tray entries grouped behind one button. Bundled identity-based symbols avoid magenta missing-provider textures. This deliberately uses symbolic icons, not pixel/color-based detection of bad icons.
-- **Your day:** separate Day / History / Apps pages, keeping graphs, recorded-day averages, retained totals, calendar and relative app shares.
-- **Session:** a flat console action list below your existing video; destructive actions still require confirmation. The decoder is created only while the drawer is open and motion is enabled.
-- **Preview:** settings, palette and wizard recoloring can be tested in private state without applying a wallpaper. Optional software-video diagnostics for the reported VAAPI texture-export issue.
-- **Review only:** separate branch and draft PR; no merge or native activation. Emacs, NixOS configuration, flake inputs and unrelated configuration remain unchanged.
+- **Content-sized panels:** the shared Sheet now fits its contents within a screen-height cap. Power is 330px wide with a 155px video; radio panels are 360px wide with a 116px status inset. Sound and Your day are narrower too. Large lists still scroll.
+- **Smaller rail icons:** 16–20px glyphs (18px at the default rail width), keeping comfortable click targets. Hover gently tints the background; keyboard focus remains visible without mouse-click focus boxes.
+- **Settings without a permanent button:** hover the bottom of the rail for a labeled arrow, search Settings in Library, or use Super+Ctrl+S. Settings and System are optional modules, off for new preferences; existing explicit module choices are respected. All thirteen modules are configurable.
+- **Pixel path browser:** click avatar, video or wallpaper-folder paths in Profile. Browse folders, go up/home, reveal hidden files, then explicitly select or cancel. Portraits can reset to initials.
+- **Wallpaper-led surfaces:** the new `wallpaper` recipe colors background/frame/rail/panels as well as icons from the same image hue. It is the default for new preferences. `black` still means exact black, and copied older preferences keep their chosen recipe. Choose **wallpaper** in the full editor if your preview still uses black.
+- **Two wallpaper views:** the full editor remains; a horizontal thumbnail ribbon opens via Super+Ctrl+W, Library search or a 650ms hover over the middle of the right frame. Scroll/arrows browse, click/Enter applies. Hovering alone never applies an image. The edge can be disabled in Look and does not trigger on a fullscreen workspace.
+- **Your day:** app icons/names and shares make the first page readable at a glance. Clicking an app opens its daily trend, selected-day time and retained total. Missing days remain distinct from recorded zero.
+- **Wallust / Firefox:** live apply explicitly uses this checkout's Wallust config, validates the generated cache, supports non-default XDG cache paths and requests Pywalfox reload. Failures surface instead of pretending every app updated. Firefox owns its native host; the ineffective standalone forking unit is removed, and manifest setup names the Nix executable explicitly.
+- **Preserved:** workspace presentation, original wizard art/recoloring, notification silhouette and Power video. No unrelated Emacs/NixOS/flake edits, merge or activation.
 
 ## Safest native preview first — no rebuild
 
@@ -51,6 +50,32 @@ Download the [review branch ZIP](https://github.com/StupidAfCoder/NixOS-Rebuild/
 
 In Wallpapers, select an image and use **Try colors on this preview** to recolor the real preview shell and wizard. Its palette is generated under the private cache; it does not change the live wallpaper, Firefox, terminals or compositor files.
 
+### Testing Firefox / live app colors without a rebuild
+
+Ordinary preview selection intentionally does **not** recolor Firefox. This is isolation, not terminal-launch detection failure.
+
+In the full wallpaper editor, select an image, click **Sync live app colors…**, read the warning, then **Confirm live app recoloring**. This is an explicit exception to preview isolation: it writes the real Wallust targets (including existing terminal and application theme files), requests Firefox refresh and signals Kitty. It does not change the live wallpaper, run Matugen, or enable the collector. These live theme changes persist after preview exits. Choose your original wallpaper and sync again to restore its colors.
+
+The helper restores the original XDG paths **only for that child command**. No confirmed sync, no live Wallust writes. The private preview's palette operation remains separate.
+
+Firefox must have the Pywalfox extension enabled in the profile actually in use, with a connected native host. The repository already includes the addon and native package. If the extension reports a missing host on an existing installation, run from a normal terminal:
+
+```sh
+pywalfox install --executable "$(command -v pywalfox)"
+```
+
+That writes the native messaging manifest. Reconnect the extension/restart Firefox if needed, then retry app sync. `pywalfox update` returning zero is **not** proof that the browser acknowledged a theme; inspect the browser too. Custom Firefox forks/profiles may require their own manifest path. Do not start a standalone `pywalfox start` systemd daemon as a substitute for the browser connection.
+
+### Quick wallpaper ribbon
+
+After activation, **Super+Ctrl+W** opens the quick view; **Super+Shift+W** retains the full editor. In a preview, use the edge/Library or:
+
+```sh
+qs ipc --path "$PWD/quickshell/shell.qml" call quickwallpaper toggle
+```
+
+Preview ribbon selections affect only the private shell palette; live mode runs the full wallpaper / shell / Wallust / GTK-Qt pipeline. The ribbon uses the recipe/tone last chosen in the editor.
+
 To verify **live wallpaper apply, real collection, new services and terminal integration**, use the later build/activation workflow only after reviewing the source. Those side effects are deliberately not exercised by the preview helper. In the browser, open `docs/tour/index.html` (or the live Arena preview); it is an illustration, not native Quickshell output.
 
 ## Start here: a five-minute tour
@@ -61,9 +86,9 @@ To verify **live wallpaper apply, real collection, new services and terminal int
 - Rail defaults to 44px and can be adjusted from 36–64px. Frame can be adjusted from 4–10px.
 - **Your original wizard template and recoloring code are retained**, not redrawn. Its robe still takes the wallpaper accent, and generated sprites still reload from cache.
 - Wizard click opens Wallpapers. Clock click opens **Your day**. The NixOS launcher now uses the theme accent rather than fixed blue. Bundled pixel icons open Settings, Sound & light and System; accessible names identify actions without hover labels.
-- Existing launcher/workspace/tray interactions remain. On shorter screens, the date/marquee are reduced and the rail scrolls instead of overlapping. Settings remains pinned outside that scroll area.
+- Existing launcher/workspace/tray interactions remain. On shorter screens, the date/marquee are reduced and the rail scrolls instead of overlapping. A bottom-edge Settings reveal remains reachable outside that scroll area, even with every module hidden.
 
-### 2. Wallpapers: try black, then turn the tone dial
+### 2. Wallpapers: whole-surface color, or true black
 
 Open with the wizard, `Super+Shift+W`, or:
 
@@ -73,7 +98,7 @@ qs ipc call wallpaper toggle
 
 1. Search for a wallpaper. Click a landscape thumbnail; selection **does not apply it**.
 2. The gallery reflows with available width; the preview/control column stacks beneath it on narrower screens.
-3. Select **black**, **neutral**, **tonal**, **expressive**, **paper**, or **mono**.
+3. Select **wallpaper**, **black**, **neutral**, **tonal**, **expressive**, **paper**, or **mono**.
 4. Adjust **Accent tone** and **Color intensity**. Choose representative, dominant or colorful source selection.
 5. The swatch and sample strip are generated by the **actual Python generator**. Preview generation does not overwrite your live colors.
 6. Click **Apply wallpaper & palette**. Recipe, tone, intensity and source preference are remembered globally for subsequent selections. Per-wallpaper remembered profiles are not implemented in this pass.
@@ -110,15 +135,15 @@ Firefox **still uses Wallust + Pywalfox**, not the shell's palette. GTK/Qt remai
 
 ### 5. Your profile and live settings
 
-Open the pinned Settings icon, `Super+Ctrl+S`, or:
+Open the bottom-of-rail reveal, search **Settings** in Library, use `Super+Ctrl+S`, or:
 
 ```sh
 qs ipc call settings toggle
 ```
 
-**Profile:** display name, short note, avatar path, power-video path, wallpaper directory. Paths are local absolute paths; nothing is uploaded. This does not change your Linux account name or user account photo.
+**Profile:** display name, short note, and a pixel file/folder picker for avatar, power video and wallpaper directory. Paths are local absolute paths; nothing is uploaded. This does not change your Linux account name or user account photo.
 
-**Bar:** individually toggle launcher, workspaces, clock, wizard, media, sound/brightness, system, battery/energy, network, Bluetooth, tray and power. All default on; unavailable Bluetooth hardware still hides its control. Workspace indicators: 1–10; rail width: 36–64px. Restore module defaults requires confirmation. Hiding a module does not disable its keyboard shortcut or prevent an already open panel from working.
+**Bar:** individually toggle launcher, workspaces, clock, wizard, media, sound/brightness, system, battery/energy, network, Bluetooth, tray, power and settings. Settings and System default off; all others default on; unavailable Bluetooth hardware still hides its control. Workspace indicators: 1–10; rail width: 36–64px. Restore module defaults requires confirmation. Hiding a module does not disable its keyboard shortcut or prevent an already open panel from working.
 
 **Look (appearance):** frame width, body font size, animation duration, reduced motion, high contrast, launcher position, link to wallpaper tone controls. Settings/Power drawers translate horizontally and the launcher can translate vertically; ordinary popups fade. Neither scales pixel text. Reduced motion makes transitions instant and pauses decorative animation/video.
 
@@ -242,15 +267,15 @@ To stop collection/audio automation without discarding data, disable both contro
 
 ## Validation performed here
 
-- **34 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime and launcher schema.
+- **43 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
 - Four source-guard tests prevent assigning `implicitHeight`/`implicitWidth` on Qt positioners (`Flow`, `Row`, `Column`, `Grid`). This catches the native startup failure reported during the first review; grammar parsing alone did not catch it.
-- **7 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers and module catalog. Repeated in Asia/Kolkata and America/New_York timezones.
-- **70 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
+- **8 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers and module catalog. Repeated in Asia/Kolkata and America/New_York timezones.
+- **74 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
 - `qmllint` inspected; corrected a SystemTray type-name collision and a Button `action` name collision. Full type validation is limited by missing native Quickshell modules.
 - **11 Nix files** parse with the Nix tree-sitter grammar. **No full Nix module evaluation or build** in this sandbox.
-- Bash syntax checks cover all ten shell scripts. The five core rice scripts (apply, preview, brightness, system stats and asset generation) also pass ShellCheck. The unrelated recording helper has a pre-existing `ls | grep` warning and is untouched.
+- Bash syntax checks cover all eleven shell scripts. The six core rice scripts (apply, preview, Wallust sync, brightness, system stats and asset generation) also pass ShellCheck. The unrelated recording helper has a pre-existing `ls | grep` warning and is untouched.
 - Quickshell API declarations inspected for MPRIS controls, notification timeout units/actions, Process stdin, focused-monitor routing, IconImage status/asynchronous aliases and IPC path selection. All statically named bundled icons exist.
-- The revised HTML tour has **9 illustrative scenes**, with library search/placement, wireless flow, Day/History/Apps navigation and safe session confirmations. Three DOM regression tests cover these transitions. It is not an exhaustive replica of native Settings or a hardware test.
+- The revised HTML tour has **10 illustrative scenes**, with library search/placement, wireless flow, Day/History/Apps navigation and safe session confirmations. Four DOM regression tests cover these transitions. It is not an exhaustive replica of native Settings or a hardware test.
 - The HTML tour is a safe mockup. An attempted offscreen native Qt render was blocked by unavailable system graphics libraries; **no native screenshots or native animation claims** are presented.
 
 Run Python tests locally with Pillow and materialyoucolor installed:
@@ -281,6 +306,10 @@ The VAAPI texture-export warnings are a separate video/driver path. The `--softw
 
 ## Native QA still required before merge or activation
 
+- [ ] File picker navigates nested/spaced paths, selects images/videos/folders, cancels without writes and restores Settings focus.
+- [ ] Right-edge ribbon opens only after dwell, stays closed until pointer re-entry, scrolls/selects, and routes to the invoking monitor.
+- [ ] Wallpaper recipe changes rail/panel surfaces as well as glyphs; black remains exact black.
+- [ ] Confirmed live app sync changes Firefox with its extension connected; unconfirmed preview operations leave live targets untouched.
 - [ ] Shell starts without QML binding/type errors on your pinned Quickshell revision.
 - [ ] Your corner and Power enter/exit from the right; Escape cancels a pending power action before closing.
 - [ ] In the preview, change frame/bar width, font and module switches: the visible shell must update, and private `config/pixel-shell/settings.json` must change without helper errors. Restart against that same private state to check persistence.

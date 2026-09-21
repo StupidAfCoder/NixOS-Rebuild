@@ -10,11 +10,11 @@ Rectangle {
     property string detail: ""
     property bool online: false
     property bool searching: false
-    implicitHeight: 164
+    implicitHeight: 116
     color: Colors.surface
     border.color: Colors.outlineVariant
     ColumnLayout {
-        anchors.fill: parent; anchors.margins: 18; spacing: 12
+        anchors.fill: parent; anchors.margins: 14; spacing: 8
         RowLayout {
             spacing: 8; Layout.fillWidth: true
             Rectangle {
@@ -29,7 +29,7 @@ Rectangle {
             ColoredIcon { iconName: root.iconName; tint: Colors.accent; Layout.preferredWidth: 30; Layout.preferredHeight: 30 }
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 6
-                PixelText { text: root.heading; font.family: "Pixel Operator"; font.pixelSize: 23; Layout.fillWidth: true }
+                PixelText { text: root.heading; font.family: "Pixel Operator"; font.pixelSize: 20; Layout.fillWidth: true }
                 PixelText { text: root.detail; color: Colors.textOnSurfaceVariant; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone }
             }
         }

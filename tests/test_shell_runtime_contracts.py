@@ -54,3 +54,22 @@ class RuntimeContracts(unittest.TestCase):
         for file in (ROOT / 'quickshell').rglob('*.qml'):
             for name in re.findall(r'(?:iconName|icon):\s*"([\w-]+\.svg)"', file.read_text()):
                 self.assertTrue((ROOT / 'quickshell/bar/assets/icons' / name).is_file(), (file, name))
+
+    def test_compact_sheets_and_recovery_access(self):
+        sheet = (ROOT / 'quickshell/common/Sheet.qml').read_text()
+        self.assertIn('body.implicitHeight + heading.implicitHeight', sheet)
+        self.assertIn('property bool fitContent: true', sheet)
+        launcher = (ROOT / 'quickshell/launcher/AppLauncherContent.qml').read_text()
+        self.assertIn('fitContent: false', launcher)  # avoids a ListView height cycle
+        self.assertIn('shellAction: "settings"', launcher)
+        self.assertIn('Settings.moduleEnabled("settings")', (ROOT / 'quickshell/bar/Bar.qml').read_text())
+
+    def test_file_picker_and_quick_wallpaper_registration(self):
+        picker = (ROOT / 'quickshell/common/PathPicker.qml').read_text()
+        self.assertIn('FolderListModel', picker)
+        self.assertIn('signal chosen(string path)', picker)
+        frame = (ROOT / 'quickshell/bar/ShellFrame.qml').read_text()
+        self.assertIn('Region { item: wallpaperEdge }', frame)
+        self.assertIn('QuickWallpapersContent', frame)
+        self.assertIn('wallpaperEdge.latched', frame)
+        self.assertIn('call quickwallpaper toggle', (ROOT / 'hyprland.lua').read_text())

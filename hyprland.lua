@@ -342,6 +342,7 @@ hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + B", hl.dsp.exec_cmd(browser))
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd(wallpaper_change))
+hl.bind(mainMod .. " + CTRL + W", hl.dsp.exec_cmd("qs ipc call quickwallpaper toggle"))
 -- Live shell preferences and local calendar / focused-app history.
 hl.bind(mainMod .. " + CTRL + S", hl.dsp.exec_cmd("qs ipc call settings toggle"))
 hl.bind(mainMod .. " + CTRL + C", hl.dsp.exec_cmd("qs ipc call wellbeing toggle"))

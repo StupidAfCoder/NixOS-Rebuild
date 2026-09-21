@@ -15,6 +15,6 @@ PixelButton {
     }
     background: Item {
         Rectangle { height: 2; width: parent.width; anchors.bottom: parent.bottom; color: Colors.accent; visible: root.selected }
-        Rectangle { anchors.fill: parent; color: "transparent"; border.color: Colors.accent; visible: root.activeFocus }
+        Rectangle { anchors.fill: parent; color: "transparent"; border.color: Colors.accent; visible: root.visualFocus }
     }
 }

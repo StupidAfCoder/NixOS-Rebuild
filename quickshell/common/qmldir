@@ -12,3 +12,7 @@ MenuRow 1.0 MenuRow.qml
 TabButton 1.0 TabButton.qml
 SignalMeter 1.0 SignalMeter.qml
 ConnectionScreen 1.0 ConnectionScreen.qml
+
+PathPicker 1.0 PathPicker.qml
+
+singleton AppIdentity 1.0 AppIdentity.qml

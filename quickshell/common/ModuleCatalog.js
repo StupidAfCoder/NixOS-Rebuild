@@ -13,11 +13,12 @@ function entries() {
         {key: "network", label: "Network", icon: "wifi.svg", description: "Wi-Fi and wired connection status."},
         {key: "bluetooth", label: "Bluetooth", icon: "bluetooth.svg", description: "Shown when an adapter is available."},
         {key: "tray", label: "Application tray", icon: "database.svg", description: "Background apps grouped behind one rail control."},
+        {key: "settings", label: "Settings button", icon: "settings-2.svg", description: "Optional button. Bottom-edge reveal, Library and shortcut always work."},
         {key: "power", label: "Power drawer", icon: "power.svg", description: "Video, lock, sleep and confirmed session actions."}
     ];
 }
 function defaults() {
     var result = {};
-    entries().forEach(function(entry) { result[entry.key] = true; });
+    entries().forEach(function(entry) { result[entry.key] = entry.key !== "settings" && entry.key !== "system"; });
     return result;
 }

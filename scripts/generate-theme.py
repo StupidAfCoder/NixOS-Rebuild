@@ -2,7 +2,7 @@
 """Single-seed wallpaper themes. Preview is pure; only the CLI publishes files.
 
 Compatible: generate-theme.py IMAGE dark|light [CONTRAST]
-New: --recipe black|neutral|tonal|expressive|paper|mono --tone -15..15
+New: --recipe wallpaper|black|neutral|tonal|expressive|paper|mono --tone -15..15
      --saturation 0..1.6 --source representative|dominant|colorful --preview
 """
 import argparse
@@ -16,7 +16,7 @@ from PIL import Image, ImageOps
 from materialyoucolor.hct import Hct
 
 ROOT = Path(__file__).resolve().parents[1]
-RECIPES = ("black", "neutral", "tonal", "expressive", "paper", "mono")
+RECIPES = ("wallpaper", "black", "neutral", "tonal", "expressive", "paper", "mono")
 
 
 def atomic_write(path, text):
@@ -103,9 +103,11 @@ def generate(path, mode="dark", contrast_level=0., recipe="black", tone=0., satu
     hue = seed["hue"]
     chroma = 0 if neutral else min(90, seed["chroma"] * saturation * (1.3 if recipe == "expressive" else 1))
     light = mode == "light" or recipe == "paper"
-    tinted = recipe in ("tonal", "expressive", "paper") and not neutral
-    surface_chroma = min(chroma * .10, 8) if tinted else 0
+    tinted = recipe in ("wallpaper", "tonal", "expressive", "paper") and not neutral
+    surface_chroma = min(chroma * (.55 if recipe == "wallpaper" else .25), 36 if recipe == "wallpaper" else 16) if tinted else 0
     levels = [96, 98, 94, 91, 87, 83] if light else ([0, 3, 5, 8, 12, 16] if recipe == "black" else [5, 7, 9, 12, 16, 20])
+    if recipe == "wallpaper" and not light:
+        levels = [12, 14, 16, 19, 22, 26]
     keys = ("background", "surface", "surface_container_low", "surface_container", "surface_container_high", "surface_variant")
     colors = {key: hct_hex(hue, surface_chroma, level) for key, level in zip(keys, levels)}
     colors["background"] = "#000000" if recipe == "black" and not light else colors["background"]
@@ -130,6 +132,9 @@ def generate(path, mode="dark", contrast_level=0., recipe="black", tone=0., satu
                   outline_variant="#b8b8b1" if light else "#303030", shadow="#000000",
                   error="#a51c25" if light else "#ffb4ab",
                   on_error="#ffffff" if light else "#380000")
+    if tinted:
+        colors["outline_variant"] = hct_hex(hue, surface_chroma, 72 if light else 32)
+        colors["outline"] = hct_hex(hue, surface_chroma, 44 if light else 54)
     return {**colors, "_meta": {**seed, "recipe": recipe, "tone": tone, "saturation": saturation,
                                 "source": source, "mode": "light" if light else "dark"}}
 

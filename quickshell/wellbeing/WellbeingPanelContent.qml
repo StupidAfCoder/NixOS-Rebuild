@@ -12,10 +12,15 @@ Sheet {
     title: "Your day"
     subtitle: Usage.sampleData ? "Sample history" : Settings.trackingEnabled ? "" : "Recording paused"
     centered: true
-    preferredWidth: 620
-    preferredHeight: 740
+    preferredWidth: 490
+    preferredHeight: page === 1 ? 670 : 600
     onDismiss: WellbeingPanel.hide()
     property int page: 0
+    property string selectedApp: ""
+    readonly property var appSeries: Usage.appSeries(selectedApp, rangeApps ? graphEnd : selectedDay, period)
+    readonly property real appMaximum: Math.max(1, ...appSeries.map(d => d.seconds))
+    readonly property real appPeriodTotal: appSeries.reduce((n,d) => n + d.seconds, 0)
+    function showApp(app) { selectedApp = app; changePage(2); }
     property date today: new Date()
     property date month: new Date(today.getFullYear(), today.getMonth(), 1, 12)
     property string selectedDay: Usage.key(today)
@@ -33,7 +38,7 @@ Sheet {
     readonly property real largestApp: Math.max.apply(null, apps.map(a => a.seconds).concat([1]))
     readonly property int firstWeekday: (month.getDay() + 6) % 7
     readonly property int daysInMonth: new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate()
-    function changePage(next) { page = (next + 3) % 3; resetScroll(); }
+    function changePage(next) { page = (next + 3) % 3; if (page !== 2) selectedApp = ""; resetScroll(); }
     function selectDay(day) {
         selectedDay = day;
         const parts = day.split("-").map(Number);
@@ -55,7 +60,6 @@ Sheet {
     }
     onShownChanged: if (shown) updateToday()
     Timer { interval: 60000; running: root.shown; repeat: true; onTriggered: root.updateToday() }
-    Timer { interval: 60000; repeat: true; running: root.shown; onTriggered: root.today = new Date() }
     RowLayout {
         Layout.fillWidth: true
         Repeater {
@@ -67,10 +71,10 @@ Sheet {
         IconButton { iconName: "chevron-right.svg"; hint: "Next page"; onClicked: root.changePage(root.page + 1) }
     }
     ColumnLayout {
-        visible: root.page === 0; Layout.fillWidth: true; spacing: 22
+        visible: root.page === 0; Layout.fillWidth: true; spacing: 14
         PixelText { text: root.selectedDay === Usage.key(root.today) ? "Today" : root.selectedDay; color: Colors.textOnSurfaceVariant }
-        PixelText { text: Usage.hasDay(root.selectedDay) ? Usage.duration(Usage.total(root.selectedDay)) : "No history"; font.family: "Pixel Operator"; font.pixelSize: 52; Layout.fillWidth: true }
-        PixelText { text: "Focused time"; color: Colors.textOnSurfaceVariant }
+        PixelText { text: Usage.hasDay(root.selectedDay) ? Usage.duration(Usage.total(root.selectedDay)) : "No history"; font.family: "Pixel Operator"; font.pixelSize: 42; Layout.fillWidth: true }
+        PixelText { text: "Focused time · " + root.dailyApps.length + " apps"; color: Colors.textOnSurfaceVariant }
         RowLayout {
             Layout.fillWidth: true; spacing: 5
             Repeater {
@@ -90,15 +94,17 @@ Sheet {
                 MenuRow {
                     required property var modelData
                     Layout.fillWidth: true
-                    label: modelData.app; trailing: Usage.duration(modelData.seconds)
-                    onClicked: { root.rangeApps = false; root.changePage(2); }
+                    label: AppIdentity.name(modelData.app); trailing: Usage.duration(modelData.seconds)
+                    iconSource: AppIdentity.icon(modelData.app); iconName: AppIdentity.fallback(modelData.app)
+                    detail: Math.round(modelData.share * 100) + "% of focused time"
+                    onClicked: { root.rangeApps = false; root.showApp(modelData.app); }
                 }
             }
         }
         PixelText { visible: !root.dailyApps.length; text: Usage.hasDay(root.selectedDay) ? "No focused activity recorded on this day." : "Enable local history in Settings to begin."; wrapMode: Text.Wrap; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant }
         RowLayout {
             Layout.fillWidth: true
-            PixelButton { text: "All apps"; visible: root.dailyApps.length > 0; onClicked: { root.rangeApps = false; root.changePage(2); } }
+            PixelButton { text: "All apps"; visible: root.dailyApps.length > 0; onClicked: { root.selectedApp = ""; root.rangeApps = false; root.changePage(2); } }
             PixelButton { text: "Today"; visible: root.selectedDay !== Usage.key(root.today); onClicked: root.goToday() }
             Item { Layout.fillWidth: true }
             IconButton { iconName: "settings-2.svg"; hint: "History settings"; onClicked: { WellbeingPanel.hide(); SettingsPanel.toggle(); } }
@@ -185,7 +191,7 @@ Sheet {
         }
     }
     ColumnLayout {
-        visible: root.page === 2; Layout.fillWidth: true; spacing: 18
+        visible: root.page === 2 && !root.selectedApp; Layout.fillWidth: true; spacing: 18
         Flow {
             Layout.fillWidth: true; spacing: 6
             TabButton { text: "Day"; selected: !root.rangeApps; onClicked: root.rangeApps = false }
@@ -199,10 +205,12 @@ Sheet {
                 id: appRow
                 required property var modelData
                 Layout.fillWidth: true; spacing: 8
-                RowLayout {
+                MenuRow {
                     Layout.fillWidth: true
-                    PixelText { text: appRow.modelData.app; Layout.fillWidth: true }
-                    PixelText { text: Usage.duration(appRow.modelData.seconds) + "  /  " + Math.round(appRow.modelData.share * 100) + "%"; color: Colors.textOnSurfaceVariant }
+                    label: AppIdentity.name(appRow.modelData.app)
+                    iconSource: AppIdentity.icon(appRow.modelData.app); iconName: AppIdentity.fallback(appRow.modelData.app)
+                    trailing: Usage.duration(appRow.modelData.seconds) + " / " + Math.round(appRow.modelData.share * 100) + "%"
+                    onClicked: root.showApp(appRow.modelData.app)
                 }
                 Rectangle {
                     Layout.fillWidth: true; implicitHeight: 4; color: Colors.surfaceContainerHigh
@@ -211,6 +219,34 @@ Sheet {
             }
         }
         PixelText { visible: !root.apps.length; text: "No app activity for this selection."; Layout.fillWidth: true; color: Colors.textOnSurfaceVariant }
+    }
+    ColumnLayout {
+        visible: root.page === 2 && !!root.selectedApp; Layout.fillWidth: true; spacing: 14
+        PixelButton { text: "Back to apps"; onClicked: { root.selectedApp = ""; root.resetScroll(); } }
+        MenuRow { Layout.fillWidth: true; label: AppIdentity.name(root.selectedApp); iconSource: AppIdentity.icon(root.selectedApp); iconName: AppIdentity.fallback(root.selectedApp); detail: root.selectedApp; enabled: false }
+        PixelText { text: Usage.duration(root.appPeriodTotal); font.family: "Pixel Operator"; font.pixelSize: 40 }
+        PixelText { text: root.period + " days through " + (root.rangeApps ? root.graphEnd : root.selectedDay); color: Colors.textOnSurfaceVariant }
+        Row {
+            id: appGraph
+            Layout.fillWidth: true; Layout.preferredHeight: 90; spacing: 4
+            Repeater {
+                model: root.appSeries
+                Button {
+                    id: appBar
+                    required property var modelData
+                    width: Math.max(1, (appGraph.width - (root.period - 1) * appGraph.spacing) / root.period); height: appGraph.height
+                    Accessible.name: modelData.day + ": " + (modelData.recorded ? Usage.duration(modelData.seconds) : "No data")
+                    background: Item {
+                        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: Math.max(2, parent.height * appBar.modelData.seconds / root.appMaximum); color: appBar.modelData.recorded ? Colors.accent : Colors.outlineVariant }
+                        Rectangle { anchors.fill: parent; color: "transparent"; border.color: Colors.accent; visible: appBar.activeFocus }
+                    }
+                    onClicked: root.selectDay(modelData.day)
+                }
+            }
+        }
+        PixelText { text: "Daily focused time · peak " + Usage.duration(root.appMaximum); color: Colors.textOnSurfaceVariant }
+        PixelText { text: "Selected day / " + Usage.duration(Usage.days[root.selectedDay]?.[root.selectedApp] || 0); Layout.fillWidth: true }
+        PixelText { text: "Retained history / " + Usage.duration(Object.keys(Usage.days).reduce((n,d) => n + (Usage.days[d][root.selectedApp] || 0), 0)); Layout.fillWidth: true }
     }
     PixelText { visible: !!Usage.error; text: Usage.error; Layout.fillWidth: true; wrapMode: Text.Wrap; color: Colors.error }
 }

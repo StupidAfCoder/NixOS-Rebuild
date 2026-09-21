@@ -2,3 +2,5 @@ PixelPanel 1.0 PixelPanel.qml
 singleton WallpaperBackend 1.0 WallpaperBackend.qml
 singleton WallpaperLauncher 1.0 WallpaperLauncher.qml
 WallpaperLauncherContent 1.0 WallpaperLauncherContent.qml
+singleton QuickWallpapers 1.0 QuickWallpapers.qml
+QuickWallpapersContent 1.0 QuickWallpapersContent.qml

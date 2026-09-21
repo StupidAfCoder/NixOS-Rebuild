@@ -8,7 +8,7 @@ Sheet {
     id: root
     shown: RightPanel.shown
     title: "Sound & light"
-    preferredWidth: 340; preferredHeight: BrightnessBackend.available ? 330 : 240
+    preferredWidth: 310; preferredHeight: BrightnessBackend.available ? 330 : 240
     onDismiss: RightPanel.shown = false
     onShownChanged: if (shown) BrightnessBackend.refresh()
     RowLayout {

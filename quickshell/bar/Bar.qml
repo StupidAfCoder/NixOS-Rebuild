@@ -177,10 +177,22 @@ Item {
             SystemTray { Layout.alignment: Qt.AlignHCenter }
         }
     }
-    // Recovery access is always available even when every optional module is disabled.
+    // Recovery remains available even with every optional module hidden.
     IconButton {
-        anchors.bottom: parent.bottom; anchors.bottomMargin: 8; anchors.horizontalCenter: parent.horizontalCenter
-        iconName: "settings-2.svg"; hint: "Your corner · Super+Ctrl+S"
+        id: settingsReveal
+        anchors.bottom: parent.bottom; anchors.bottomMargin: 6; anchors.horizontalCenter: parent.horizontalCenter
+        iconName: Settings.moduleEnabled("settings") ? "settings-2.svg" : "chevron-up.svg"
+        hint: "Settings · Super+Ctrl+S"
         onClicked: SettingsPanel.toggle()
+        opacity: Settings.moduleEnabled("settings") || hovered || activeFocus ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Settings.motionMs } }
+        Rectangle {
+            visible: !Settings.moduleEnabled("settings") && settingsReveal.hovered
+            x: parent.width + 8; anchors.verticalCenter: parent.verticalCenter
+            width: revealLabel.implicitWidth + 16; height: 28
+            color: Colors.surfaceContainerHigh; border.color: Colors.outlineVariant
+            PixelText { id: revealLabel; anchors.centerIn: parent; text: "Settings" }
+        }
     }
+    Rectangle { anchors.bottom: parent.bottom; anchors.bottomMargin: 4; anchors.horizontalCenter: parent.horizontalCenter; width: 10; height: 2; color: Colors.accent; opacity: .5; visible: !Settings.moduleEnabled("settings") }
 }
