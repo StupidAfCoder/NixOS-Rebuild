@@ -5,9 +5,11 @@ import QtQuick
 QtObject {
     id: root
     property bool shown: false
+    property string requestedScreen: ""
     property var stack: []   // [{ handle, x, y }, ...]
 
-    function openFor(item, x, y) {
+    function openFor(item, x, y, screenName) {
+        requestedScreen = screenName || ""
         stack = [{ handle: item.menu, x: x, y: y }]
         shown = true
     }
@@ -21,5 +23,6 @@ QtObject {
     function hide() {
         shown = false
         stack = []
+        requestedScreen = ""
     }
 }

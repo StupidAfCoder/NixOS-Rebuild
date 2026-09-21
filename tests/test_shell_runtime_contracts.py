@@ -98,6 +98,30 @@ class RuntimeContracts(unittest.TestCase):
         self.assertNotIn('ProfileAvatar', power)
         self.assertIn('MediaPlayer {', power)
 
+    def test_preview_cancellation_is_global_not_per_monitor(self):
+        controller = (ROOT / 'quickshell/wallpaper/WallpaperLauncher.qml').read_text()
+        self.assertIn('onShownChanged: if (!shown) WallpaperBackend.cancelPreview()', controller)
+        studio = (ROOT / 'quickshell/wallpaper/WallpaperLauncherContent.qml').read_text()
+        self.assertIn('if (!shown) return;', studio)
+        self.assertIn('function onContrastChanged() { root.preview(); }', studio)
+        backend = (ROOT / 'quickshell/wallpaper/WallpaperBackend.qml').read_text()
+        self.assertIn('previewProc.revision === previewRevision', backend)
+        self.assertIn('root.finishPreview(code, revision, root.previewResult)', backend)
+
+    def test_trash_selection_waits_for_success_and_both_views_observe_busy(self):
+        studio = (ROOT / 'quickshell/wallpaper/WallpaperLauncherContent.qml').read_text()
+        self.assertIn('function onWallpaperTrashed(path)', studio)
+        self.assertIn('if (root.selectedPath === path) root.selectedPath = ""', studio)
+        self.assertNotIn('WallpaperBackend.trash(root.selectedPath); root.selectedPath = ""', studio)
+        for name in ['WallpaperLauncherContent', 'QuickWallpapersContent']:
+            self.assertIn('|| WallpaperBackend.trashing', (ROOT / 'quickshell/wallpaper' / (name + '.qml')).read_text())
+
+    def test_nested_tray_supplies_its_parent_monitor(self):
+        tray = (ROOT / 'quickshell/bar/TrayAppsContent.qml').read_text()
+        self.assertIn('TrayMenu.openFor(modelData, pos.x, pos.y, root.invokingScreen)', tray)
+        frame = (ROOT / 'quickshell/bar/ShellFrame.qml').read_text()
+        self.assertIn('TrayAppsContent { invokingScreen: screenRoot.modelData.name;', frame)
+
     def test_file_picker_and_quick_wallpaper_registration(self):
         picker = (ROOT / 'quickshell/common/PathPicker.qml').read_text()
         self.assertIn('FolderListModel', picker)

@@ -62,6 +62,20 @@ Changing palette controls in the editor only generates a preview until Apply/Try
 **Sync live app colors** is a separate, confirmed Wallust operation; it is not a promise that
 Firefox acknowledged the refresh or that its palette exactly matches the shell's recipe.
 
+## Async selection rules
+
+An installed-app refresh preserves the selected **desktop-entry ID**, not its row number or
+name. A new search/category deliberately resets selection. Wallpaper preview completion is
+revision-checked: closing the editor or clearing its selection invalidates old work without
+interrupting an explicit Apply/Try. Global editor closure is distinct from hiding one screen's
+content instance during monitor transfer.
+
+Trash owns its captured path until completion and blocks competing in-shell apply/try/sync
+jobs. Only a successful completion clears a matching selection. Failed/refused deletion and
+selection of a different image never optimistically erase the user's current choice.
+
+Nested tray menus retain their parent screen, since their coordinates are window-local.
+
 ## Deliberate limits / native checks
 
 - Image picker decodes images at bounded preview sizes; it does not generate video thumbnails.

@@ -16,7 +16,7 @@ FocusScope {
     y: Math.round((parent.height - height) / 2)
     visible: shown || reveal > 0; enabled: shown; opacity: reveal
     Behavior on reveal { NumberAnimation { duration: Settings.motionMs; easing.type: Easing.OutCubic } }
-    readonly property bool busy: WallpaperBackend.applying || WallpaperBackend.tryingColors || WallpaperBackend.syncingApps
+    readonly property bool busy: WallpaperBackend.applying || WallpaperBackend.tryingColors || WallpaperBackend.syncingApps || WallpaperBackend.trashing
     property string selectedPath: ""
     readonly property string appliedPath: Settings.previewMode ? WallpaperBackend.previewPath || WallpaperBackend.currentPath : WallpaperBackend.currentPath
     function restoreSelection() {

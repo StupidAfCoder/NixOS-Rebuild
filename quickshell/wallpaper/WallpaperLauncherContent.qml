@@ -23,11 +23,18 @@ Sheet {
     property bool confirmAppSync: false
     property bool confirmTrash: false
     property bool advanced: false
-    readonly property bool busy: WallpaperBackend.applying || WallpaperBackend.tryingColors || WallpaperBackend.syncingApps
+    readonly property bool busy: WallpaperBackend.applying || WallpaperBackend.tryingColors || WallpaperBackend.syncingApps || WallpaperBackend.trashing
     readonly property var filtered: WallpaperBackend.wallpapers.filter(w => w.name.toLowerCase().includes(search.text.toLowerCase()))
     function preview() {
-        if (selectedPath && shown) WallpaperBackend.preview(selectedPath, recipe, tone, saturation, sourcePreference, Settings.contrast);
+        if (!shown) return;
+        if (selectedPath) WallpaperBackend.preview(selectedPath, recipe, tone, saturation, sourcePreference, Settings.contrast);
+        else WallpaperBackend.cancelPreview();
     }
+    Connections {
+        target: WallpaperBackend
+        function onWallpaperTrashed(path) { if (root.selectedPath === path) root.selectedPath = ""; }
+    }
+    Connections { target: Settings; function onContrastChanged() { root.preview(); } }
     function select(index) {
         if (index >= 0 && index < filtered.length) { gallery.currentIndex = index; selectedPath = filtered[index].path; }
     }
@@ -154,7 +161,7 @@ Sheet {
             enabled: !!root.selectedPath && !root.busy
             onClicked: { if (root.confirmAppSync) { WallpaperBackend.syncLiveApps(root.selectedPath); root.confirmAppSync = false; } else root.confirmAppSync = true; }
         }
-        PixelButton { text: root.confirmTrash ? "Confirm Trash" : "Trash…"; danger: root.confirmTrash; enabled: !!root.selectedPath && !root.busy; onClicked: { if (root.confirmTrash) { WallpaperBackend.trash(root.selectedPath); root.selectedPath = ""; root.confirmTrash = false; } else root.confirmTrash = true; } }
+        PixelButton { text: WallpaperBackend.trashing ? "Moving…" : root.confirmTrash ? "Confirm Trash" : "Trash…"; danger: root.confirmTrash; enabled: !!root.selectedPath && !root.busy; onClicked: { if (root.confirmTrash) { WallpaperBackend.trash(root.selectedPath); root.confirmTrash = false; } else root.confirmTrash = true; } }
         PixelButton { visible: root.confirmAppSync || root.confirmTrash; text: "Cancel"; onClicked: { root.confirmAppSync = false; root.confirmTrash = false; } }
     }
     PixelText { visible: root.confirmAppSync; Layout.fillWidth: true; text: "Writes LIVE Wallust templates and requests Firefox / terminal recoloring, even in preview. This is separate from the shell palette above. The wallpaper is not changed."; wrapMode: Text.Wrap; elide: Text.ElideNone; color: Colors.warning }

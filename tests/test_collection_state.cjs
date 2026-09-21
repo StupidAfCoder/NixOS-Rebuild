@@ -41,7 +41,7 @@ test('actual QML scan queue coalesces requests without changing the running proc
 });
 test('actual QML apply function defers settings persistence and blocks competing syncs',()=>{
  const source=fs.readFileSync(path.join(root,'quickshell/wallpaper/WallpaperBackend.qml'),'utf8');
- const writes=[];const ctx=vm.createContext({Settings:{previewMode:false,repo:'/checkout/',patch:p=>writes.push(p)},applyProc:{running:false},applying:false,tryingColors:false,syncingApps:true,actionError:''});
+ const writes=[];const ctx=vm.createContext({Settings:{previewMode:false,repo:'/checkout/',patch:p=>writes.push(p)},applyProc:{running:false},applying:false,tryingColors:false,syncingApps:true,trashing:false,actionError:''});
  vm.runInContext(qmlFunction(source,'apply'),ctx);
  ctx.apply('/image','wallpaper',0,1,'representative',0);assert.equal(ctx.applyProc.running,false);
  ctx.syncingApps=false;ctx.apply('/image','wallpaper',0,1,'representative',0);

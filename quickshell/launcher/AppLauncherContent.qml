@@ -21,6 +21,7 @@ Sheet {
     preferredWidth: 672; preferredHeight: 512
     onDismiss: AppLauncher.hide()
     property string category: "All"
+    property string selectedId: ""
     readonly property var shortcuts: [
         {name: "Settings", genericName: "Your corner · profile, rail and appearance", icon: "preferences-system", shellAction: "settings"},
         {name: "System readings", genericName: "CPU, memory and sensors", icon: "utilities-system-monitor", shellAction: "system"},
@@ -37,17 +38,32 @@ Sheet {
         else if (app.shellAction === "wallpapers") QuickWallpapers.toggle();
         else app.execute();
     }
-    function move(delta) {
-        results.currentIndex = Library.move(results.currentIndex, delta, applications.length);
-        if (results.currentIndex >= 0) results.positionViewAtIndex(results.currentIndex, GridView.Contain);
+    function select(index) {
+        results.currentIndex = index;
+        selectedId = Library.identity(applications[index]);
+        if (index >= 0) results.positionViewAtIndex(index, GridView.Contain);
     }
-    onApplicationsChanged: results.currentIndex = applications.length ? 0 : -1
-    onShownChanged: if (shown) { search.text = ""; category = "All"; results.currentIndex = applications.length ? 0 : -1; }
+    function restoreSelection() {
+        if (!results) return;
+        select(Library.indexFor(applications, selectedId));
+    }
+    function resetSelection() {
+        selectedId = "";
+        restoreSelection();
+    }
+    function move(delta) {
+        select(Library.move(results.currentIndex, delta, applications.length));
+    }
+    // Do not infer identity from currentIndex when GridView replaces its model:
+    // Qt may already have reset it to zero by the time this callback runs.
+    onApplicationsChanged: Qt.callLater(root.restoreSelection)
+    onCategoryChanged: resetSelection()
+    onShownChanged: if (shown) { search.text = ""; category = "All"; resetSelection(); }
     PixelField {
         id: search
         Layout.fillWidth: true
         placeholderText: "Search apps or Settings…"
-        onTextChanged: if (text) root.category = "All"
+        onTextChanged: { if (text) root.category = "All"; root.resetSelection(); }
         onAccepted: root.launch(results.currentIndex)
         Keys.onDownPressed: { results.forceActiveFocus(); root.move(0); }
     }
@@ -107,7 +123,7 @@ Sheet {
                     padding: 8; checked: results.currentIndex === tile.index
                     focusPolicy: Qt.NoFocus
                     Accessible.name: tile.modelData.name
-                    onClicked: { results.currentIndex = tile.index; results.forceActiveFocus(); }
+                    onClicked: { root.select(tile.index); results.forceActiveFocus(); }
                     onDoubleClicked: root.launch(tile.index)
                     contentItem: Item {
                         Row { anchors.top: parent.top; anchors.horizontalCenter: parent.horizontalCenter; spacing: 3

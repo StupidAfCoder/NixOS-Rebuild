@@ -38,7 +38,7 @@ test('popup follows origin and clamps to frame at both ends, including short scr
 });
 test('actual popup manager captures click screen, clears origin for IPC and transfers between monitors',()=>{
  const source=fs.readFileSync(path.join(__dirname,'../quickshell/bar/ShellFrame.qml'),'utf8');
- const ctx=vm.createContext({popupScreen:'',popupAnchorY:-1,pendingAnchorY:-1,pendingScreen:'',Hyprland:{focusedMonitor:{name:'DP-1'}},closeAll(){}});
+ const ctx=vm.createContext({popupScreen:'',popupAnchorY:-1,pendingAnchorY:-1,pendingScreen:'',TrayMenu:{requestedScreen:''},Hyprland:{focusedMonitor:{name:'DP-1'}},closeAll(){}});
  for(const name of ['toggleFrom','activate']) {
   const match=source.match(new RegExp('    function '+name+'\\([^]*?\\n    \\}'));assert.ok(match,name);vm.runInContext(match[0],ctx);
  }
@@ -48,4 +48,36 @@ test('actual popup manager captures click screen, clears origin for IPC and tran
  ctx.toggleFrom(panel,origin,'DP-1');assert.ok(panel.shown);assert.equal(ctx.popupScreen,'DP-1');
  ctx.toggleFrom(panel,origin,'DP-1');assert.equal(panel.shown,false);
  panel.open();assert.equal(ctx.popupAnchorY,-1);assert.equal(ctx.popupScreen,'DP-1');
+});
+test('library selection uses desktop-entry identity across reorder, duplicates and removal',()=>{
+ const a={id:'org.a.App',name:'Editor'},b={id:'org.b.App',name:'Editor'},shell={name:'Settings',shellAction:'settings'};
+ assert.notEqual(apps.identity(a),apps.identity(b));assert.equal(apps.identity(shell),'shell:settings');
+ assert.equal(apps.indexFor([b,shell,a],apps.identity(a)),2);
+ assert.equal(apps.indexFor([b,shell],apps.identity(a)),0);
+ assert.equal(apps.indexFor([],apps.identity(a)),-1);
+});
+test('actual launcher restores identity after model reset and deliberately resets for a new query',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../quickshell/launcher/AppLauncherContent.qml'),'utf8');
+ const ctx=vm.createContext({Library:apps,GridView:{Contain:0},applications:[{id:'b',name:'B'},{id:'a',name:'A'}],selectedId:'desktop:a',results:{currentIndex:0,positionViewAtIndex(){}}});
+ for(const name of ['select','restoreSelection','resetSelection','move']) {
+  const match=source.match(new RegExp('    function '+name+'\\([^]*?\\n    \\}'));assert.ok(match,name);vm.runInContext(match[0],ctx);
+ }
+ ctx.restoreSelection();assert.equal(ctx.results.currentIndex,1);assert.equal(ctx.selectedId,'desktop:a');
+ ctx.resetSelection();assert.equal(ctx.results.currentIndex,0);assert.equal(ctx.selectedId,'desktop:b');
+ ctx.applications=[];ctx.restoreSelection();assert.equal(ctx.results.currentIndex,-1);assert.equal(ctx.selectedId,'');
+});
+test('nested tray routing keeps the parent monitor and clears its captured origin when closed',()=>{
+ const traySource=fs.readFileSync(path.join(__dirname,'../quickshell/bar/TrayMenu.qml'),'utf8');
+ const frameSource=fs.readFileSync(path.join(__dirname,'../quickshell/bar/ShellFrame.qml'),'utf8');
+ const tray=vm.createContext({shown:false,requestedScreen:'',stack:[]});
+ for(const name of ['openFor','openSubmenu','hide']) {
+  const match=traySource.match(new RegExp('    function '+name+'\\([^]*?\\n    \\}'));assert.ok(match,name);vm.runInContext(match[0],tray);
+ }
+ tray.openFor({menu:'handle'},320,500,'DP-2');assert.equal(tray.requestedScreen,'DP-2');
+ const ctx=vm.createContext({TrayMenu:tray,popupScreen:'',popupAnchorY:-1,pendingScreen:'',pendingAnchorY:-1,Hyprland:{focusedMonitor:{name:'DP-1'}},closeAll(){}});
+ vm.runInContext(frameSource.match(/    function activate\([^]*?\n    \}/)[0],ctx);ctx.activate(tray);
+ assert.equal(ctx.popupScreen,'DP-2');assert.equal(tray.stack[0].y,500);
+ tray.openSubmenu('child',580,510,1);assert.equal(tray.requestedScreen,'DP-2');assert.equal(tray.stack.length,2);
+ tray.hide();assert.equal(tray.requestedScreen,'');assert.equal(tray.stack.length,0);
+ tray.openFor({menu:'fallback'},0,0);ctx.activate(tray);assert.equal(ctx.popupScreen,'DP-1');
 });

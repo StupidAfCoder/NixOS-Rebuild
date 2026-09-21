@@ -13,3 +13,14 @@ function filter(entries, query, category) {
     });
 }
 function move(index, delta, count) { return count ? Math.max(0, Math.min(count - 1, index + delta)) : -1; }
+
+// Names are presentation, not identity: different desktop entries can share one.
+function identity(entry) {
+    if (!entry) return "";
+    return entry.shellAction ? "shell:" + entry.shellAction : entry.id ? "desktop:" + entry.id : "name:" + entry.name;
+}
+function indexFor(entries, selectedId) {
+    if (!entries.length) return -1;
+    var index = entries.findIndex(function(entry) { return identity(entry) === selectedId; });
+    return index < 0 ? 0 : index;
+}

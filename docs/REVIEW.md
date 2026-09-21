@@ -19,6 +19,17 @@ This is the revised implementation for review, **not a claim of completed native
 
 See [the design notes](CONSOLE-DESIGN.md) for references, state rules and keyboard behavior. `docs/tour/index.html` has twelve **illustrative** scenes; it is not a native desktop recording.
 
+## Follow-up: selection and asynchronous jobs
+
+This follow-up keeps the visual redesign intact and tightens its state transitions:
+
+- The launcher retains the selected desktop-entry ID across app-model refreshes (even when names are duplicated). Search/category changes intentionally reset to the first result; an empty model clears selection.
+- Palette-preview requests have revisions. Clearing a selection or globally closing the editor invalidates queued/running results and clears the old swatches. Canceled work is not shown as busy. A late result cannot repopulate the closed/empty editor, and incomplete/non-color JSON is rejected. A monitor transfer does **not** cancel the newly visible editor's request. Changing high contrast regenerates the selected preview.
+- Trash now participates in the **in-shell** mutation guard alongside apply, private color try and live app sync. It captures the requested path, reports completion, and clears the matching selection **only on success**. Failure or preview-mode refusal leaves the selection intact; selecting another image during deletion is not undone by completion of the old job. This is not a filesystem transaction against external commands.
+- Tray menus capture their parent panel's monitor before opening. Their window-local coordinates are no longer reinterpreted on whichever monitor Hyprland happens to report as focused.
+
+The added tests execute the QML JavaScript transitions with inert process/model objects. They are not native process/render/input tests. Native QA should include rapid selection/close/reopen, failed Trash, app-list refresh and nested tray menus on a second monitor.
+
 ## Safest native preview first — no rebuild
 
 Download the [review branch ZIP](https://github.com/StupidAfCoder/NixOS-Rebuild/archive/refs/heads/arena/01a0c316-nixos-rebuild.zip), or open the branch on GitHub and choose **Code → Download ZIP**. Unlike the earlier standalone preview bundle, this ZIP contains the full repository, including the native shell and `docs/tour/index.html`.
@@ -270,9 +281,9 @@ To stop collection/audio automation without discarding data, disable both contro
 
 ## Validation performed here
 
-- **51 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Apply integration tests run the real apply script and generator in a copied fixture, with all desktop commands stubbed, covering pre-apply failure preservation and partial-success reporting. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
+- **54 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Apply integration tests run the real apply script and generator in a copied fixture, with all desktop commands stubbed, covering pre-apply failure preservation and partial-success reporting. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
 - Four source-guard tests prevent assigning `implicitHeight`/`implicitWidth` on Qt positioners (`Flow`, `Row`, `Column`, `Grid`). This catches the native startup failure reported during the first review; grammar parsing alone did not catch it.
-- **19 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers, selection/scan/apply logic, rail placement, library filtering and actual popup-manager routing. Popup geometry is tested at both edges and on short screens. Repeated in Asia/Kolkata and America/New_York timezones.
+- **29 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers, selection/scan/apply logic, rail placement, library filtering and actual popup-manager routing. Popup geometry is tested at both edges and on short screens. Repeated in Asia/Kolkata and America/New_York timezones.
 - **75 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
 - `qmllint` inspected; corrected a SystemTray type-name collision and a Button `action` name collision. Full type validation is limited by missing native Quickshell modules.
 - **11 Nix files** parse with the Nix tree-sitter grammar. **No full Nix module evaluation or build** in this sandbox.
@@ -285,7 +296,7 @@ Run Python tests locally with Pillow and materialyoucolor installed:
 
 ```sh
 python3 -m unittest discover -s tests -v
-node --test tests/test_usage_math.cjs tests/test_collection_state.cjs tests/test_console_layout.cjs
+node --test tests/test_usage_math.cjs tests/test_collection_state.cjs tests/test_console_layout.cjs tests/test_wallpaper_jobs.cjs
 # Optional HTML illustration tests, with jsdom available on NODE_PATH:
 node --test tests/test_tour.cjs
 ```
@@ -312,6 +323,8 @@ The VAAPI texture-export warnings are a separate video/driver path. The `--softw
 - [ ] Top-center Settings reveal has no reserved rail gap and remains reachable with all modules hidden.
 - [ ] Move/reorder every module; switch workspaces by mouse then keyboard: only the compositor-active slot remains selected.
 - [ ] Open network/audio/Bluetooth/energy beside their bar origins, including bottom-edge clamping and second-monitor transfer.
+- [ ] Close/clear/reopen palette preview during generation: no stale swatches/errors; refused/failed Trash keeps selection; successful Trash clears only its captured selection.
+- [ ] Refresh installed apps while browsing the shelf: selection stays with the same entry. Open nested tray menus on a monitor other than the focused fallback monitor.
 - [ ] File picker thumbnails and selected-image preview render; it navigates nested/spaced paths, selects images/videos/folders, cancels without writes and restores Settings focus.
 - [ ] Right-edge ribbon opens only after dwell, stays closed until pointer re-entry, scrolls/selects, and routes to the invoking monitor.
 - [ ] Balanced is restrained on varied wallpapers; Tinted still colors all surfaces; black remains exact black. Existing saved choices survive.

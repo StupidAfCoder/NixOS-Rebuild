@@ -45,7 +45,9 @@ Scope {
     }
     function activate(panel) {
         if (!panel.shown) return;
-        popupScreen = pendingScreen || Hyprland.focusedMonitor?.name || Quickshell.screens[0]?.name || "";
+        // Nested tray menus already have window-local coordinates from their
+        // parent panel; switching to another monitor would invalidate them.
+        popupScreen = (panel === TrayMenu ? TrayMenu.requestedScreen : "") || pendingScreen || Hyprland.focusedMonitor?.name || Quickshell.screens[0]?.name || "";
         popupAnchorY = pendingAnchorY;
         closeAll(panel);
     }
@@ -171,7 +173,7 @@ Scope {
                         SettingsPanelContent { anchorY: manager.popupAnchorY; shown: SettingsPanel.shown && frame.onScreen }
                         WellbeingPanelContent { anchorY: manager.popupAnchorY; shown: WellbeingPanel.shown && frame.onScreen }
                         RightEdgePanel { anchorY: manager.popupAnchorY; shown: RightPanel.shown && frame.onScreen }
-                        TrayAppsContent { anchorY: manager.popupAnchorY; shown: TrayApps.shown && frame.onScreen }
+                        TrayAppsContent { invokingScreen: screenRoot.modelData.name; anchorY: manager.popupAnchorY; shown: TrayApps.shown && frame.onScreen }
                         TrayMenuContent { visible: TrayMenu.shown && frame.onScreen }
                     }
                     Bar { id: barArea; anchors.left: parent.left; anchors.top: parent.top; anchors.bottom: parent.bottom; barWidth: manager.barWidth; z: 30; onOpenPanel: (panel, origin) => manager.toggleFrom(panel, origin, screenRoot.modelData.name) }

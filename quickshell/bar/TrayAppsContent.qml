@@ -6,6 +6,7 @@ import "../common"
 
 Sheet {
     id: root
+    property string invokingScreen: ""
     shown: TrayApps.shown
     title: "Background apps"
     preferredWidth: 340
@@ -20,7 +21,7 @@ Sheet {
             function openMenu() {
                 if (!modelData.hasMenu) return;
                 const pos = mapToItem(null, width, 0);
-                TrayMenu.openFor(modelData, pos.x, pos.y);
+                TrayMenu.openFor(modelData, pos.x, pos.y, root.invokingScreen);
             }
             MenuRow {
                 Layout.fillWidth: true
