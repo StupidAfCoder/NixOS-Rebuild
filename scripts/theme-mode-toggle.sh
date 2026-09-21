@@ -7,5 +7,9 @@ STATE="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper/current"
 mapfile -t prefs < <(python3 "$ROOT/scripts/shell-state.py" theme-args)
 recipe=paper
 [[ "${prefs[0]}" == paper ]] && recipe=black
-bash "$ROOT/scripts/apply-wallpaper.sh" "$(cat "$STATE")" "$recipe" "${prefs[1]}" "${prefs[2]}" "${prefs[3]}" "${prefs[4]}"
-python3 "$ROOT/scripts/shell-state.py" patch "{\"recipe\":\"$recipe\"}"
+status=0
+bash "$ROOT/scripts/apply-wallpaper.sh" "$(cat "$STATE")" "$recipe" "${prefs[1]}" "${prefs[2]}" "${prefs[3]}" "${prefs[4]}" || status=$?
+if [[ "$status" == 0 || "$status" == 2 ]]; then
+    python3 "$ROOT/scripts/shell-state.py" patch "{\"recipe\":\"$recipe\"}"
+fi
+exit "$status"

@@ -33,7 +33,10 @@ Sheet {
     onSourcePreferenceChanged: preview()
     onShownChanged: if (!shown) confirmAppSync = false; else {
         recipe = Settings.recipe; tone = Settings.tone; saturation = Settings.saturation; sourcePreference = Settings.sourcePreference;
-        if (!selectedPath) selectedPath = WallpaperBackend.currentPath;
+        if (WallpaperLauncher.requestedPath) {
+            selectedPath = WallpaperLauncher.requestedPath;
+            WallpaperLauncher.requestedPath = "";
+        } else if (!selectedPath) selectedPath = WallpaperBackend.currentPath;
         preview();
 
     }

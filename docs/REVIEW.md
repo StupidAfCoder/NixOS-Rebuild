@@ -16,6 +16,14 @@ This is the revised implementation for review, **not a claim of completed native
 - **Wallust / Firefox:** live apply explicitly uses this checkout's Wallust config, validates the generated cache, supports non-default XDG cache paths and requests Pywalfox reload. Failures surface instead of pretending every app updated. Firefox owns its native host; the ineffective standalone forking unit is removed, and manifest setup names the Nix executable explicitly.
 - **Preserved:** workspace presentation, original wizard art/recoloring, notification silhouette and Power video. No unrelated Emacs/NixOS/flake edits, merge or activation.
 
+## Follow-up interaction fixes
+
+- Folder browsing keeps its location field synchronized after typed navigation, supports Up/Down/Enter, handles files directly under `/`, includes uppercase image extensions, and clears stale selections when the listing changes. Escape and Cancel both restore Settings focus without saving.
+- The quick ribbon restores selection by path after asynchronous refreshes. **Adjust colors** opens that selected image, rather than a previously opened wallpaper. Clicking a thumbnail returns keyboard control to the ribbon.
+- A folder change during a scan queues a fresh scan; superseded results are not published. Palette-preview success no longer erases an unrelated apply/scan error.
+- Live apply prepares colors in a private staging directory before contacting the wallpaper daemon. If generation fails or the daemon reports failure, the previous shell palette and recorded wallpaper remain untouched. Once the wallpaper changes, files are published atomically one at a time; later integration failures produce a visible partial-success warning. This is **not** an atomic transaction across desktop services.
+- Recipe preferences are saved after successful/partially successful application, not before attempting it. Invalid generator arguments cannot be confused with partial success. The CLI theme toggle follows the same rule.
+
 ## Safest native preview first — no rebuild
 
 Download the [review branch ZIP](https://github.com/StupidAfCoder/NixOS-Rebuild/archive/refs/heads/arena/01a0c316-nixos-rebuild.zip), or open the branch on GitHub and choose **Code → Download ZIP**. Unlike the earlier standalone preview bundle, this ZIP contains the full repository, including the native shell and `docs/tour/index.html`.
@@ -267,13 +275,13 @@ To stop collection/audio automation without discarding data, disable both contro
 
 ## Validation performed here
 
-- **43 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
+- **47 Python tests pass**, including a multi-recipe/color/tone/contrast matrix, exact black and grayscale, single-accent compatibility, deterministic extraction, tiny-patch rejection, preview non-mutation, failed-generation preservation, settings validation, private atomic files, daily retention, corrupt-history recovery, module schema/deep merging/concurrent writers, and audio ownership/recycled stream safety. Stubbed preview-helper tests verify isolation, private palette/mascot initialization, root/video environment, duplicate refusal, and service restoration after successful and failed shell exits. Additional source contracts guard filesystem resolution, pure icon bindings, grouped tray controls, decoder lifetime, content sizing, recovery access, path picker/edge registration and launcher schema. Apply integration tests run the real apply script and generator in a copied fixture, with all desktop commands stubbed, covering pre-apply failure preservation and partial-success reporting. Stubbed Wallust integration checks cover explicit config selection, restored preview XDG paths, blocked unconfirmed writes, normal sync and failure/malformed-cache handling.
 - Four source-guard tests prevent assigning `implicitHeight`/`implicitWidth` on Qt positioners (`Flow`, `Row`, `Column`, `Grid`). This catches the native startup failure reported during the first review; grammar parsing alone did not catch it.
-- **8 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers and module catalog. Repeated in Asia/Kolkata and America/New_York timezones.
+- **13 Node tests pass**, covering the actual QML JavaScript date/sanitization/aggregation/heat/ranking helpers and module catalog. Repeated in Asia/Kolkata and America/New_York timezones.
 - **74 QML files** parse using Qt's `qmlformat`. Explicit `qmldir` registrations added for custom singletons.
 - `qmllint` inspected; corrected a SystemTray type-name collision and a Button `action` name collision. Full type validation is limited by missing native Quickshell modules.
 - **11 Nix files** parse with the Nix tree-sitter grammar. **No full Nix module evaluation or build** in this sandbox.
-- Bash syntax checks cover all eleven shell scripts. The six core rice scripts (apply, preview, Wallust sync, brightness, system stats and asset generation) also pass ShellCheck. The unrelated recording helper has a pre-existing `ls | grep` warning and is untouched.
+- Bash syntax checks cover all eleven shell scripts. The seven core rice scripts (apply, preview, Wallust sync, theme toggle, brightness, system stats and asset generation) also pass ShellCheck. The unrelated recording helper has a pre-existing `ls | grep` warning and is untouched.
 - Quickshell API declarations inspected for MPRIS controls, notification timeout units/actions, Process stdin, focused-monitor routing, IconImage status/asynchronous aliases and IPC path selection. All statically named bundled icons exist.
 - The revised HTML tour has **10 illustrative scenes**, with library search/placement, wireless flow, Day/History/Apps navigation and safe session confirmations. Four DOM regression tests cover these transitions. It is not an exhaustive replica of native Settings or a hardware test.
 - The HTML tour is a safe mockup. An attempted offscreen native Qt render was blocked by unavailable system graphics libraries; **no native screenshots or native animation claims** are presented.
@@ -282,7 +290,7 @@ Run Python tests locally with Pillow and materialyoucolor installed:
 
 ```sh
 python3 -m unittest discover -s tests -v
-node --test tests/test_usage_math.cjs
+node --test tests/test_usage_math.cjs tests/test_collection_state.cjs
 # Optional HTML illustration tests, with jsdom available on NODE_PATH:
 node --test tests/test_tour.cjs
 ```

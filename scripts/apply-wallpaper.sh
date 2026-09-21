@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One serialized apply transaction. Firefox stays on Wallust, independently of shell recipes.
+# Serialize applications; prepare colors before touching the live wallpaper or palette.
 set -euo pipefail
 [[ "${PIXEL_SHELL_PREVIEW:-}" != 1 ]] || { echo "Live wallpaper apply is blocked in preview" >&2; exit 3; }
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -11,25 +11,43 @@ STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/wallpaper"
 mkdir -p "$STATE_DIR"
 exec 9>"$STATE_DIR/apply.lock"
 flock 9
+stage="$(mktemp -d "$STATE_DIR/palette.XXXXXX")"
+trap 'rm -rf -- "$stage"' EXIT
 mode=dark
 [[ "$recipe" == paper ]] && mode=light
-python3 "$ROOT/scripts/generate-theme.py" "$selected_path" "$mode" "$contrast" \
-  --recipe "$recipe" --tone "$tone" --saturation "$saturation" --source "$source"
-awww img "$selected_path" --transition-type fade --transition-fps 60 --transition-duration 0.6
-printf '%s\n' "$selected_path" > "$STATE_DIR/current.tmp"
-mv "$STATE_DIR/current.tmp" "$STATE_DIR/current"
-# Update the mascot without needing to wait for the systemd path watcher.
-bash "$ROOT/quickshell/bar/scripts/generate-theme-assets.sh" || echo 'Mascot refresh failed' >&2
-app_sync_status=0
-if ! bash "$ROOT/scripts/sync-wallust.sh" "$selected_path"; then
-    app_sync_status=2
-    echo 'Wallpaper applied, but live application color sync failed. Check Wallust/Pywalfox.' >&2
+# Normalize all pre-apply failures to 1: argparse also uses 2, but our 2 means partial success.
+if ! python3 "$ROOT/scripts/generate-theme.py" "$selected_path" "$mode" "$contrast" \
+  --recipe "$recipe" --tone "$tone" --saturation "$saturation" --source "$source" --output-dir "$stage"; then
+    exit 1
 fi
-# GTK/Qt remain independently managed by Matugen; do not route Firefox through it.
-matugen image "$selected_path" -m "$mode" -t scheme-tonal-spot --source-color-index 0 --contrast 0.2 || echo 'GTK/Qt palette update failed' >&2
-hyprctl reload || true
-# Kitty supports config reload via SIGUSR1. Foot receives Wallust terminal sequences.
-pkill -USR1 -x kitty || true
-notify-send 'Wallpaper' "Applied $(basename -- "$selected_path") · $recipe" || true
-
-exit "$app_sync_status"
+if ! awww img "$selected_path" --transition-type fade --transition-fps 60 --transition-duration 0.6; then
+    exit 1
+fi
+# Each publication is atomic; external desktop tools cannot form a single atomic transaction.
+partial=0
+publish() {
+    local source="$1" target="$2" temporary
+    mkdir -p "$(dirname -- "$target")" || return 1
+    temporary="$(mktemp "$target.XXXXXX")" || return 1
+    if ! cp -- "$source" "$temporary" || ! mv -- "$temporary" "$target"; then
+        rm -f -- "$temporary"
+        return 1
+    fi
+}
+warn() { partial=2; printf '%s\n' "$1" >&2; }
+for file in hypr/colors.lua quickshell/bar/theme/colors.json; do
+    publish "$stage/$file" "$ROOT/$file" || warn "Could not publish $file"
+done
+printf '%s\n' "$selected_path" > "$stage/current"
+publish "$stage/current" "$STATE_DIR/current" || warn 'Could not record the active wallpaper'
+bash "$ROOT/quickshell/bar/scripts/generate-theme-assets.sh" || warn 'Mascot refresh failed'
+bash "$ROOT/scripts/sync-wallust.sh" "$selected_path" || warn 'Live application color sync failed; check Wallust/Pywalfox'
+# GTK/Qt remain independently managed by Matugen; Firefox remains on Wallust.
+matugen image "$selected_path" -m "$mode" -t scheme-tonal-spot --source-color-index 0 --contrast 0.2 || warn 'GTK/Qt palette update failed'
+hyprctl reload || warn 'Compositor theme reload failed'
+if [[ "$partial" == 0 ]]; then
+    notify-send 'Wallpaper' "Applied $(basename -- "$selected_path") · $recipe" || true
+else
+    notify-send 'Wallpaper' 'Wallpaper changed; some theme updates failed. Check the shell log.' || true
+fi
+exit "$partial"

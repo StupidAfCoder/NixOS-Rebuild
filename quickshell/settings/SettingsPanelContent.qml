@@ -16,7 +16,8 @@ Sheet {
     edge: "right"
     preferredWidth: 460
     preferredHeight: parent.height
-    onDismiss: { if (picking) picking = false; else SettingsPanel.hide(); }
+    onDismiss: { if (picking) closePicker(); else SettingsPanel.hide(); }
+    function closePicker() { picking = false; resetScroll(); forceActiveFocus(); }
     property bool picking: false
     property string pickKey: ""
     function pick(key, value, directory, filters) { pickKey = key; picking = true; pathPicker.start(value, directory, filters); resetScroll(); }
@@ -27,8 +28,8 @@ Sheet {
 
     PathPicker {
         id: pathPicker; visible: root.picking; Layout.fillWidth: true
-        onChosen: path => { const patch = {}; patch[root.pickKey] = path; Settings.patch(patch); root.picking = false; root.resetScroll(); root.forceActiveFocus(); }
-        onCancelled: { root.picking = false; root.resetScroll(); root.forceActiveFocus(); }
+        onChosen: path => { const patch = {}; patch[root.pickKey] = path; Settings.patch(patch); root.closePicker(); }
+        onCancelled: { root.closePicker(); }
     }
     PixelText { text: Settings.error; visible: text.length > 0; color: Colors.error; Layout.fillWidth: true; wrapMode: Text.Wrap; elide: Text.ElideNone }
     Rectangle {
